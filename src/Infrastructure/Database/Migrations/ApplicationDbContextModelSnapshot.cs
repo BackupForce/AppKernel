@@ -204,6 +204,53 @@ namespace Infrastructure.Database.Migrations
                     b.ToTable("member_asset_ledger", "public");
                 });
 
+            modelBuilder.Entity("Domain.Members.MemberExternalIdentity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ExternalUserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("external_user_id");
+
+                    b.Property<string>("ExternalUserName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("external_user_name");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("provider");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_member_external_identities");
+
+                    b.HasIndex("MemberId")
+                        .HasDatabaseName("ix_member_external_identities_member_id");
+
+                    b.HasIndex("Provider", "ExternalUserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_member_external_identities_provider_external_user_id");
+
+                    b.ToTable("member_external_identities", "public");
+                });
+
             modelBuilder.Entity("Domain.Members.MemberPointBalance", b =>
                 {
                     b.Property<Guid>("MemberId")
@@ -523,6 +570,16 @@ namespace Infrastructure.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_member_asset_ledger_members_member_id");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberExternalIdentity", b =>
+                {
+                    b.HasOne("Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_member_external_identities_members_member_id");
                 });
 
             modelBuilder.Entity("Domain.Members.MemberPointBalance", b =>
