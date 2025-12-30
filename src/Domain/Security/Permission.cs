@@ -32,4 +32,66 @@ public sealed class Permission
 
         public static IEnumerable<Permission> ChildPermissions => AllPermissions.Where(p => p != All);
     }
+
+    /// <summary>
+    /// 會員模組權限定義
+    /// </summary>
+    public static class Members
+    {
+        public static readonly Permission All = new(10, "members:*", "會員模組所有權限");
+        public static readonly Permission Read = new(11, "members:read", "檢視會員資料");
+        public static readonly Permission Create = new(12, "members:create", "建立會員");
+        public static readonly Permission Update = new(13, "members:update", "修改會員資料");
+        public static readonly Permission Suspend = new(14, "members:suspend", "停權會員");
+
+        public static IEnumerable<Permission> AllPermissions => new[]
+        {
+            All, Read, Create, Update, Suspend
+        };
+    }
+
+    /// <summary>
+    /// 會員點數權限定義
+    /// </summary>
+    public static class MemberPoints
+    {
+        public static readonly Permission All = new(20, "member_points:*", "會員點數所有權限");
+        public static readonly Permission Read = new(21, "member_points:read", "檢視會員點數");
+        public static readonly Permission Adjust = new(22, "member_points:adjust", "人工調整會員點數");
+        public static readonly Permission Transfer = new(23, "member_points:transfer", "會員點數轉帳");
+
+        public static IEnumerable<Permission> AllPermissions => new[]
+        {
+            All, Read, Adjust, Transfer
+        };
+    }
+
+    /// <summary>
+    /// 會員資產權限定義
+    /// </summary>
+    public static class MemberAssets
+    {
+        public static readonly Permission All = new(30, "member_assets:*", "會員資產所有權限");
+        public static readonly Permission Read = new(31, "member_assets:read", "檢視會員資產");
+        public static readonly Permission Adjust = new(32, "member_assets:adjust", "調整會員資產");
+
+        public static IEnumerable<Permission> AllPermissions => new[]
+        {
+            All, Read, Adjust
+        };
+    }
+
+    /// <summary>
+    /// 會員操作歷程權限定義
+    /// </summary>
+    public static class MemberAudit
+    {
+        public static readonly Permission All = new(40, "member_audit:*", "會員操作歷程所有權限");
+        public static readonly Permission Read = new(41, "member_audit:read", "檢視會員操作歷程");
+
+        public static IEnumerable<Permission> AllPermissions => new[]
+        {
+            All, Read
+        };
+    }
 }
