@@ -6,6 +6,7 @@ using Application.Abstractions.Events;
 using Application.Abstractions.Identity;
 using Application.Abstractions.Infrastructure;
 using Dapper;
+using Domain.Members;
 using Domain.Users;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -90,6 +91,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IMemberRepository, MemberRepository>();
 
         return services;
     }

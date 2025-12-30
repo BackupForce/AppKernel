@@ -13,7 +13,7 @@ public class UserTests
         var name = new Name("Full Name");
 
         // Act
-        var user = User.Create(email, name, true);
+        var user = User.Create(email, name, "hashed", true);
 
         // Assert
         user.Should().NotBeNull();
@@ -27,7 +27,7 @@ public class UserTests
         var name = new Name("Full Name");
 
         // Act
-        var user = User.Create(email, name, true);
+        var user = User.Create(email, name, "hashed", true);
 
         // Assert
         user.DomainEvents

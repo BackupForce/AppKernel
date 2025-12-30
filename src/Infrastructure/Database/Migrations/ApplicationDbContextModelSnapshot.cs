@@ -24,6 +24,265 @@ namespace Infrastructure.Database.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Domain.Members.Member", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("display_name");
+
+                    b.Property<string>("MemberNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("member_no");
+
+                    b.Property<short>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_members");
+
+                    b.HasIndex("MemberNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_members_member_no");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_members_user_id");
+
+                    b.ToTable("members", "public");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberActivityLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("action");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Ip")
+                        .HasColumnType("text")
+                        .HasColumnName("ip");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<Guid?>("OperatorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operator_user_id");
+
+                    b.Property<string>("Payload")
+                        .HasColumnType("text")
+                        .HasColumnName("payload");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("text")
+                        .HasColumnName("user_agent");
+
+                    b.HasKey("Id")
+                        .HasName("pk_member_activity_log");
+
+                    b.HasIndex("Action", "CreatedAt")
+                        .HasDatabaseName("ix_member_activity_log_action_created_at");
+
+                    b.HasIndex("MemberId", "CreatedAt")
+                        .HasDatabaseName("ix_member_activity_log_member_id_created_at");
+
+                    b.ToTable("member_activity_log", "public");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberAssetBalance", b =>
+                {
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<string>("AssetCode")
+                        .HasColumnType("text")
+                        .HasColumnName("asset_code");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("numeric(38,18)")
+                        .HasColumnName("balance");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("MemberId", "AssetCode")
+                        .HasName("pk_member_asset_balance");
+
+                    b.ToTable("member_asset_balance", "public");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberAssetLedger", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AssetCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("asset_code");
+
+                    b.Property<decimal>("AfterBalance")
+                        .HasColumnType("numeric(38,18)")
+                        .HasColumnName("after_balance");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(38,18)")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("BeforeBalance")
+                        .HasColumnType("numeric(38,18)")
+                        .HasColumnName("before_balance");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<Guid?>("OperatorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operator_user_id");
+
+                    b.Property<string>("ReferenceId")
+                        .HasColumnType("text")
+                        .HasColumnName("reference_id");
+
+                    b.Property<string>("ReferenceType")
+                        .HasColumnType("text")
+                        .HasColumnName("reference_type");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("text")
+                        .HasColumnName("remark");
+
+                    b.Property<short>("Type")
+                        .HasColumnType("smallint")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_member_asset_ledger");
+
+                    b.HasIndex("MemberId", "AssetCode", "CreatedAt")
+                        .HasDatabaseName("ix_member_asset_ledger_member_id_asset_code_created_at");
+
+                    b.ToTable("member_asset_ledger", "public");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberPointBalance", b =>
+                {
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<long>("Balance")
+                        .HasColumnType("bigint")
+                        .HasColumnName("balance");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("MemberId")
+                        .HasName("pk_member_point_balance");
+
+                    b.ToTable("member_point_balance", "public");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberPointLedger", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<long>("AfterBalance")
+                        .HasColumnType("bigint")
+                        .HasColumnName("after_balance");
+
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("amount");
+
+                    b.Property<long>("BeforeBalance")
+                        .HasColumnType("bigint")
+                        .HasColumnName("before_balance");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<Guid?>("OperatorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operator_user_id");
+
+                    b.Property<string>("ReferenceId")
+                        .HasColumnType("text")
+                        .HasColumnName("reference_id");
+
+                    b.Property<string>("ReferenceType")
+                        .HasColumnType("text")
+                        .HasColumnName("reference_type");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("text")
+                        .HasColumnName("remark");
+
+                    b.Property<short>("Type")
+                        .HasColumnType("smallint")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_member_point_ledger");
+
+                    b.HasIndex("MemberId", "CreatedAt")
+                        .HasDatabaseName("ix_member_point_ledger_member_id_created_at");
+
+                    b.HasIndex("ReferenceType", "ReferenceId")
+                        .HasDatabaseName("ix_member_point_ledger_reference_type_reference_id");
+
+                    b.ToTable("member_point_ledger", "public");
+                });
+
             modelBuilder.Entity("Domain.Nodes.Node", b =>
                 {
                     b.Property<Guid>("Id")
@@ -226,6 +485,64 @@ namespace Infrastructure.Database.Migrations
                         .HasDatabaseName("ix_role_user_users_id");
 
                     b.ToTable("role_user", "public");
+                });
+
+            modelBuilder.Entity("Domain.Members.Member", b =>
+                {
+                    b.HasOne("Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .HasConstraintName("fk_members_users_user_id");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberActivityLog", b =>
+                {
+                    b.HasOne("Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_member_activity_log_members_member_id");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberAssetBalance", b =>
+                {
+                    b.HasOne("Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_member_asset_balance_members_member_id");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberAssetLedger", b =>
+                {
+                    b.HasOne("Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_member_asset_ledger_members_member_id");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberPointBalance", b =>
+                {
+                    b.HasOne("Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_member_point_balance_members_member_id");
+                });
+
+            modelBuilder.Entity("Domain.Members.MemberPointLedger", b =>
+                {
+                    b.HasOne("Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_member_point_ledger_members_member_id");
                 });
 
             modelBuilder.Entity("Domain.Nodes.NodeRelation", b =>
