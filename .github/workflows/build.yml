@@ -22,10 +22,10 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore ./CleanArchitecture.sln
+        run: dotnet restore ./AppKernel.sln
 
       - name: Build
-        run: dotnet build ./CleanArchitecture.sln --configuration Release --no-restore
+        run: dotnet build ./AppKernel.sln --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test ./CleanArchitecture.sln --configuration Release --no-restore --no-build
+        run: dotnet test ./AppKernel.sln --configuration Release --no-restore --no-build
