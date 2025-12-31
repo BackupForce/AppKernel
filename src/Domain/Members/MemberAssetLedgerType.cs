@@ -1,6 +1,6 @@
 ﻿namespace Domain.Members;
 
-public enum MemberAssetLedgerType : short
+public enum MemberAssetLedgerType
 {
     Credit = 0,
     Debit = 1,

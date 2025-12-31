@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Authentication;
+﻿using System.Data;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Caching;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
@@ -94,7 +95,7 @@ internal sealed class AdjustMemberAssetCommandHandler(
             $"{{\"assetCode\":\"{request.AssetCode}\",\"delta\":{request.Delta}}}",
             dateTimeProvider.UtcNow);
 
-        using var transaction = await unitOfWork.BeginTransactionAsync();
+        using IDbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
         memberRepository.UpsertAssetBalance(balance);
         memberRepository.InsertAssetLedger(ledger);

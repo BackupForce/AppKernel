@@ -51,7 +51,7 @@ public class RootUserSeeder : IDataSeeder
             return;
         }
 
-        var user = User.Create(rootEmail, new Name("root"), _passwordHasher.Hash(password), false);
+        User user = User.Create(rootEmail, new Name("root"), _passwordHasher.Hash(password), false);
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync();

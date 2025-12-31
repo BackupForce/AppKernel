@@ -1,6 +1,6 @@
 ﻿namespace Domain.Members;
 
-public enum MemberPointLedgerType : short
+public enum MemberPointLedgerType
 {
     Earn = 0,
     Spend = 1,
