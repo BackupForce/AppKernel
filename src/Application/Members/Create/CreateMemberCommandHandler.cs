@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Caching;
+﻿using System.Data;
+using Application.Abstractions.Caching;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Members;
@@ -42,7 +43,7 @@ internal sealed class CreateMemberCommandHandler(
         Member member = memberResult.Value;
         MemberPointBalance pointBalance = MemberPointBalance.Create(member.Id, utcNow);
 
-        using var transaction = await unitOfWork.BeginTransactionAsync();
+        using IDbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
         memberRepository.Insert(member);
         memberRepository.UpsertPointBalance(pointBalance);

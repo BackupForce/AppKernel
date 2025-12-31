@@ -29,7 +29,7 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
     {
         DateTime utcNow = DateTime.UtcNow;
 
-        var outboxMessages = context
+        List<OutboxMessage> outboxMessages = context
             .ChangeTracker
             .Entries<Entity>()
             .Select(entry => entry.Entity)

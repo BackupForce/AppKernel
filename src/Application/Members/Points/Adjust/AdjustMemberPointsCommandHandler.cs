@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Authentication;
+﻿using System.Data;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Caching;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
@@ -72,7 +73,7 @@ internal sealed class AdjustMemberPointsCommandHandler(
             $"{{\"delta\":{request.Delta},\"remark\":\"{request.Remark}\"}}",
             dateTimeProvider.UtcNow);
 
-        using var transaction = await unitOfWork.BeginTransactionAsync();
+        using IDbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
         memberRepository.UpsertPointBalance(balance);
         memberRepository.InsertPointLedger(ledger);

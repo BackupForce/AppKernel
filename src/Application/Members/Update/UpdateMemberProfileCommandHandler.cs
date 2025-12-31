@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Authentication;
+﻿using System.Data;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Caching;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
@@ -39,7 +40,7 @@ internal sealed class UpdateMemberProfileCommandHandler(
             $"{{\"displayName\":\"{request.DisplayName}\"}}",
             dateTimeProvider.UtcNow);
 
-        using var transaction = await unitOfWork.BeginTransactionAsync();
+        using IDbTransaction transaction = await unitOfWork.BeginTransactionAsync();
         memberRepository.InsertActivity(log);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         transaction.Commit();
