@@ -50,7 +50,7 @@ internal sealed class AdjustMemberPointsCommandHandler(
 
         long afterBalance = adjustResult.Value;
 
-        MemberPointLedger ledger = MemberPointLedger.Create(
+        var ledger = MemberPointLedger.Create(
             request.MemberId,
             ledgerType,
             amount,
@@ -64,7 +64,7 @@ internal sealed class AdjustMemberPointsCommandHandler(
 
         member.RegisterPointsAdjusted(ledgerType, amount, beforeBalance, afterBalance, userContext.UserId);
 
-        MemberActivityLog activityLog = MemberActivityLog.Create(
+        var activityLog = MemberActivityLog.Create(
             request.MemberId,
             "points.adjust",
             null,

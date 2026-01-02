@@ -86,7 +86,7 @@ internal sealed class AdjustMemberAssetCommandHandler(
             afterBalance,
             userContext.UserId);
 
-        MemberActivityLog activityLog = MemberActivityLog.Create(
+        var activityLog = MemberActivityLog.Create(
             request.MemberId,
             "assets.adjust",
             null,

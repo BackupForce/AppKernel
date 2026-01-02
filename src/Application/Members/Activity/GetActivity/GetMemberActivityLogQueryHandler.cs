@@ -4,6 +4,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Members.Dtos;
 using Dapper;
+using SharedKernel;
+using System.Globalization;
 
 namespace Application.Members.Activity.GetActivity;
 
@@ -61,7 +63,7 @@ internal sealed class GetMemberActivityLogQueryHandler(IDbConnectionFactory fact
         IEnumerable<MemberActivityLogDto> items = await connection.QueryAsync<MemberActivityLogDto>(
             finalSql,
             parameters);
-        int totalCount = await connection.ExecuteScalarAsync<int>(string.Format(countSql, baseSql), parameters);
+        int totalCount = await connection.ExecuteScalarAsync<int>(string.Format(CultureInfo.InvariantCulture, countSql, baseSql), parameters);
 
         return PagedResult<MemberActivityLogDto>.Create(items, totalCount, request.Page, request.PageSize);
     }

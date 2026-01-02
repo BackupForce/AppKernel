@@ -18,7 +18,7 @@ public class GetUserTests : BaseFunctionalTest
     public async Task Should_ReturnNotFound_WhenUserDoesNotExist()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync($"api/v1/users/{userId}");
@@ -42,7 +42,7 @@ public class GetUserTests : BaseFunctionalTest
 
     private async Task<Guid> CreateUserAsync()
     {
-        var request = new CreateUserRequest("test@test.com", "name", true);
+        var request = new CreateUserRequest("test@test.com", "name", "123456", true);
 
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync("api/v1/users", request);
 

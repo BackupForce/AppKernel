@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Data;
 using Application.Members.Activate;
+using Application.Members.Activity.GetActivity;
 using Application.Members.Assets.Adjust;
 using Application.Members.Assets.GetAssets;
 using Application.Members.Assets.GetHistory;
@@ -10,8 +11,8 @@ using Application.Members.Points.Adjust;
 using Application.Members.Points.GetBalance;
 using Application.Members.Points.GetHistory;
 using Application.Members.Search;
+using Application.Members.Suspend;
 using Application.Members.Update;
-using Application.Members.Activity.GetActivity;
 using Asp.Versioning;
 using Domain.Security;
 using MediatR;

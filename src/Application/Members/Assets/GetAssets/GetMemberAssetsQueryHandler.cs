@@ -3,6 +3,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Members.Dtos;
 using Dapper;
+using SharedKernel;
 
 namespace Application.Members.Assets.GetAssets;
 

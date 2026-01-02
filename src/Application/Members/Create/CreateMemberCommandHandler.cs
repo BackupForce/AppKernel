@@ -41,7 +41,7 @@ internal sealed class CreateMemberCommandHandler(
         }
 
         Member member = memberResult.Value;
-        MemberPointBalance pointBalance = MemberPointBalance.Create(member.Id, utcNow);
+        var pointBalance = MemberPointBalance.Create(member.Id, utcNow);
 
         using IDbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 

@@ -31,7 +31,7 @@ internal sealed class ActivateMemberCommandHandler(
             return activateResult;
         }
 
-        MemberActivityLog log = MemberActivityLog.Create(
+        var log = MemberActivityLog.Create(
             member.Id,
             "member.activate",
             null,

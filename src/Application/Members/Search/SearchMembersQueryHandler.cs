@@ -1,9 +1,11 @@
 ﻿using System.Data;
+using System.Globalization;
 using System.Text;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Members.Dtos;
 using Dapper;
+using SharedKernel;
 
 namespace Application.Members.Search;
 
@@ -64,7 +66,7 @@ internal sealed class SearchMembersQueryHandler(IDbConnectionFactory factory)
         using IDbConnection connection = factory.GetOpenConnection();
 
         IEnumerable<MemberListItemDto> items = await connection.QueryAsync<MemberListItemDto>(finalSql, parameters);
-        int totalCount = await connection.ExecuteScalarAsync<int>(string.Format(countSql, baseSql), parameters);
+        int totalCount = await connection.ExecuteScalarAsync<int>(string.Format(CultureInfo.InvariantCulture, countSql, baseSql), parameters);
 
         return PagedResult<MemberListItemDto>.Create(items, totalCount, request.Page, request.PageSize);
     }

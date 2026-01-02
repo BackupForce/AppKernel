@@ -31,7 +31,7 @@ internal sealed class SuspendMemberCommandHandler(
             return suspendResult;
         }
 
-        MemberActivityLog log = MemberActivityLog.Create(
+        var log = MemberActivityLog.Create(
             member.Id,
             "member.suspend",
             null,

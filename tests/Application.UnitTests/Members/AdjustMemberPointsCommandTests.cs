@@ -64,7 +64,7 @@ public sealed class AdjustMemberPointsCommandTests
         Result<Member> memberResult = Member.Create(null, "MBR-002", "測試會員", DateTime.UtcNow);
         Member member = memberResult.Value;
         _memberRepository.GetByIdAsync(member.Id, Arg.Any<CancellationToken>()).Returns(member);
-        MemberPointBalance balance = MemberPointBalance.Create(member.Id, DateTime.UtcNow);
+        var balance = MemberPointBalance.Create(member.Id, DateTime.UtcNow);
         _memberRepository.GetPointBalanceAsync(member.Id, Arg.Any<CancellationToken>()).Returns(balance);
 
         var command = new AdjustMemberPointsCommand(member.Id, -50, "手動扣點");

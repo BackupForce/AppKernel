@@ -4,6 +4,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Members.Dtos;
 using Dapper;
+using SharedKernel;
+using System.Globalization;
 
 namespace Application.Members.Assets.GetHistory;
 
@@ -75,7 +77,7 @@ internal sealed class GetMemberAssetHistoryQueryHandler(IDbConnectionFactory fac
         using IDbConnection connection = factory.GetOpenConnection();
 
         IEnumerable<MemberAssetLedgerDto> items = await connection.QueryAsync<MemberAssetLedgerDto>(finalSql, parameters);
-        int totalCount = await connection.ExecuteScalarAsync<int>(string.Format(countSql, baseSql), parameters);
+        int totalCount = await connection.ExecuteScalarAsync<int>(string.Format(CultureInfo.InvariantCulture, countSql, baseSql), parameters);
 
         return PagedResult<MemberAssetLedgerDto>.Create(items, totalCount, request.Page, request.PageSize);
     }

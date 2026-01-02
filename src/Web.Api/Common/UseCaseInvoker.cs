@@ -54,4 +54,21 @@ public static class UseCaseInvoker
             return await Handle<TRequest, TResult>(request, sender, ct);
         };
     }
+
+    public static Func<T1, T2, ISender, CancellationToken, Task<IResult>>
+    FromRoute<TRequest, T1, T2>(
+        Func<T1, T2, TRequest> toRequest)
+        where TRequest : IRequest<Result>
+    {
+        return async (a, b, sender, ct) =>
+        {
+            TRequest request = toRequest(a, b);
+            Result result = await sender.Send(request, ct);
+
+            return result.Match(
+                () => Results.Ok(),
+                error => CustomResults.Problem(error)
+            );
+        };
+    }
 }

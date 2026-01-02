@@ -28,7 +28,7 @@ internal sealed class CreateUserCommandHandler(
         }
 
         var name = new Name(command.Name);
-        User user = User.Create(email, name, _passwordHasher.Hash(command.Password), command.HasPublicProfile);
+        var user = User.Create(email, name, _passwordHasher.Hash(command.Password), command.HasPublicProfile);
 
         userRepository.Insert(user);
 

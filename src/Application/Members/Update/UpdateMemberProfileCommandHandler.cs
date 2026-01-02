@@ -31,7 +31,7 @@ internal sealed class UpdateMemberProfileCommandHandler(
             return updateResult;
         }
 
-        MemberActivityLog log = MemberActivityLog.Create(
+        var log = MemberActivityLog.Create(
             member.Id,
             "member.update_profile",
             null,

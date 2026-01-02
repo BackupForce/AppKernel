@@ -4,6 +4,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Members.Dtos;
 using Dapper;
+using SharedKernel;
+using System.Globalization;
 
 namespace Application.Members.Points.GetHistory;
 
@@ -74,7 +76,7 @@ internal sealed class GetMemberPointHistoryQueryHandler(IDbConnectionFactory fac
         using IDbConnection connection = factory.GetOpenConnection();
 
         IEnumerable<MemberPointLedgerDto> items = await connection.QueryAsync<MemberPointLedgerDto>(finalSql, parameters);
-        int totalCount = await connection.ExecuteScalarAsync<int>(string.Format(countSql, baseSql), parameters);
+        int totalCount = await connection.ExecuteScalarAsync<int>(string.Format(CultureInfo.InvariantCulture, countSql, baseSql), parameters);
 
         return PagedResult<MemberPointLedgerDto>.Create(items, totalCount, request.Page, request.PageSize);
     }

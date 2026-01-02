@@ -6,6 +6,7 @@ using Api.FunctionalTests.Infrastructure;
 using Application.Users;
 using Application.Users.Create;
 using FluentAssertions;
+using Hangfire.Dashboard;
 
 namespace Api.FunctionalTests.Users;
 
@@ -20,7 +21,7 @@ public class CreateUserTests : BaseFunctionalTest
     public async Task Should_ReturnBadRequest_WhenEmailIsMissing()
     {
         // Arrange
-        var request = new CreateUserRequest("", "name", true);
+        var request = new CreateUserRequest("", "name","", true);
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync("api/v1/users", request);
@@ -42,7 +43,7 @@ public class CreateUserTests : BaseFunctionalTest
     public async Task Should_ReturnBadRequest_WhenEmailIsInvalid()
     {
         // Arrange
-        var request = new CreateUserRequest("test", "name", true);
+        var request = new CreateUserRequest("test", "name", "123456", true);
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync("api/v1/users", request);
@@ -61,7 +62,7 @@ public class CreateUserTests : BaseFunctionalTest
     public async Task Should_ReturnBadRequest_WhenNameIsMissing()
     {
         // Arrange
-        var request = new CreateUserRequest("test@test.com", "", true);
+        var request = new CreateUserRequest("test@test.com", "", "", true);
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync("api/v1/users", request);
@@ -80,7 +81,7 @@ public class CreateUserTests : BaseFunctionalTest
     public async Task Should_ReturnOk_WhenRequestIsValid()
     {
         // Arrange
-        var request = new CreateUserRequest("test@test.com", "name", true);
+        var request = new CreateUserRequest("test@test.com", "", "", true);
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync("api/v1/users", request);
@@ -93,7 +94,7 @@ public class CreateUserTests : BaseFunctionalTest
     public async Task Should_ReturnConflict_WhenUserExists()
     {
         // Arrange
-        var request = new CreateUserRequest("test@test.com", "name", true);
+        var request = new CreateUserRequest("test@test.com", "name", "123456", true);
 
         // Act
         await HttpClient.PostAsJsonAsync("api/v1/users", request);
