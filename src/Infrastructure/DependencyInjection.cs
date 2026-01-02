@@ -79,6 +79,8 @@ public static class DependencyInjection
         services.AddSingleton<IDbConnectionFactory>(_ =>
             new DbConnectionFactory(new NpgsqlDataSourceBuilder(connectionString).Build()));
 
+        services.AddSingleton<IUniqueConstraintDetector, UniqueConstraintDetector>();
+
         services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
 
         services.AddDbContext<ApplicationDbContext>(
@@ -89,9 +91,11 @@ public static class DependencyInjection
                 .AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>()));
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<ITrackedUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IMemberRepository, MemberRepository>();
+        services.AddScoped<IMemberExternalIdentityRepository, MemberExternalIdentityRepository>();
 
         return services;
     }
