@@ -8,10 +8,17 @@ public sealed class Permission
         Description = description;
     }
 
-    public int Id { get; init; }
+    private Permission()
+    {
+        Name = string.Empty;
+        Description = string.Empty;
+    }
 
-    public string Name { get; init; }
-    public string Description { get; init; }
+    public int Id { get; set; }
+
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public int? RoleId { get; set; }
 
     /// <summary>
     /// 針對使用者列表UserList的權限定義
@@ -92,6 +99,34 @@ public sealed class Permission
         public static IEnumerable<Permission> AllPermissions => new[]
         {
             All, Read
+        };
+    }
+
+    /// <summary>
+    /// 角色管理權限定義
+    /// </summary>
+    public static class Roles
+    {
+        public static readonly Permission All = new(50, "roles:*", "角色模組所有權限");
+        public static readonly Permission View = new(51, "roles:view", "檢視角色");
+        public static readonly Permission Create = new(52, "roles:create", "建立角色");
+        public static readonly Permission Update = new(53, "roles:update", "修改角色");
+        public static readonly Permission Delete = new(54, "roles:delete", "刪除角色");
+
+        public static IEnumerable<Permission> AllPermissions => new[]
+        {
+            All, View, Create, Update, Delete
+        };
+    }
+
+    public static Permission CreateForRole(string name, string description, int roleId)
+    {
+        // 中文註解：建立屬於角色的權限，描述預設為空字串以符合資料表不允許 null 的限制。
+        return new Permission
+        {
+            Name = name,
+            Description = description,
+            RoleId = roleId
         };
     }
 }
