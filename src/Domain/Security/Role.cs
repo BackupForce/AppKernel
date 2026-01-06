@@ -16,10 +16,30 @@ public sealed class Role
         Name = name;
     }
 
-    public int Id { get; init; }
+    private Role()
+    {
+        Name = string.Empty;
+    }
 
-    public string Name { get; init; }
+    public int Id { get; set; }
 
-    public ICollection<User> Users { get; init; } = new List<User>();
-    public ICollection<Permission> Permissions { get; init; } = new List<Permission>();
+    public string Name { get; set; }
+
+    public ICollection<User> Users { get; private set; } = new List<User>();
+    public ICollection<Permission> Permissions { get; private set; } = new List<Permission>();
+
+    public static Role Create(string name)
+    {
+        // 中文註解：建立可持久化的新角色，交由資料庫產生識別碼。
+        return new Role
+        {
+            Name = name
+        };
+    }
+
+    public void Rename(string name)
+    {
+        // 中文註解：更新角色名稱。
+        Name = name;
+    }
 }

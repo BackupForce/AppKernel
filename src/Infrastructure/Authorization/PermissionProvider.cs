@@ -2,22 +2,30 @@
 
 namespace Infrastructure.Authorization;
 
-internal sealed class PermissionProvider(ICacheService cacheService)
+// 保留供未來改為快取取權限的實作使用，目前未在任何流程中被呼叫
+internal sealed class PermissionProvider
 {
+    private readonly ICacheService _cacheService;
+
+    public PermissionProvider(ICacheService cacheService)
+    {
+        _cacheService = cacheService;
+    }
+
     public async Task<HashSet<string>> GetForUserIdAsync(Guid userId)
     {
         string cacheKey = $"auth:permissions-{userId}";
-        HashSet<string>? cachedPermissions = await cacheService.GetAsync<HashSet<string>>(cacheKey);
+        HashSet<string>? cachedPermissions = await _cacheService.GetAsync<HashSet<string>>(cacheKey);
 
         if (cachedPermissions is not null)
         {
             return cachedPermissions;
         }
 
-        // TODO: Here you'll implement your logic to fetch permissions.
-        HashSet<string> permissionsSet = [];
+        // TODO: 未來改以快取為主來源
+        HashSet<string> permissionsSet = new HashSet<string>();
 
-        await cacheService.SetAsync(cacheKey, permissionsSet);
+        await _cacheService.SetAsync(cacheKey, permissionsSet);
 
         return permissionsSet;
     }
