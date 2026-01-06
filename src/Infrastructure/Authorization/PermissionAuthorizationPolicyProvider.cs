@@ -22,6 +22,7 @@ internal sealed class PermissionAuthorizationPolicyProvider : DefaultAuthorizati
             return policy;
         }
 
+        // 動態建立以 permissions claim 為核心的授權 Policy
         AuthorizationPolicy permissionPolicy = new AuthorizationPolicyBuilder()
             .AddRequirements(new PermissionRequirement(policyName))
             .Build();
@@ -29,5 +30,15 @@ internal sealed class PermissionAuthorizationPolicyProvider : DefaultAuthorizati
         _authorizationOptions.AddPolicy(policyName, permissionPolicy);
 
         return permissionPolicy;
+    }
+
+    public override Task<AuthorizationPolicy> GetDefaultPolicyAsync()
+    {
+        return base.GetDefaultPolicyAsync();
+    }
+
+    public override Task<AuthorizationPolicy?> GetFallbackPolicyAsync()
+    {
+        return base.GetFallbackPolicyAsync();
     }
 }
