@@ -27,7 +27,7 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 
 builder.Services
     .AddApplication()
-    .AddPresentation()
+    .AddPresentation(builder.Configuration)
     .AddInfrastructure(builder.Configuration);
 
 builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
@@ -72,6 +72,8 @@ app.UseRequestContextLogging();
 app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
+
+app.UseCors(Web.Api.Common.CorsPolicyNames.Default);
 
 app.UseAuthentication();
 
