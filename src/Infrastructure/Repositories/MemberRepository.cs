@@ -46,6 +46,11 @@ internal sealed class MemberRepository(ApplicationDbContext context) : IMemberRe
         context.Members.Add(member);
     }
 
+    public void InsertPointBalance(MemberPointBalance balance)
+    {
+        context.MemberPointBalances.Add(balance);
+    }
+
     public void UpsertPointBalance(MemberPointBalance balance)
     {
         context.MemberPointBalances.Update(balance);

@@ -41,8 +41,8 @@ public class JwtService : IJwtService
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: "your-app",
-            audience: "your-app",
+            issuer: "appkernel",
+            audience: "appkernel",
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(_expireMinutes),
             signingCredentials: credentials);
@@ -63,8 +63,8 @@ public class JwtService : IJwtService
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = "your-app",
-                ValidAudience = "your-app",
+                ValidIssuer = "appkernel",
+                ValidAudience = "appkernel",
                 IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
                 ClockSkew = TimeSpan.Zero
             }, out _);

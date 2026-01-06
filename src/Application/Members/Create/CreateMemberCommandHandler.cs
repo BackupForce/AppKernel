@@ -46,7 +46,7 @@ internal sealed class CreateMemberCommandHandler(
         using IDbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
         memberRepository.Insert(member);
-        memberRepository.UpsertPointBalance(pointBalance);
+        memberRepository.InsertPointBalance(pointBalance);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         transaction.Commit();
 
