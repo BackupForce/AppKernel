@@ -53,6 +53,9 @@ public static class DependencyInjection
         services.AddCors(options =>
         {
             options.AddPolicy(CorsPolicyNames.Default, policyBuilder =>
+        services.Configure<CorsSettings>(configuration.GetSection(CorsSettings.SectionName));
+
+        services.AddCors(options => options.AddPolicy(CorsPolicyNames.Default, policyBuilder =>
             {
                 policyBuilder
                     .WithOrigins([.. corsSettings.AllowedOrigins])
@@ -69,6 +72,7 @@ public static class DependencyInjection
                 }
             });
         });
+            }));
 
         return services;
     }

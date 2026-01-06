@@ -1,63 +1,86 @@
-﻿using Application.Abstractions.Identity;
-using Domain.Users;
-using Infrastructure.Authentication;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.DependencyInjection;
-using static Dapper.SqlMapper;
 
 namespace Infrastructure.Authorization;
 
-internal sealed class PermissionAuthorizationHandler(IServiceScopeFactory serviceScopeFactory)
-    : AuthorizationHandler<PermissionRequirement>
+// 基於 JWT permissions claim 的授權處理器，直接解析權限字串，不查詢資料庫
+internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
 {
-    protected override async Task HandleRequirementAsync(
+    protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        if (context.User is not { Identity.IsAuthenticated: true })
+        if (context.User is null || context.User.Identity is null)
         {
-            return;
+            return Task.CompletedTask;
         }
 
-        using IServiceScope scope = serviceScopeFactory.CreateScope();
-
-        PermissionProvider permissionProvider = scope.ServiceProvider.GetRequiredService<PermissionProvider>();
-        IRootUserService rootUserService = scope.ServiceProvider.GetRequiredService<IRootUserService>();
-        IUserRepository userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-
-        Guid userId = context.User.GetUserId();
-
-        // ⬇️ 查詢使用者資訊
-        User? user = await userRepository.GetByIdAsync(userId);
-        if (user is null)
+        if (!context.User.Identity.IsAuthenticated)
         {
-            return;
+            return Task.CompletedTask;
         }
 
-        // ⬇️ 如果是 root，直接通過
-        if (rootUserService.IsRoot(user))
+        Claim? permissionsClaim = context.User.FindFirst("permissions");
+        if (permissionsClaim is null || string.IsNullOrWhiteSpace(permissionsClaim.Value))
         {
-            context.Succeed(requirement);
-            return;
+            // 沒有權限清單直接拒絕
+            return Task.CompletedTask;
         }
 
-        // ⬇️ 一般權限檢查
-        HashSet<string> permissions = await permissionProvider.GetForUserIdAsync(userId);
-        string requiredPermission = requirement.Permission;
+        // 解析 JWT 的 permissions claim
+        string[] userPermissions = permissionsClaim.Value.Split(
+            ',',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        if (permissions.Contains(requiredPermission))
+        string requiredPermission = requirement.PermissionCode;
+
+        if (UserHasExactPermission(userPermissions, requiredPermission))
         {
             context.Succeed(requirement);
-            return;
+            return Task.CompletedTask;
         }
 
-        // ⬇️ 加上總權限 fallback，例如 "users:*"
-        string resourcePrefix = requiredPermission.Split(':')[0];
-        string wildcardPermission = $"{resourcePrefix}:*";
-
-        if (permissions.Contains(wildcardPermission))
+        // 支援 "xxx:*" 的 wildcard 權限
+        if (UserHasWildcardPermission(userPermissions, requiredPermission))
         {
             context.Succeed(requirement);
         }
+
+        return Task.CompletedTask;
+    }
+
+    private static bool UserHasExactPermission(string[] userPermissions, string requiredPermission)
+    {
+        for (int index = 0; index < userPermissions.Length; index++)
+        {
+            if (string.Equals(userPermissions[index], requiredPermission, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool UserHasWildcardPermission(string[] userPermissions, string requiredPermission)
+    {
+        int separatorIndex = requiredPermission.IndexOf(':');
+        if (separatorIndex <= 0)
+        {
+            return false;
+        }
+
+        string requiredPrefix = requiredPermission.Substring(0, separatorIndex);
+        string wildcardPermission = requiredPrefix + ":*";
+
+        for (int index = 0; index < userPermissions.Length; index++)
+        {
+            if (string.Equals(userPermissions[index], wildcardPermission, StringComparison.OrdinalIgnoreCase) && requiredPermission.StartsWith(requiredPrefix + ":", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

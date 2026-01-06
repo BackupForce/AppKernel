@@ -19,6 +19,7 @@ public interface IMemberRepository
 
     void Insert(Member member);
 
+    void InsertPointBalance(MemberPointBalance balance);
     void UpsertPointBalance(MemberPointBalance balance);
 
     void UpsertAssetBalance(MemberAssetBalance balance);

@@ -7,6 +7,7 @@ using Application.Abstractions.Identity;
 using Application.Abstractions.Infrastructure;
 using Dapper;
 using Domain.Members;
+using Domain.Security;
 using Domain.Users;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -92,6 +93,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IMemberRepository, MemberRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
 
         return services;
     }
@@ -183,8 +185,6 @@ public static class DependencyInjection
     private static IServiceCollection AddAuthorizationInternal(this IServiceCollection services)
     {
         services.AddAuthorization();
-
-        services.AddScoped<PermissionProvider>();
 
         services.AddTransient<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
