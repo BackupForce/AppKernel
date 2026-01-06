@@ -5,6 +5,7 @@ using Web.Api.Common;
 using Web.Api.Infrastructure;
 using Web.Api.OpenApi;
 using Web.Api.Settings;
+using System.Linq;
 
 namespace Web.Api.Extensions;
 
@@ -41,6 +42,17 @@ public static class DependencyInjection
             throw new InvalidOperationException("Cors:AllowedOrigins must contain at least one origin.");
         }
 
+        if (corsSettings.AllowCredentials && corsSettings.AllowedOrigins.Any(origin =>
+                string.Equals(origin, "*", StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException("Cors:AllowedOrigins cannot contain \"*\" when AllowCredentials is true.");
+        }
+
+        services.Configure<CorsSettings>(configuration.GetSection(CorsSettings.SectionName));
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy(CorsPolicyNames.Default, policyBuilder =>
         services.Configure<CorsSettings>(configuration.GetSection(CorsSettings.SectionName));
 
         services.AddCors(options => options.AddPolicy(CorsPolicyNames.Default, policyBuilder =>
@@ -58,6 +70,8 @@ public static class DependencyInjection
                 {
                     policyBuilder.DisallowCredentials();
                 }
+            });
+        });
             }));
 
         return services;
