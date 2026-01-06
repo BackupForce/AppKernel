@@ -17,12 +17,12 @@ internal sealed class GetRoleByIdQueryHandler(IRoleRepository roleRepository)
             return Result.Failure<RoleDetailDto>(RoleErrors.NotFound);
         }
 
-        List<string> permissionCodes = role.Permissions
+        var permissionCodes = role.Permissions
             .Select(permission => permission.Name)
             .OrderBy(code => code)
             .ToList();
 
-        RoleDetailDto dto = new RoleDetailDto(role.Id, role.Name, permissionCodes);
+        var dto = new RoleDetailDto(role.Id, role.Name, permissionCodes);
 
         return dto;
     }

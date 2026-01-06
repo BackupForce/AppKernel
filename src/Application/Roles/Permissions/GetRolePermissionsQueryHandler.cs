@@ -22,7 +22,7 @@ internal sealed class GetRolePermissionsQueryHandler(IRoleRepository roleReposit
             request.RoleId,
             cancellationToken);
 
-        List<string> permissionCodes = permissions
+        var permissionCodes = permissions
             .Select(permission => permission.Name)
             .OrderBy(code => code)
             .ToList();

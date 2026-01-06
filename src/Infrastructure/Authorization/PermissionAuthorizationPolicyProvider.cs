@@ -31,14 +31,4 @@ internal sealed class PermissionAuthorizationPolicyProvider : DefaultAuthorizati
 
         return permissionPolicy;
     }
-
-    public override Task<AuthorizationPolicy> GetDefaultPolicyAsync()
-    {
-        return base.GetDefaultPolicyAsync();
-    }
-
-    public override Task<AuthorizationPolicy?> GetFallbackPolicyAsync()
-    {
-        return base.GetFallbackPolicyAsync();
-    }
 }

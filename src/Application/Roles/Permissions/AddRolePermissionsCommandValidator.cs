@@ -15,7 +15,7 @@ internal sealed class AddRolePermissionsCommandValidator : AbstractValidator<Add
             .WithMessage("至少需要一個有效的權限代碼。");
     }
 
-    private bool HasValidCodes(IReadOnlyCollection<string> codes)
+    private static bool HasValidCodes(IReadOnlyCollection<string> codes)
     {
         if (codes is null)
         {

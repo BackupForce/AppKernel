@@ -18,20 +18,40 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
         return query.FirstOrDefaultAsync(role => role.Id == roleId, cancellationToken);
     }
 
-    public Task<bool> IsNameUniqueAsync(string name, int? excludingRoleId, CancellationToken cancellationToken)
+    public async Task<bool> IsNameUniqueAsync(
+    string name,
+    int? excludingRoleId,
+    CancellationToken cancellationToken)
     {
-        string normalizedName = name.ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
+        string candidateName = name.Trim();
+
         IQueryable<Role> query = context.Set<Role>();
 
         if (excludingRoleId.HasValue)
         {
             int excludedId = excludingRoleId.Value;
-            return query.AllAsync(
-                role => role.Id == excludedId || role.Name.ToLower() != normalizedName,
-                cancellationToken);
-        }
 
-        return query.AllAsync(role => role.Name.ToLower() != normalizedName, cancellationToken);
+            bool exists = await query.AnyAsync(
+                role =>
+                    role.Id != excludedId &&
+                    string.Equals(role.Name, candidateName, StringComparison.OrdinalIgnoreCase),
+                cancellationToken);
+
+            return !exists;
+        }
+        else
+        {
+            bool exists = await query.AnyAsync(
+                role => string.Equals(role.Name, candidateName, StringComparison.OrdinalIgnoreCase),
+                cancellationToken);
+
+            return !exists;
+        }
     }
 
     public async Task<IReadOnlyList<Role>> ListAsync(CancellationToken cancellationToken)
@@ -66,34 +86,53 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
 
     public Task AddPermissionsAsync(IEnumerable<Permission> permissions, CancellationToken cancellationToken)
     {
-        List<Permission> permissionList = permissions.ToList();
+        var permissionList = permissions.ToList();
 
         return context.Set<Permission>().AddRangeAsync(permissionList, cancellationToken);
     }
 
-    public async Task RemovePermissionsAsync(int roleId, IEnumerable<string> permissionCodes, CancellationToken cancellationToken)
+    public async Task RemovePermissionsAsync(
+    int roleId,
+    IEnumerable<string> permissionCodes,
+    CancellationToken cancellationToken)
     {
-        List<string> permissionCodeList = permissionCodes
-            .Select(code => code.ToLowerInvariant())
-            .ToList();
-
-        if (permissionCodeList.Count == 0)
+        if (permissionCodes is null)
         {
             return;
         }
 
-        List<Permission> permissions = await context.Set<Permission>()
-            .Where(permission =>
-                permission.RoleId == roleId && permissionCodeList.Contains(permission.Name.ToLower()))
+        var targets = permissionCodes
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Select(code => code.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (targets.Count == 0)
+        {
+            return;
+        }
+
+        List<Permission> permissionsForRole = await context.Set<Permission>()
+            .Where(permission => permission.RoleId == roleId)
             .ToListAsync(cancellationToken);
 
-        if (permissions.Count == 0)
+        if (permissionsForRole.Count == 0)
         {
             return;
         }
 
-        context.Set<Permission>().RemoveRange(permissions);
+        var toRemove = permissionsForRole
+            .Where(permission => targets.Contains(permission.Name))
+            .ToList();
+
+        if (toRemove.Count == 0)
+        {
+            return;
+        }
+
+        context.Set<Permission>().RemoveRange(toRemove);
     }
+
+
 
     public async Task RemovePermissionsByRoleIdAsync(int roleId, CancellationToken cancellationToken)
     {

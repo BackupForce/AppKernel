@@ -75,12 +75,9 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
 
         for (int index = 0; index < userPermissions.Length; index++)
         {
-            if (string.Equals(userPermissions[index], wildcardPermission, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(userPermissions[index], wildcardPermission, StringComparison.OrdinalIgnoreCase) && requiredPermission.StartsWith(requiredPrefix + ":", StringComparison.OrdinalIgnoreCase))
             {
-                if (requiredPermission.StartsWith(requiredPrefix + ":", StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
+                return true;
             }
         }
 

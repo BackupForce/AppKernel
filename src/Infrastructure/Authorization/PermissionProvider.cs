@@ -23,7 +23,7 @@ internal sealed class PermissionProvider
         }
 
         // TODO: 未來改以快取為主來源
-        HashSet<string> permissionsSet = new HashSet<string>();
+        var permissionsSet = new HashSet<string>();
 
         await _cacheService.SetAsync(cacheKey, permissionsSet);
 

@@ -23,7 +23,7 @@ internal sealed class CreateRoleCommandHandler(IRoleRepository roleRepository, I
             return Result.Failure<int>(RoleErrors.NameConflict);
         }
 
-        Role role = Role.Create(name);
+        var role = Role.Create(name);
 
         roleRepository.Insert(role);
         await unitOfWork.SaveChangesAsync(cancellationToken);

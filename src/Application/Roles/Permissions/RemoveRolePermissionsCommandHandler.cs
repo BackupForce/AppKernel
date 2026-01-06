@@ -19,7 +19,7 @@ internal sealed class RemoveRolePermissionsCommandHandler(
             return Result.Failure(RoleErrors.NotFound);
         }
 
-        HashSet<string> codes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var codes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (string code in request.PermissionCodes)
         {
             if (!string.IsNullOrWhiteSpace(code))

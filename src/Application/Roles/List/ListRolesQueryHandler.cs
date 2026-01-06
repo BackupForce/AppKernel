@@ -14,7 +14,7 @@ internal sealed class ListRolesQueryHandler(IRoleRepository roleRepository)
     {
         IReadOnlyList<Role> roles = await roleRepository.ListAsync(cancellationToken);
 
-        List<RoleListItemDto> items = roles
+        var items = roles
             .Select(role => new RoleListItemDto(role.Id, role.Name, role.Permissions.Count))
             .OrderBy(item => item.Id)
             .ToList();

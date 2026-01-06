@@ -19,13 +19,13 @@ internal sealed class AddRolePermissionsCommandHandler(
             return Result.Failure(RoleErrors.NotFound);
         }
 
-        HashSet<string> existingCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var existingCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (Permission permission in role.Permissions)
         {
             existingCodes.Add(permission.Name);
         }
 
-        HashSet<string> requestedCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var requestedCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (string code in request.PermissionCodes)
         {
             if (!string.IsNullOrWhiteSpace(code))
@@ -39,12 +39,12 @@ internal sealed class AddRolePermissionsCommandHandler(
             return Result.Failure(RoleErrors.PermissionCodesRequired);
         }
 
-        List<Permission> permissionsToAdd = new List<Permission>();
+        var permissionsToAdd = new List<Permission>();
         foreach (string code in requestedCodes)
         {
             if (!existingCodes.Contains(code))
             {
-                Permission permission = Permission.CreateForRole(code, string.Empty, role.Id);
+                var permission = Permission.CreateForRole(code, string.Empty, role.Id);
                 permissionsToAdd.Add(permission);
             }
         }
