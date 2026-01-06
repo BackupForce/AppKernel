@@ -92,13 +92,13 @@ public sealed class RolesEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AddRolePermissions");
 
-        group.MapDelete(
-                "/{id:int}/permissions",
-                UseCaseInvoker.FromRoute<RemoveRolePermissionsCommand, int, UpdateRolePermissionsRequest>(
-                    (id, request) => new RemoveRolePermissionsCommand(id, request.PermissionCodes)))
-            .RequireAuthorization(Permission.Roles.Update.Name)
-            .Produces(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithName("RemoveRolePermissions");
+        group.MapPost(
+            "/{id:int}/permissions/remove",
+            UseCaseInvoker.FromRoute<RemoveRolePermissionsCommand, int, UpdateRolePermissionsRequest>(
+                (id, request) => new RemoveRolePermissionsCommand(id, request.PermissionCodes)))
+        .RequireAuthorization(Permission.Roles.Update.Name)
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .WithName("RemoveRolePermissions");
     }
 }

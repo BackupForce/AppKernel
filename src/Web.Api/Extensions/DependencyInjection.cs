@@ -34,26 +34,26 @@ public static class DependencyInjection
 
         services.ConfigureOptions<ConfigureSwaggerGenOptions>();
 
-        CorsSettings corsSettings = configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>()
-            ?? throw new InvalidOperationException("Cors section is missing or malformed.");
+        CorsSettings corsSettings =
+    configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>()
+    ?? throw new InvalidOperationException("Cors section is missing or malformed.");
 
         if (corsSettings.AllowedOrigins.Count is 0)
         {
             throw new InvalidOperationException("Cors:AllowedOrigins must contain at least one origin.");
         }
 
-        if (corsSettings.AllowCredentials && corsSettings.AllowedOrigins.Any(origin =>
+        if (corsSettings.AllowCredentials &&
+            corsSettings.AllowedOrigins.Any(origin =>
                 string.Equals(origin, "*", StringComparison.Ordinal)))
         {
-            throw new InvalidOperationException("Cors:AllowedOrigins cannot contain \"*\" when AllowCredentials is true.");
+            throw new InvalidOperationException(
+                "Cors:AllowedOrigins cannot contain \"*\" when AllowCredentials is true.");
         }
 
-        services.Configure<CorsSettings>(configuration.GetSection(CorsSettings.SectionName));
-
-        services.AddCors(options =>
-        {
-            options.AddPolicy(CorsPolicyNames.Default, policyBuilder =>
-        services.Configure<CorsSettings>(configuration.GetSection(CorsSettings.SectionName));
+        // ✔ Options 註冊：只做一次，而且一定在 AddCors 之前
+        services.Configure<CorsSettings>(
+            configuration.GetSection(CorsSettings.SectionName));
 
         services.AddCors(options => options.AddPolicy(CorsPolicyNames.Default, policyBuilder =>
             {
@@ -70,9 +70,8 @@ public static class DependencyInjection
                 {
                     policyBuilder.DisallowCredentials();
                 }
-            });
-        });
             }));
+
 
         return services;
     }
