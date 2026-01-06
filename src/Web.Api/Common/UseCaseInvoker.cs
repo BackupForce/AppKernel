@@ -71,4 +71,22 @@ public static class UseCaseInvoker
             );
         };
     }
+
+    /// <summary>
+    /// 支援單一輸入參數轉換成不含回傳值的 UseCase。
+    /// </summary>
+    public static Func<TIn, ISender, CancellationToken, Task<IResult>> FromRoute<TRequest, TIn>(
+        Func<TIn, TRequest> toRequest)
+        where TRequest : IRequest<Result>
+    {
+        return async (input, sender, ct) =>
+        {
+            TRequest request = toRequest(input);
+            Result result = await sender.Send(request, ct);
+
+            return result.Match(
+                () => Results.Ok(),
+                error => CustomResults.Problem(error));
+        };
+    }
 }
