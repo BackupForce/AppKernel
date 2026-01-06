@@ -96,7 +96,7 @@
   - `404 Not Found`: 角色不存在
 
 ### 移除角色權限（批次）
-- **DELETE** `/{id}/permissions`
+- **POST** `/{id}/permissions/remove`
 - **Body**
   ```json
   {
