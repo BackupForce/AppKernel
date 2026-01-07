@@ -8,6 +8,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Users.Create;
 using Domain.Tenants;
+using Domain.Security;
 using Domain.Users;
 using MediatR;
 using SharedKernel;

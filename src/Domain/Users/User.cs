@@ -94,7 +94,7 @@ public sealed class User : Entity
             return;
         }
 
-        UserGroup? target = _userGroups.FirstOrDefault(userGroup => userGroup.GroupId == group.Id);
+        UserGroup? target = _userGroups.Find(userGroup => userGroup.GroupId == group.Id);
         if (target is null)
         {
             return;
