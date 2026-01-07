@@ -94,7 +94,7 @@ public sealed class User : Entity
             return;
         }
 
-        UserGroup? target = _userGroups.FirstOrDefault(userGroup => userGroup.GroupId == group.Id);
+        UserGroup? target = _userGroups.Find(userGroup => userGroup.GroupId == group.Id);
         if (target is null)
         {
             return;
@@ -120,7 +120,7 @@ public sealed class User : Entity
 
     public void RemoveTenant(Guid tenantId)
     {
-        UserTenant? target = _userTenants.FirstOrDefault(userTenant => userTenant.TenantId == tenantId);
+        UserTenant? target = _userTenants.Find(userTenant => userTenant.TenantId == tenantId);
         if (target is null)
         {
             return;

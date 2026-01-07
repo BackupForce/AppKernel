@@ -24,7 +24,7 @@ internal sealed class CreateGroupCommandHandler(IGroupRepository groupRepository
             return Result.Failure<Guid>(GroupErrors.NameConflict);
         }
 
-        Group group = Group.Create(name, externalKey);
+        var group = Group.Create(name, externalKey);
 
         groupRepository.Insert(group);
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -58,7 +58,7 @@ internal sealed class PermissionProvider : IPermissionProvider
             .SelectMany(user => user.Roles.Select(role => role.Id))
             .ToListAsync();
 
-        List<Guid> roleSubjectIds = roleIds
+        var roleSubjectIds = roleIds
             .Select(MapRoleIdToSubjectId)
             .ToList();
 
@@ -71,9 +71,9 @@ internal sealed class PermissionProvider : IPermissionProvider
         List<PermissionAssignment> assignments = await _dbContext.PermissionAssignments
             .AsNoTracking()
             .Where(assignment =>
-                (assignment.SubjectType == SubjectType.User && assignment.SubjectId == userId)
-                || (assignment.SubjectType == SubjectType.Role && roleSubjectIds.Contains(assignment.SubjectId))
-                || (assignment.SubjectType == SubjectType.Group && groupIds.Contains(assignment.SubjectId)))
+                assignment.SubjectType == SubjectType.User && assignment.SubjectId == userId
+                || assignment.SubjectType == SubjectType.Role && roleSubjectIds.Contains(assignment.SubjectId)
+                || assignment.SubjectType == SubjectType.Group && groupIds.Contains(assignment.SubjectId))
             .ToListAsync();
 
         List<string> rolePermissionCodes = await _dbContext.Set<Permission>()
@@ -117,7 +117,7 @@ internal sealed class PermissionProvider : IPermissionProvider
 
         var nodeScopeSet = new HashSet<Guid?>(nodeScope);
 
-        List<PermissionDecisionEntry> relevantDecisions = decisions
+        var relevantDecisions = decisions
             .Where(entry => nodeScopeSet.Contains(entry.NodeId))
             .ToList();
 
@@ -223,7 +223,7 @@ internal sealed class PermissionProvider : IPermissionProvider
 
     private static string NormalizePermissionCode(string permissionCode)
     {
-        return permissionCode.Trim().ToLowerInvariant();
+        return permissionCode.Trim().ToUpperInvariant();
     }
 
     private static Guid MapRoleIdToSubjectId(int roleId)

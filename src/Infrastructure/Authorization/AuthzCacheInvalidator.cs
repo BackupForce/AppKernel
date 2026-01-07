@@ -15,7 +15,7 @@ internal sealed class AuthzCacheInvalidator(
 
     public Task InvalidateUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return RemoveKeysByPatternAsync($"{AuthzCacheKeys.ForUser(userId)}*", cancellationToken);
+        return RemoveKeysByPatternAsync($"{AuthzCacheKeys.ForUser(userId)}*");
     }
 
     public Task InvalidateUsersAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
@@ -88,7 +88,7 @@ internal sealed class AuthzCacheInvalidator(
 
     public Task InvalidateAllMatricesAsync(CancellationToken cancellationToken = default)
     {
-        return RemoveKeysByPatternAsync($"{AuthzCacheKeys.UserMatrixPrefix}*", cancellationToken);
+        return RemoveKeysByPatternAsync($"{AuthzCacheKeys.UserMatrixPrefix}*");
     }
 
     public Task TrackRoleUserAsync(int roleId, Guid userId, CancellationToken cancellationToken = default)
@@ -121,7 +121,7 @@ internal sealed class AuthzCacheInvalidator(
         return BitConverter.ToInt32(subjectId.ToByteArray(), 0);
     }
 
-    private async Task RemoveKeysByPatternAsync(string pattern, CancellationToken cancellationToken)
+    private async Task RemoveKeysByPatternAsync(string pattern)
     {
         EndPoint[] endpoints = connectionMultiplexer.GetEndPoints();
         var tasks = new List<Task>();

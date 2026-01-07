@@ -59,12 +59,9 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
 
         Guid? tenantId = TryResolveTenantId(httpContext);
 
-        if (httpContext.Request.RouteValues.TryGetValue("id", out object? idValue))
+        if (httpContext.Request.RouteValues.TryGetValue("id", out object? idValue) && TryGetGuid(idValue, out Guid id))
         {
-            if (TryGetGuid(idValue, out Guid id))
-            {
-                return (id, tenantId);
-            }
+            return (id, tenantId);
         }
 
         if (httpContext.Request.RouteValues.TryGetValue("externalKey", out object? externalKeyValue))
@@ -122,20 +119,14 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
 
     private static Guid? TryResolveTenantId(HttpContext httpContext)
     {
-        if (httpContext.Request.RouteValues.TryGetValue("tenantId", out object? tenantValue))
+        if (httpContext.Request.RouteValues.TryGetValue("tenantId", out object? tenantValue) && TryGetGuid(tenantValue, out Guid tenantId))
         {
-            if (TryGetGuid(tenantValue, out Guid tenantId))
-            {
-                return tenantId;
-            }
+            return tenantId;
         }
 
-        if (httpContext.Items.TryGetValue("TenantId", out object? tenantItem))
+        if (httpContext.Items.TryGetValue("TenantId", out object? tenantItem) && TryGetGuid(tenantItem, out Guid ttenantId))
         {
-            if (TryGetGuid(tenantItem, out Guid tenantId))
-            {
-                return tenantId;
-            }
+            return ttenantId;
         }
 
         return null;
