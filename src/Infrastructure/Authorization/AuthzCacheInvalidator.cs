@@ -134,14 +134,20 @@ internal sealed class AuthzCacheInvalidator(
                 continue;
             }
 
-            foreach (RedisKey key in server.Keys(pattern: pattern))
+            await foreach (RedisKey key in server.KeysAsync(pattern: pattern))
             {
                 tasks.Add(_database.KeyDeleteAsync(key));
             }
         }
 
+        if (tasks.Count == 0)
+        {
+            return;
+        }
+
         await Task.WhenAll(tasks);
     }
+
 
     private static RedisKey RoleUsersKey(int roleId) => $"{RoleUsersPrefix}{roleId}";
 

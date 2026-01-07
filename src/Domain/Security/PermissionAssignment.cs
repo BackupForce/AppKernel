@@ -56,7 +56,7 @@ public sealed class PermissionAssignment : Entity
     /// <summary>
     /// 資源節點導覽屬性，用於載入被授權的資源範圍。
     /// </summary>
-    public ResourceNode? Node { get; private set; }
+    public ResourceNode? Node { get; set; }
 
     /// <summary>
     /// 建立新的權限指派，指定主體、決策、權限代碼與可選的資源節點。

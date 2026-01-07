@@ -38,7 +38,7 @@ public sealed class ResourceNode : Entity
     /// <summary>
     /// 父節點導覽屬性，用於載入資源的上層結構。
     /// </summary>
-    public ResourceNode? Parent { get; private set; }
+    public ResourceNode? Parent { get; set; }
 
     /// <summary>
     /// 子節點集合，用於維護資源的階層關係。

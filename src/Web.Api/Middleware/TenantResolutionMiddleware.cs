@@ -42,12 +42,9 @@ public class TenantResolutionMiddleware(RequestDelegate next)
 
     private static Guid? TryResolveTenantIdFromRoute(HttpContext context)
     {
-        if (context.Request.RouteValues.TryGetValue("tenantId", out object? tenantValue))
+        if (context.Request.RouteValues.TryGetValue("tenantId", out object? tenantValue) && TryGetGuid(tenantValue, out Guid tenantId))
         {
-            if (TryGetGuid(tenantValue, out Guid tenantId))
-            {
-                return tenantId;
-            }
+            return tenantId;
         }
 
         return null;
@@ -55,12 +52,9 @@ public class TenantResolutionMiddleware(RequestDelegate next)
 
     private static Guid? TryResolveTenantIdFromHeader(HttpContext context)
     {
-        if (context.Request.Headers.TryGetValue(TenantIdHeaderName, out var tenantIdValues))
+        if (context.Request.Headers.TryGetValue(TenantIdHeaderName, out Microsoft.Extensions.Primitives.StringValues tenantIdValues) && Guid.TryParse(tenantIdValues.FirstOrDefault(), out Guid tenantId))
         {
-            if (Guid.TryParse(tenantIdValues.FirstOrDefault(), out Guid tenantId))
-            {
-                return tenantId;
-            }
+            return tenantId;
         }
 
         return null;
@@ -68,7 +62,7 @@ public class TenantResolutionMiddleware(RequestDelegate next)
 
     private static string? TryResolveTenantCode(HttpContext context)
     {
-        if (context.Request.Headers.TryGetValue(TenantCodeHeaderName, out var tenantCodeValues))
+        if (context.Request.Headers.TryGetValue(TenantCodeHeaderName, out Microsoft.Extensions.Primitives.StringValues tenantCodeValues))
         {
             return tenantCodeValues.FirstOrDefault();
         }
