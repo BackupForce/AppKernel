@@ -12,11 +12,17 @@ public sealed class ResourceNode : Entity
     {
     }
 
-    private ResourceNode(Guid id, string name, string externalKey, Guid? parentId)
+    private ResourceNode(Guid id, string name, string externalKey, Guid tenantId, Guid? parentId)
         : base(id)
     {
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("TenantId cannot be empty.", nameof(tenantId));
+        }
+
         Name = name;
         ExternalKey = externalKey;
+        TenantId = tenantId;
         ParentId = parentId;
     }
 
@@ -29,6 +35,11 @@ public sealed class ResourceNode : Entity
     /// 外部唯一識別碼，用於與外部系統或前端路由對應，並確保同一資源只會建立一個節點。
     /// </summary>
     public string ExternalKey { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 租戶識別碼，用於界定資源節點所屬的租戶邊界。
+    /// </summary>
+    public Guid TenantId { get; private set; }
 
     /// <summary>
     /// 父節點識別碼，為 null 代表根節點。
@@ -46,10 +57,10 @@ public sealed class ResourceNode : Entity
     public ICollection<ResourceNode> Children { get; private set; } = new List<ResourceNode>();
 
     /// <summary>
-    /// 建立新的資源節點，提供名稱、外部唯一識別碼與可選的父節點。
+    /// 建立新的資源節點，提供名稱、外部唯一識別碼、租戶識別碼與可選的父節點。
     /// </summary>
-    public static ResourceNode Create(string name, string externalKey, Guid? parentId = null)
+    public static ResourceNode Create(string name, string externalKey, Guid tenantId, Guid? parentId = null)
     {
-        return new ResourceNode(Guid.NewGuid(), name, externalKey, parentId);
+        return new ResourceNode(Guid.NewGuid(), name, externalKey, tenantId, parentId);
     }
 }
