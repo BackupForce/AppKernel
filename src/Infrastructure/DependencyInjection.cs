@@ -69,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IRootUserService, RootUserService>();
         services.AddScoped<IDataSeeder, RootUserSeeder>();
+        services.AddScoped<IDataSeeder, DefaultTenantSeeder>();
         services.AddScoped<SuperAdminSeeder>();
 
         return services;

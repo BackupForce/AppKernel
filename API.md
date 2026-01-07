@@ -16,7 +16,8 @@
   ```json
   {
     "email": "user@example.com",
-    "password": "string"
+    "password": "string",
+    "tenantCode": "string"
   }
   ```
 - **成功回應**
