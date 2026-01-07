@@ -52,12 +52,17 @@ public static class UseCaseInvoker
         Func<TIn, TRequest> toRequest)
         where TRequest : IRequest<Result<TResult>>
     {
-        return CreateFromRouteHandler(
+        // 將 CreateFromRouteHandler 呼叫加上明確的型別參數
+        return CreateFromRouteHandler<TIn>(
             routeName,
             async (input, sender, ct) =>
             {
                 TRequest request = toRequest(input);
-                return await Handle<TRequest, TResult>(request, sender, ct);
+                Result result = await sender.Send(request, ct);
+
+                return result.Match(
+                    () => Results.Ok(),
+                    error => CustomResults.Problem(error));
             });
     }
 
@@ -83,13 +88,13 @@ public static class UseCaseInvoker
         Func<T1, T2, TRequest> toRequest)
         where TRequest : IRequest<Result<TResult>>
     {
-        return CreateFromRouteHandler(
-            routeName,
-            async (a, b, sender, ct) =>
-            {
-                TRequest request = toRequest(a, b);
-                return await Handle<TRequest, TResult>(request, sender, ct);
-            });
+        return CreateFromRouteHandler<T1, T2>(
+             routeName,
+             async (T1 a, T2 b, ISender sender, CancellationToken ct) =>
+             {
+                 TRequest request = toRequest(a, b);
+                 return await Handle<TRequest, TResult>(request, sender, ct);
+             });
     }
 
     public static Func<T1, T2, ISender, CancellationToken, Task<IResult>>
@@ -118,17 +123,16 @@ public static class UseCaseInvoker
         Func<T1, T2, TRequest> toRequest)
         where TRequest : IRequest<Result>
     {
-        return CreateFromRouteHandler(
+        return CreateFromRouteHandler<T1, T2>(
             routeName,
-            async (a, b, sender, ct) =>
+            async (T1 a, T2 b, ISender sender, CancellationToken ct) =>
             {
                 TRequest request = toRequest(a, b);
                 Result result = await sender.Send(request, ct);
 
                 return result.Match(
                     () => Results.Ok(),
-                    error => CustomResults.Problem(error)
-                );
+                    error => CustomResults.Problem(error));
             });
     }
 
@@ -158,17 +162,17 @@ public static class UseCaseInvoker
         Func<TIn, TRequest> toRequest)
         where TRequest : IRequest<Result>
     {
-        return CreateFromRouteHandler(
-            routeName,
-            async (input, sender, ct) =>
-            {
-                TRequest request = toRequest(input);
-                Result result = await sender.Send(request, ct);
+        return CreateFromRouteHandler<TIn>(
+     routeName,
+     async (input, sender, ct) =>
+     {
+         TRequest request = toRequest(input);
+         Result result = await sender.Send(request, ct);
 
-                return result.Match(
-                    () => Results.Ok(),
-                    error => CustomResults.Problem(error));
-            });
+         return result.Match(
+             () => Results.Ok(),
+             error => CustomResults.Problem(error));
+     });
     }
 
     private static readonly ModuleBuilder RouteHandlerModule = CreateRouteHandlerModule();
@@ -217,7 +221,12 @@ public static class UseCaseInvoker
                 typeof(Task<IResult>),
                 new[] { typeof(TIn), typeof(ISender), typeof(CancellationToken) });
 
-            ApplyFromRouteAttribute(invokeMethod.DefineParameter(1, ParameterAttributes.None, routeName), routeName);
+            ParameterBuilder inputParameter = invokeMethod.DefineParameter(1, ParameterAttributes.None, routeName);
+            ApplyFromRouteAttribute(inputParameter, routeName);
+
+            // Minimal API 需要所有參數都有名稱，否則 RequestDelegateFactory 會拋出例外。
+            invokeMethod.DefineParameter(2, ParameterAttributes.None, "sender");
+            invokeMethod.DefineParameter(3, ParameterAttributes.None, "ct");
 
             ILGenerator invokeIl = invokeMethod.GetILGenerator();
             invokeIl.Emit(OpCodes.Ldarg_0);
@@ -234,9 +243,7 @@ public static class UseCaseInvoker
         object instance = Activator.CreateInstance(handlerType, handler)!;
         MethodInfo method = handlerType.GetMethod("Invoke")!;
 
-        return (Func<TIn, ISender, CancellationToken, Task<IResult>>)method.CreateDelegate(
-            typeof(Func<TIn, ISender, CancellationToken, Task<IResult>>),
-            instance);
+        return method.CreateDelegate<Func<TIn, ISender, CancellationToken, Task<IResult>>>(instance);
     }
 
     /// <summary>
@@ -282,7 +289,15 @@ public static class UseCaseInvoker
                 typeof(Task<IResult>),
                 new[] { typeof(T1), typeof(T2), typeof(ISender), typeof(CancellationToken) });
 
-            ApplyFromRouteAttribute(invokeMethod.DefineParameter(1, ParameterAttributes.None, routeName), routeName);
+            ParameterBuilder routeParameter = invokeMethod.DefineParameter(1, ParameterAttributes.None, routeName);
+            ApplyFromRouteAttribute(routeParameter, routeName);
+
+            // 第二個參數通常是 body（或其他非 route 來源），仍需提供名稱以滿足 Minimal API 的要求。
+            invokeMethod.DefineParameter(2, ParameterAttributes.None, "body");
+
+            // Minimal API 需要所有參數都有名稱，否則 RequestDelegateFactory 會拋出例外。
+            invokeMethod.DefineParameter(3, ParameterAttributes.None, "sender");
+            invokeMethod.DefineParameter(4, ParameterAttributes.None, "ct");
 
             ILGenerator invokeIl = invokeMethod.GetILGenerator();
             invokeIl.Emit(OpCodes.Ldarg_0);
@@ -300,9 +315,7 @@ public static class UseCaseInvoker
         object instance = Activator.CreateInstance(handlerType, handler)!;
         MethodInfo method = handlerType.GetMethod("Invoke")!;
 
-        return (Func<T1, T2, ISender, CancellationToken, Task<IResult>>)method.CreateDelegate(
-            typeof(Func<T1, T2, ISender, CancellationToken, Task<IResult>>),
-            instance);
+        return method.CreateDelegate<Func<T1, T2, ISender, CancellationToken, Task<IResult>>>(instance);
     }
 
     /// <summary>
@@ -310,8 +323,8 @@ public static class UseCaseInvoker
     /// </summary>
     private static ModuleBuilder CreateRouteHandlerModule()
     {
-        AssemblyName assemblyName = new AssemblyName("Web.Api.RouteHandlers");
-        AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+        var assemblyName = new AssemblyName("Web.Api.RouteHandlers");
+        var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
 
         return assemblyBuilder.DefineDynamicModule("RouteHandlers");
     }
@@ -323,7 +336,7 @@ public static class UseCaseInvoker
     {
         ConstructorInfo constructor = typeof(FromRouteAttribute).GetConstructor(Type.EmptyTypes)!;
         PropertyInfo property = typeof(FromRouteAttribute).GetProperty(nameof(FromRouteAttribute.Name))!;
-        CustomAttributeBuilder attributeBuilder = new CustomAttributeBuilder(
+        var attributeBuilder = new CustomAttributeBuilder(
             constructor,
             Array.Empty<object>(),
             new[] { property },
