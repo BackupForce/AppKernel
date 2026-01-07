@@ -24,13 +24,18 @@ public sealed class RolesEndpoints : IEndpoint
             .RequireAuthorization()
             .WithTags("Roles");
 
+        // 改用顯式 handler 參數宣告，避免 Minimal API 自動推斷參數來源。
         group.MapPost(
                 "/",
-                (CreateRoleRequest request, ISender sender, CancellationToken ct) =>
-                    UseCaseInvoker.Handle<CreateRoleCommand, int>(
-                        new CreateRoleCommand(request.Name),
+                async (CreateRoleRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    CreateRoleCommand command = new CreateRoleCommand(request.Name);
+                    return await UseCaseInvoker.Send<CreateRoleCommand, int>(
+                        command,
                         sender,
-                        ct))
+                        value => Results.Ok(value),
+                        ct);
+                })
             .RequireAuthorization(Permission.Roles.Create.Name)
             .Produces<int>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -38,8 +43,11 @@ public sealed class RolesEndpoints : IEndpoint
 
         group.MapPut(
                 "/{id:int}",
-                UseCaseInvoker.FromRoute<UpdateRoleCommand, int, UpdateRoleRequest>(
-                    (id, request) => new UpdateRoleCommand(id, request.Name)))
+                async (int id, UpdateRoleRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    UpdateRoleCommand command = new UpdateRoleCommand(id, request.Name);
+                    return await UseCaseInvoker.Send(command, sender, ct);
+                })
             .RequireAuthorization(Permission.Roles.Update.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -47,8 +55,11 @@ public sealed class RolesEndpoints : IEndpoint
 
         group.MapDelete(
                 "/{id:int}",
-                UseCaseInvoker.FromRoute<DeleteRoleCommand, int>(
-                    id => new DeleteRoleCommand(id)))
+                async (int id, ISender sender, CancellationToken ct) =>
+                {
+                    DeleteRoleCommand command = new DeleteRoleCommand(id);
+                    return await UseCaseInvoker.Send(command, sender, ct);
+                })
             .RequireAuthorization(Permission.Roles.Delete.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
@@ -56,8 +67,15 @@ public sealed class RolesEndpoints : IEndpoint
 
         group.MapGet(
                 "/{id:int}",
-                UseCaseInvoker.FromRoute<GetRoleByIdQuery, int, RoleDetailDto>(
-                    id => new GetRoleByIdQuery(id)))
+                async (int id, ISender sender, CancellationToken ct) =>
+                {
+                    GetRoleByIdQuery request = new GetRoleByIdQuery(id);
+                    return await UseCaseInvoker.Send<GetRoleByIdQuery, RoleDetailDto>(
+                        request,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
             .RequireAuthorization(Permission.Roles.View.Name)
             .Produces<RoleDetailDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
@@ -65,19 +83,30 @@ public sealed class RolesEndpoints : IEndpoint
 
         group.MapGet(
                 "/",
-                (ISender sender, CancellationToken ct) =>
-                    UseCaseInvoker.Handle<ListRolesQuery, IReadOnlyList<RoleListItemDto>>(
-                        new ListRolesQuery(),
+                async (ISender sender, CancellationToken ct) =>
+                {
+                    ListRolesQuery query = new ListRolesQuery();
+                    return await UseCaseInvoker.Send<ListRolesQuery, IReadOnlyList<RoleListItemDto>>(
+                        query,
                         sender,
-                        ct))
+                        value => Results.Ok(value),
+                        ct);
+                })
             .RequireAuthorization(Permission.Roles.View.Name)
             .Produces<IReadOnlyList<RoleListItemDto>>(StatusCodes.Status200OK)
             .WithName("ListRoles");
 
         group.MapGet(
                 "/{id:int}/permissions",
-                UseCaseInvoker.FromRoute<GetRolePermissionsQuery, int, IReadOnlyList<string>>(
-                    id => new GetRolePermissionsQuery(id)))
+                async (int id, ISender sender, CancellationToken ct) =>
+                {
+                    GetRolePermissionsQuery request = new GetRolePermissionsQuery(id);
+                    return await UseCaseInvoker.Send<GetRolePermissionsQuery, IReadOnlyList<string>>(
+                        request,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
             .RequireAuthorization(Permission.Roles.View.Name)
             .Produces<IReadOnlyList<string>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
@@ -85,8 +114,11 @@ public sealed class RolesEndpoints : IEndpoint
 
         group.MapPost(
                 "/{id:int}/permissions",
-                UseCaseInvoker.FromRoute<AddRolePermissionsCommand, int, UpdateRolePermissionsRequest>(
-                    (id, request) => new AddRolePermissionsCommand(id, request.PermissionCodes)))
+                async (int id, UpdateRolePermissionsRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    AddRolePermissionsCommand command = new AddRolePermissionsCommand(id, request.PermissionCodes);
+                    return await UseCaseInvoker.Send(command, sender, ct);
+                })
             .RequireAuthorization(Permission.Roles.Update.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -94,8 +126,11 @@ public sealed class RolesEndpoints : IEndpoint
 
         group.MapPost(
             "/{id:int}/permissions/remove",
-            UseCaseInvoker.FromRoute<RemoveRolePermissionsCommand, int, UpdateRolePermissionsRequest>(
-                (id, request) => new RemoveRolePermissionsCommand(id, request.PermissionCodes)))
+            async (int id, UpdateRolePermissionsRequest request, ISender sender, CancellationToken ct) =>
+            {
+                RemoveRolePermissionsCommand command = new RemoveRolePermissionsCommand(id, request.PermissionCodes);
+                return await UseCaseInvoker.Send(command, sender, ct);
+            })
         .RequireAuthorization(Permission.Roles.Update.Name)
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
