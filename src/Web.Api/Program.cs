@@ -81,6 +81,8 @@ app.UseExceptionHandler();
 
 app.UseCors(Web.Api.Common.CorsPolicyNames.Default);
 
+app.UseTenantResolution();
+
 app.UseAuthentication();
 
 app.UseAuthorization();

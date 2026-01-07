@@ -15,7 +15,7 @@ public class Login : IEndpoint
             ISender sender,
             CancellationToken cancellationToken) =>
         {
-            var command = new LoginCommand(request.Email, request.Password);
+            var command = new LoginCommand(request.Email, request.Password, request.TenantCode);
 
             Result<LoginResponse> result = await sender.Send(command, cancellationToken);
 

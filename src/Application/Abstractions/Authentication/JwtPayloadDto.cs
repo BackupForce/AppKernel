@@ -9,8 +9,8 @@ public class JwtPayloadDto
 {
     public Guid UserId { get; set; }
     public string UserName { get; set; } = default!;
+    public Guid TenantId { get; set; }
     public List<string> Roles { get; set; } = new();
     public List<Guid> NodeIds { get; set; } = new();
     public List<string> Permissions { get; set; } = new();
 }
-
