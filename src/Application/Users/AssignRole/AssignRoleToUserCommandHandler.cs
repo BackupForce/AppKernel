@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Data;
+﻿using Application.Abstractions.Authorization;
+using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Security;
 using Domain.Users;
@@ -9,6 +10,7 @@ namespace Application.Users.AssignRole;
 internal sealed class AssignRoleToUserCommandHandler(
     IUserRepository userRepository,
     IRoleRepository roleRepository,
+    IAuthzCacheInvalidator invalidator,
     IUnitOfWork unitOfWork)
     : ICommandHandler<AssignRoleToUserCommand, AssignRoleToUserResultDto>
 {
@@ -35,6 +37,8 @@ internal sealed class AssignRoleToUserCommandHandler(
 
         user.AssignRole(role);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await invalidator.TrackRoleUserAsync(role.Id, user.Id, cancellationToken);
+        await invalidator.InvalidateUserAsync(user.Id, cancellationToken);
 
         var roleIds = user.Roles.Select(r => r.Id).OrderBy(id => id).ToList();
         var response = new AssignRoleToUserResultDto(user.Id, roleIds);

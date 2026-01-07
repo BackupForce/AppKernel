@@ -42,6 +42,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using SharedKernel;
+using StackExchange.Redis;
 
 namespace Infrastructure;
 
@@ -106,7 +107,10 @@ public static class DependencyInjection
 
         services.AddStackExchangeRedisCache(options => options.Configuration = redisConnectionString);
 
+        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+
         services.AddSingleton<ICacheService, CacheService>();
+        services.AddScoped<IAuthzCacheInvalidator, AuthzCacheInvalidator>();
 
         return services;
     }

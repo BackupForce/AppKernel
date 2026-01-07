@@ -25,7 +25,7 @@ internal sealed class PermissionProvider : IPermissionProvider
             return false;
         }
 
-        string cacheKey = $"authz:permissions:{userId}";
+        string cacheKey = AuthzCacheKeys.ForUser(userId);
         UserPermissionMatrix? cachedMatrix =
             await _cacheService.GetAsync<UserPermissionMatrix>(cacheKey);
 
