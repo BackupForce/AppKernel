@@ -49,7 +49,11 @@ internal sealed class PermissionProvider : IPermissionProvider
             .Select(MapRoleIdToSubjectId)
             .ToList();
 
-        List<Guid> groupIds = new();
+        List<Guid> groupIds = await _dbContext.UserGroups
+            .AsNoTracking()
+            .Where(userGroup => userGroup.UserId == userId)
+            .Select(userGroup => userGroup.GroupId)
+            .ToListAsync();
 
         List<PermissionAssignment> assignments = await _dbContext.PermissionAssignments
             .AsNoTracking()
