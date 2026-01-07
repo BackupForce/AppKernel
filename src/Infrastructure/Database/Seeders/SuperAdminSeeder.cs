@@ -54,7 +54,7 @@ public sealed class SuperAdminSeeder
             .Where(permission => permission.RoleId == role.Id)
             .ToListAsync(cancellationToken);
 
-        HashSet<string> existingCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var existingCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (Permission permission in existingPermissions)
         {
             if (string.IsNullOrWhiteSpace(permission.Name))
@@ -65,7 +65,7 @@ public sealed class SuperAdminSeeder
             existingCodes.Add(permission.Name);
         }
 
-        List<Permission> permissionsToAdd = new List<Permission>();
+        var permissionsToAdd = new List<Permission>();
         foreach (string code in allPermissionCodes)
         {
             if (existingCodes.Contains(code))
@@ -73,7 +73,7 @@ public sealed class SuperAdminSeeder
                 continue;
             }
 
-            Permission permissionToAdd = Permission.CreateForRole(code, code, role.Id);
+            var permissionToAdd = Permission.CreateForRole(code, code, role.Id);
             permissionsToAdd.Add(permissionToAdd);
         }
 

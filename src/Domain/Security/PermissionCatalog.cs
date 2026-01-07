@@ -8,16 +8,18 @@ public static class PermissionCatalog
 {
     public static IReadOnlyCollection<string> AllPermissionCodes { get; } = BuildAllPermissionCodes();
 
-    private static IReadOnlyCollection<string> BuildAllPermissionCodes()
+    private static string[] BuildAllPermissionCodes()
     {
         // 中文註解：彙整所有模組的權限代碼並去重。
-        HashSet<string> codes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        IEnumerable<Permission> permissions = Permission.Users.AllPermissions
-            .Concat(Permission.Members.AllPermissions)
-            .Concat(Permission.MemberPoints.AllPermissions)
-            .Concat(Permission.MemberAssets.AllPermissions)
-            .Concat(Permission.MemberAudit.AllPermissions)
-            .Concat(Permission.Roles.AllPermissions);
+        var codes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        IEnumerable<Permission> permissions =
+            Permission.Users.AllPermissions
+                .Concat(Permission.Members.AllPermissions)
+                .Concat(Permission.MemberPoints.AllPermissions)
+                .Concat(Permission.MemberAssets.AllPermissions)
+                .Concat(Permission.MemberAudit.AllPermissions)
+                .Concat(Permission.Roles.AllPermissions);
 
         foreach (Permission permission in permissions)
         {
@@ -31,4 +33,5 @@ public static class PermissionCatalog
 
         return codes.ToArray();
     }
+
 }
