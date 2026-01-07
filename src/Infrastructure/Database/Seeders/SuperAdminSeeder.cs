@@ -55,7 +55,9 @@ public sealed class SuperAdminSeeder
             .Where(permission => permission.RoleId == role.Id)
             .ToListAsync(cancellationToken);
 
+        var expectedCodes = new HashSet<string>(allPermissionCodes, StringComparer.OrdinalIgnoreCase);
         var existingCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var hasUpdates = false;
         foreach (Permission permission in existingPermissions)
         {
             if (string.IsNullOrWhiteSpace(permission.Name))
@@ -63,7 +65,14 @@ public sealed class SuperAdminSeeder
                 continue;
             }
 
-            existingCodes.Add(permission.Name);
+            string normalizedName = permission.Name.Trim().ToUpperInvariant();
+            if (expectedCodes.Contains(normalizedName) && permission.Name != normalizedName)
+            {
+                permission.Name = normalizedName;
+                hasUpdates = true;
+            }
+
+            existingCodes.Add(normalizedName);
         }
 
         var permissionsToAdd = new List<Permission>();
@@ -81,6 +90,11 @@ public sealed class SuperAdminSeeder
         if (permissionsToAdd.Count > 0)
         {
             await _db.Set<Permission>().AddRangeAsync(permissionsToAdd, cancellationToken);
+            hasUpdates = true;
+        }
+
+        if (hasUpdates)
+        {
             await _db.SaveChangesAsync(cancellationToken);
         }
 
