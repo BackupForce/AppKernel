@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Text;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Members.Dtos;
@@ -9,7 +10,9 @@ using System.Globalization;
 
 namespace Application.Members.Activity.GetActivity;
 
-internal sealed class GetMemberActivityLogQueryHandler(IDbConnectionFactory factory)
+internal sealed class GetMemberActivityLogQueryHandler(
+    IDbConnectionFactory factory,
+    ITenantContext tenantContext)
     : IQueryHandler<GetMemberActivityLogQuery, PagedResult<MemberActivityLogDto>>
 {
     public async Task<Result<PagedResult<MemberActivityLogDto>>> Handle(
@@ -28,10 +31,16 @@ internal sealed class GetMemberActivityLogQueryHandler(IDbConnectionFactory fact
                 mal.payload AS Payload,
                 mal.created_at AS CreatedAt
             FROM member_activity_log mal
+            INNER JOIN members m ON m.id = mal.member_id
             WHERE mal.member_id = @MemberId
+              AND m.tenant_id = @TenantId
             """);
 
-        var parameters = new DynamicParameters(new { request.MemberId });
+        var parameters = new DynamicParameters(new
+        {
+            request.MemberId,
+            TenantId = tenantContext.TenantId
+        });
 
         if (request.StartDate.HasValue)
         {

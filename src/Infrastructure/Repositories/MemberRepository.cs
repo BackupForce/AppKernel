@@ -6,24 +6,32 @@ namespace Infrastructure.Repositories;
 
 internal sealed class MemberRepository(ApplicationDbContext context) : IMemberRepository
 {
-    public Task<Member?> GetByIdAsync(Guid memberId, CancellationToken cancellationToken = default)
+    public Task<Member?> GetByIdAsync(Guid tenantId, Guid memberId, CancellationToken cancellationToken = default)
     {
-        return context.Members.FirstOrDefaultAsync(m => m.Id == memberId, cancellationToken);
+        return context.Members.FirstOrDefaultAsync(
+            m => m.TenantId == tenantId && m.Id == memberId,
+            cancellationToken);
     }
 
-    public Task<Member?> GetByMemberNoAsync(string memberNo, CancellationToken cancellationToken = default)
+    public Task<Member?> GetByMemberNoAsync(Guid tenantId, string memberNo, CancellationToken cancellationToken = default)
     {
-        return context.Members.FirstOrDefaultAsync(m => m.MemberNo == memberNo, cancellationToken);
+        return context.Members.FirstOrDefaultAsync(
+            m => m.TenantId == tenantId && m.MemberNo == memberNo,
+            cancellationToken);
     }
 
-    public Task<bool> IsMemberNoUniqueAsync(string memberNo, CancellationToken cancellationToken = default)
+    public Task<bool> IsMemberNoUniqueAsync(Guid tenantId, string memberNo, CancellationToken cancellationToken = default)
     {
-        return context.Members.AllAsync(m => m.MemberNo != memberNo, cancellationToken);
+        return context.Members.AllAsync(
+            m => m.TenantId != tenantId || m.MemberNo != memberNo,
+            cancellationToken);
     }
 
-    public Task<bool> IsUserIdUniqueAsync(Guid userId, CancellationToken cancellationToken = default)
+    public Task<bool> IsUserIdUniqueAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default)
     {
-        return context.Members.AllAsync(m => m.UserId != userId, cancellationToken);
+        return context.Members.AllAsync(
+            m => m.TenantId != tenantId || m.UserId != userId,
+            cancellationToken);
     }
 
     public Task<MemberPointBalance?> GetPointBalanceAsync(Guid memberId, CancellationToken cancellationToken = default)

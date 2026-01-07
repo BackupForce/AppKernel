@@ -58,6 +58,17 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
         }
 
         Guid? tenantId = TryResolveTenantId(httpContext);
+        Guid? nodeId = await ResolveNodeIdFromMetadataAsync(httpContext, tenantId);
+        if (nodeId.HasValue)
+        {
+            return (nodeId, tenantId);
+        }
+
+        if (httpContext.Request.RouteValues.TryGetValue("nodeId", out object? nodeValue)
+            && TryGetGuid(nodeValue, out Guid explicitNodeId))
+        {
+            return (explicitNodeId, tenantId);
+        }
 
         if (tenantId.HasValue)
         {
@@ -69,6 +80,48 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
         }
 
         return (null, tenantId);
+    }
+
+    private async Task<Guid?> ResolveNodeIdFromMetadataAsync(HttpContext httpContext, Guid? tenantId)
+    {
+        if (!tenantId.HasValue)
+        {
+            return null;
+        }
+
+        ResourceNodeMetadata? metadata = httpContext.GetEndpoint()
+            ?.Metadata
+            .GetMetadata<ResourceNodeMetadata>();
+        if (metadata is null)
+        {
+            return null;
+        }
+
+        if (!httpContext.Request.RouteValues.TryGetValue(metadata.RouteValueKey, out object? rawValue))
+        {
+            return null;
+        }
+
+        string? externalValue = rawValue switch
+        {
+            Guid guidValue => guidValue.ToString("D"),
+            string stringValue => stringValue,
+            _ => rawValue?.ToString()
+        };
+
+        if (string.IsNullOrWhiteSpace(externalValue))
+        {
+            return null;
+        }
+
+        string externalKey = $"{metadata.ExternalKeyPrefix}{externalValue}";
+        Guid nodeId = await _dbContext.ResourceNodes
+            .AsNoTracking()
+            .Where(node => node.TenantId == tenantId.Value && node.ExternalKey == externalKey)
+            .Select(node => node.Id)
+            .SingleOrDefaultAsync();
+
+        return nodeId == Guid.Empty ? null : nodeId;
     }
 
     private static bool TryGetGuid(object? value, out Guid id)

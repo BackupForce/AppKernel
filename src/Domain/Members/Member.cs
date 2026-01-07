@@ -7,6 +7,7 @@ public sealed class Member : Entity
 {
     private Member(
         Guid id,
+        Guid tenantId,
         Guid? userId,
         string memberNo,
         string displayName,
@@ -14,6 +15,7 @@ public sealed class Member : Entity
         DateTime createdAt,
         DateTime updatedAt) : base(id)
     {
+        TenantId = tenantId;
         UserId = userId;
         MemberNo = memberNo;
         DisplayName = displayName;
@@ -28,6 +30,8 @@ public sealed class Member : Entity
 
     public Guid? UserId { get; private set; }
 
+    public Guid TenantId { get; private set; }
+
     public string MemberNo { get; private set; } = string.Empty;
 
     public string DisplayName { get; private set; } = string.Empty;
@@ -39,11 +43,17 @@ public sealed class Member : Entity
     public DateTime UpdatedAt { get; private set; }
 
     public static Result<Member> Create(
+        Guid tenantId,
         Guid? userId,
         string memberNo,
         string displayName,
         DateTime utcNow)
     {
+        if (tenantId == Guid.Empty)
+        {
+            return Result.Failure<Member>(MemberErrors.TenantIdRequired);
+        }
+
         if (string.IsNullOrWhiteSpace(displayName))
         {
             return Result.Failure<Member>(MemberErrors.DisplayNameRequired);
@@ -56,6 +66,7 @@ public sealed class Member : Entity
 
         var member = new Member(
             Guid.NewGuid(),
+            tenantId,
             userId,
             memberNo,
             displayName,

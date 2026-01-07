@@ -12,6 +12,7 @@ internal sealed class ActivateMemberCommandHandler(
     IMemberRepository memberRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
+    ITenantContext tenantContext,
     IUserContext userContext,
     ICacheService cacheService) : ICommandHandler<ActivateMemberCommand>
 {
@@ -19,7 +20,7 @@ internal sealed class ActivateMemberCommandHandler(
 
     public async Task<Result> Handle(ActivateMemberCommand request, CancellationToken cancellationToken)
     {
-        Member? member = await memberRepository.GetByIdAsync(request.MemberId, cancellationToken);
+        Member? member = await memberRepository.GetByIdAsync(tenantContext.TenantId, request.MemberId, cancellationToken);
         if (member is null)
         {
             return Result.Failure(MemberErrors.MemberNotFound);

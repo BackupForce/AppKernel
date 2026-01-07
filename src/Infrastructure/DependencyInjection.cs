@@ -70,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<IRootUserService, RootUserService>();
         services.AddScoped<IDataSeeder, RootUserSeeder>();
         services.AddScoped<IDataSeeder, DefaultTenantSeeder>();
+        services.AddScoped<IDataSeeder, MemberResourceNodeSeeder>();
         services.AddScoped<SuperAdminSeeder>();
 
         return services;
@@ -101,6 +102,7 @@ public static class DependencyInjection
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IGroupRepository, GroupRepository>();
+        services.AddScoped<IResourceNodeRepository, ResourceNodeRepository>();
 
         return services;
     }
@@ -185,6 +187,7 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<ITenantContext, TenantContext>();
 
         services.AddSingleton<IJwtService>(provider =>
             new JwtService(jwtSettings.SecretKey, jwtSettings.ExpireMinutes));

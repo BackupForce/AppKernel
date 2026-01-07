@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Text;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Members.Dtos;
@@ -9,7 +10,9 @@ using System.Globalization;
 
 namespace Application.Members.Points.GetHistory;
 
-internal sealed class GetMemberPointHistoryQueryHandler(IDbConnectionFactory factory)
+internal sealed class GetMemberPointHistoryQueryHandler(
+    IDbConnectionFactory factory,
+    ITenantContext tenantContext)
     : IQueryHandler<GetMemberPointHistoryQuery, PagedResult<MemberPointLedgerDto>>
 {
     public async Task<Result<PagedResult<MemberPointLedgerDto>>> Handle(
@@ -31,10 +34,16 @@ internal sealed class GetMemberPointHistoryQueryHandler(IDbConnectionFactory fac
                 mpl.remark AS Remark,
                 mpl.created_at AS CreatedAt
             FROM member_point_ledger mpl
+            INNER JOIN members m ON m.id = mpl.member_id
             WHERE mpl.member_id = @MemberId
+              AND m.tenant_id = @TenantId
             """);
 
-        var parameters = new DynamicParameters(new { request.MemberId });
+        var parameters = new DynamicParameters(new
+        {
+            request.MemberId,
+            TenantId = tenantContext.TenantId
+        });
 
         if (request.StartDate.HasValue)
         {

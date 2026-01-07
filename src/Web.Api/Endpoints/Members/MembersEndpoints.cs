@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Data;
+using Application.Abstractions.Authorization;
 using Application.Members.Activate;
 using Application.Members.Activity.GetActivity;
 using Application.Members.Assets.Adjust;
@@ -33,6 +34,8 @@ public sealed class MembersEndpoints : IEndpoint
             .RequireAuthorization()
             .WithTags("Members");
 
+        var memberNodeMetadata = new ResourceNodeMetadata("id", "member:");
+
         group.MapPost(
                 "/",
                 (CreateMemberRequest request, ISender sender, CancellationToken ct) =>
@@ -49,6 +52,7 @@ public sealed class MembersEndpoints : IEndpoint
                 "/{id:guid}",
                 UseCaseInvoker.FromRoute<GetMemberByIdQuery, Guid, MemberDetailDto>(id => new GetMemberByIdQuery(id)))
             .RequireAuthorization(Permission.Members.Read.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces<MemberDetailDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithName("GetMemberById");
@@ -76,6 +80,7 @@ public sealed class MembersEndpoints : IEndpoint
                 UseCaseInvoker.FromRoute<UpdateMemberProfileCommand, Guid, UpdateMemberProfileRequest>(
                     (id, request) => new UpdateMemberProfileCommand(id, request.DisplayName)))
             .RequireAuthorization(Permission.Members.Update.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("UpdateMemberProfile");
@@ -85,6 +90,7 @@ public sealed class MembersEndpoints : IEndpoint
                 UseCaseInvoker.FromRoute<SuspendMemberCommand, Guid, MemberStatusChangeRequest>(
                     (id, request) => new SuspendMemberCommand(id, request.Reason)))
             .RequireAuthorization(Permission.Members.Suspend.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("SuspendMember");
@@ -94,6 +100,7 @@ public sealed class MembersEndpoints : IEndpoint
                 UseCaseInvoker.FromRoute<ActivateMemberCommand, Guid, MemberStatusChangeRequest>(
                     (id, request) => new ActivateMemberCommand(id, request.Reason)))
             .RequireAuthorization(Permission.Members.Suspend.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ActivateMember");
@@ -103,6 +110,7 @@ public sealed class MembersEndpoints : IEndpoint
                 UseCaseInvoker.FromRoute<GetMemberPointBalanceQuery, Guid, MemberPointBalanceDto>(
                     id => new GetMemberPointBalanceQuery(id)))
             .RequireAuthorization(Permission.MemberPoints.Read.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces<MemberPointBalanceDto>(StatusCodes.Status200OK)
             .WithName("GetMemberPointBalance");
 
@@ -126,6 +134,7 @@ public sealed class MembersEndpoints : IEndpoint
                         ct);
                 })
             .RequireAuthorization(Permission.MemberPoints.Read.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces<PagedResult<MemberPointLedgerDto>>(StatusCodes.Status200OK)
             .WithName("GetMemberPointHistory");
 
@@ -140,6 +149,7 @@ public sealed class MembersEndpoints : IEndpoint
                         request.ReferenceId,
                         request.AllowNegative)))
             .RequireAuthorization(Permission.MemberPoints.Adjust.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces<long>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AdjustMemberPoints");
@@ -149,6 +159,7 @@ public sealed class MembersEndpoints : IEndpoint
                 UseCaseInvoker.FromRoute<GetMemberAssetsQuery, Guid, IReadOnlyCollection<MemberAssetBalanceDto>>(
                     id => new GetMemberAssetsQuery(id)))
             .RequireAuthorization(Permission.MemberAssets.Read.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces<IReadOnlyCollection<MemberAssetBalanceDto>>(StatusCodes.Status200OK)
             .WithName("GetMemberAssets");
 
@@ -173,6 +184,7 @@ public sealed class MembersEndpoints : IEndpoint
                         ct);
                 })
             .RequireAuthorization(Permission.MemberAssets.Read.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces<PagedResult<MemberAssetLedgerDto>>(StatusCodes.Status200OK)
             .WithName("GetMemberAssetHistory");
 
@@ -188,6 +200,7 @@ public sealed class MembersEndpoints : IEndpoint
                         request.ReferenceId,
                         request.AllowNegative)))
             .RequireAuthorization(Permission.MemberAssets.Adjust.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces<decimal>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AdjustMemberAssets");
@@ -210,6 +223,7 @@ public sealed class MembersEndpoints : IEndpoint
                         ct);
                 })
             .RequireAuthorization(Permission.MemberAudit.Read.Name)
+            .WithMetadata(memberNodeMetadata)
             .Produces<PagedResult<MemberActivityLogDto>>(StatusCodes.Status200OK)
             .WithName("GetMemberActivityLog");
     }

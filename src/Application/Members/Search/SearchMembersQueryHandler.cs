@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Globalization;
 using System.Text;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Members.Dtos;
@@ -9,7 +10,9 @@ using SharedKernel;
 
 namespace Application.Members.Search;
 
-internal sealed class SearchMembersQueryHandler(IDbConnectionFactory factory)
+internal sealed class SearchMembersQueryHandler(
+    IDbConnectionFactory factory,
+    ITenantContext tenantContext)
     : IQueryHandler<SearchMembersQuery, PagedResult<MemberListItemDto>>
 {
     public async Task<Result<PagedResult<MemberListItemDto>>> Handle(
@@ -27,10 +30,11 @@ internal sealed class SearchMembersQueryHandler(IDbConnectionFactory factory)
                 m.created_at AS CreatedAt,
                 m.updated_at AS UpdatedAt
             FROM members m
-            WHERE 1=1
+            WHERE m.tenant_id = @TenantId
             """);
 
         var parameters = new DynamicParameters();
+        parameters.Add("TenantId", tenantContext.TenantId);
 
         if (!string.IsNullOrWhiteSpace(request.MemberNo))
         {
