@@ -5,9 +5,6 @@ using Asp.Versioning;
 using Domain.Security;
 using MediatR;
 using Web.Api.Common;
-using Web.Api.Endpoints.Users.Handler;
-using Web.Api.Extensions;
-using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Users;
 
@@ -21,7 +18,17 @@ public class UsersEndpoints : IEndpoint
             .RequireAuthorization()
             .WithTags("Users");
 
-        group.MapGet("/{id:guid}", GetUserById.Handler)
+        // 改用顯式 handler 參數宣告，避免 Minimal API 推斷參數造成綁定錯誤。
+        group.MapGet("/{id:guid}",
+            async (Guid id, ISender sender, CancellationToken ct) =>
+            {
+                GetUserByIdQuery request = new GetUserByIdQuery(id);
+                return await UseCaseInvoker.Send<GetUserByIdQuery, UserResponse>(
+                    request,
+                    sender,
+                    value => Results.Ok(value),
+                    ct);
+            })
         .Produces<UserResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithName("GetUserById");
@@ -31,20 +38,34 @@ public class UsersEndpoints : IEndpoint
         // 想一下到底要不要用Handler
         // </summary>
         group.MapPost("/",
-            UseCaseInvoker.FromRoute<CreateUserCommand, CreateUserRequest, Guid>(
-                req => new CreateUserCommand(
-                    req.Email,
-                    req.Name,
-                    req.Password,
-                    req.HasPublicProfile)))
+            async (CreateUserRequest request, ISender sender, CancellationToken ct) =>
+            {
+                CreateUserCommand command = new CreateUserCommand(
+                    request.Email,
+                    request.Name,
+                    request.Password,
+                    request.HasPublicProfile);
+                return await UseCaseInvoker.Send<CreateUserCommand, Guid>(
+                    command,
+                    sender,
+                    value => Results.Ok(value),
+                    ct);
+            })
         .Produces<Guid>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .WithName("CreateUser");
 
         group.MapPost(
                 "/{userId:guid}/roles/{roleId:int}",
-                UseCaseInvoker.FromRoute<AssignRoleToUserCommand, Guid, int, AssignRoleToUserResultDto>(
-                    (userId, roleId) => new AssignRoleToUserCommand(userId, roleId)))
+                async (Guid userId, int roleId, ISender sender, CancellationToken ct) =>
+                {
+                    AssignRoleToUserCommand command = new AssignRoleToUserCommand(userId, roleId);
+                    return await UseCaseInvoker.Send<AssignRoleToUserCommand, AssignRoleToUserResultDto>(
+                        command,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
             .RequireAuthorization(Permission.Users.Update.Name)
             .Produces<AssignRoleToUserResultDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
