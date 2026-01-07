@@ -20,6 +20,23 @@
 - **Security** – `Role` and `Permission` capture role/permission relationships; permission constants cover the user module (wildcard + CRUD + reset password). `RootUser` is recognized by email to bypass permission checks.
 - **Nodes** – Optional hierarchical resource with ancestor/descendant links and soft-delete (`IsDeleted` + query filters). Deletion raises `NodeDeletedDomainEvent`.
 
+## Authorization conventions
+### ResourceNode 來源
+- **route**：資源識別來自路由參數（例如 `/nodes/{nodeId}`），以路由值解析資源節點。
+- **body**：資源識別來自 request body（例如 `nodeId` 欄位），由 payload 解析資源節點。
+- **externalKey**：資源識別來自外部鍵值（例如第三方系統對應碼），透過對應表或查詢轉換成資源節點。
+
+### PermissionCode 命名規範
+- 格式：`{domain}:{action}`（全部小寫，使用底線 `_` 分隔複合詞）。
+- `domain` 表示資源或模組，例如 `users`、`members`、`member_points`。
+- `action` 表示權限動作，例如 `read`、`create`、`update`、`delete`、`suspend`。
+- 需要通配時使用 `*`，例如 `users:*` 代表 users 模組全權限。
+
+### Deny/Allow 規則與繼承策略
+- **明確 Deny 優先於 Allow**：同一資源與動作上，若存在 Deny，最終結果為拒絕。
+- **繼承策略**：子節點未設定規則時，沿用最近的父節點規則；若一路皆未設定，預設拒絕。
+- **多角色合併**：同一使用者多角色合併時，先彙總所有規則，再套用 Deny 優先於 Allow 的決策。
+
 ## Application layer patterns & use cases
 - **Pipeline behaviors:** 
   - `ExceptionHandlingPipelineBehavior` logs unhandled exceptions.
