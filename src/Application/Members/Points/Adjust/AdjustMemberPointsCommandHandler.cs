@@ -12,6 +12,7 @@ internal sealed class AdjustMemberPointsCommandHandler(
     IMemberRepository memberRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
+    ITenantContext tenantContext,
     IUserContext userContext,
     ICacheService cacheService) : ICommandHandler<AdjustMemberPointsCommand, long>
 {
@@ -20,7 +21,7 @@ internal sealed class AdjustMemberPointsCommandHandler(
 
     public async Task<Result<long>> Handle(AdjustMemberPointsCommand request, CancellationToken cancellationToken)
     {
-        Member? member = await memberRepository.GetByIdAsync(request.MemberId, cancellationToken);
+        Member? member = await memberRepository.GetByIdAsync(tenantContext.TenantId, request.MemberId, cancellationToken);
         if (member is null)
         {
             return Result.Failure<long>(MemberErrors.MemberNotFound);

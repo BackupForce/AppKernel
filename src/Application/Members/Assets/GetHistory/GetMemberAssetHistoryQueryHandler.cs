@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Text;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Members.Dtos;
@@ -9,7 +10,9 @@ using System.Globalization;
 
 namespace Application.Members.Assets.GetHistory;
 
-internal sealed class GetMemberAssetHistoryQueryHandler(IDbConnectionFactory factory)
+internal sealed class GetMemberAssetHistoryQueryHandler(
+    IDbConnectionFactory factory,
+    ITenantContext tenantContext)
     : IQueryHandler<GetMemberAssetHistoryQuery, PagedResult<MemberAssetLedgerDto>>
 {
     public async Task<Result<PagedResult<MemberAssetLedgerDto>>> Handle(
@@ -32,10 +35,17 @@ internal sealed class GetMemberAssetHistoryQueryHandler(IDbConnectionFactory fac
                 mal.remark AS Remark,
                 mal.created_at AS CreatedAt
             FROM member_asset_ledger mal
+            INNER JOIN members m ON m.id = mal.member_id
             WHERE mal.member_id = @MemberId AND mal.asset_code = @AssetCode
+              AND m.tenant_id = @TenantId
             """);
 
-        var parameters = new DynamicParameters(new { request.MemberId, request.AssetCode });
+        var parameters = new DynamicParameters(new
+        {
+            request.MemberId,
+            request.AssetCode,
+            TenantId = tenantContext.TenantId
+        });
 
         if (request.StartDate.HasValue)
         {

@@ -4,6 +4,10 @@ namespace Domain.Members;
 
 public static class MemberErrors
 {
+    public static readonly Error TenantIdRequired = Error.Validation(
+        "Member.TenantIdRequired",
+        "TenantId 不可為空白。");
+
     public static readonly Error DisplayNameRequired = Error.Validation(
         "Member.DisplayNameRequired",
         "顯示名稱不可為空白。");

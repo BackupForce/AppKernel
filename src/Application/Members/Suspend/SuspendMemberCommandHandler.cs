@@ -12,6 +12,7 @@ internal sealed class SuspendMemberCommandHandler(
     IMemberRepository memberRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
+    ITenantContext tenantContext,
     IUserContext userContext,
     ICacheService cacheService) : ICommandHandler<SuspendMemberCommand>
 {
@@ -19,7 +20,7 @@ internal sealed class SuspendMemberCommandHandler(
 
     public async Task<Result> Handle(SuspendMemberCommand request, CancellationToken cancellationToken)
     {
-        Member? member = await memberRepository.GetByIdAsync(request.MemberId, cancellationToken);
+        Member? member = await memberRepository.GetByIdAsync(tenantContext.TenantId, request.MemberId, cancellationToken);
         if (member is null)
         {
             return Result.Failure(MemberErrors.MemberNotFound);

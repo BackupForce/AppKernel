@@ -49,6 +49,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("status");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -60,13 +64,13 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_members");
 
-                    b.HasIndex("MemberNo")
+                    b.HasIndex("TenantId", "MemberNo")
                         .IsUnique()
-                        .HasDatabaseName("ix_members_member_no");
+                        .HasDatabaseName("ux_members_tenant_id_member_no");
 
-                    b.HasIndex("UserId")
+                    b.HasIndex("TenantId", "UserId")
                         .IsUnique()
-                        .HasDatabaseName("ix_members_user_id")
+                        .HasDatabaseName("ux_members_tenant_id_user_id")
                         .HasFilter("user_id IS NOT NULL");
 
                     b.ToTable("members", "public");

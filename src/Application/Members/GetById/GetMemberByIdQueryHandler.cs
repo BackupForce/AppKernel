@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Members.Dtos;
@@ -8,7 +9,9 @@ using SharedKernel;
 
 namespace Application.Members.GetById;
 
-internal sealed class GetMemberByIdQueryHandler(IDbConnectionFactory factory)
+internal sealed class GetMemberByIdQueryHandler(
+    IDbConnectionFactory factory,
+    ITenantContext tenantContext)
     : IQueryHandler<GetMemberByIdQuery, MemberDetailDto>
 {
     public async Task<Result<MemberDetailDto>> Handle(GetMemberByIdQuery request, CancellationToken cancellationToken)
@@ -25,13 +28,18 @@ internal sealed class GetMemberByIdQueryHandler(IDbConnectionFactory factory)
                 m.updated_at AS UpdatedAt
             FROM members m
             WHERE m.id = @MemberId
+              AND m.tenant_id = @TenantId
             """;
 
         using IDbConnection connection = factory.GetOpenConnection();
 
         MemberDetailDto? member = await connection.QueryFirstOrDefaultAsync<MemberDetailDto>(
             sql,
-            new { request.MemberId });
+            new
+            {
+                request.MemberId,
+                TenantId = tenantContext.TenantId
+            });
 
         if (member is null)
         {

@@ -2,13 +2,13 @@
 
 public interface IMemberRepository
 {
-    Task<Member?> GetByIdAsync(Guid memberId, CancellationToken cancellationToken = default);
+    Task<Member?> GetByIdAsync(Guid tenantId, Guid memberId, CancellationToken cancellationToken = default);
 
-    Task<Member?> GetByMemberNoAsync(string memberNo, CancellationToken cancellationToken = default);
+    Task<Member?> GetByMemberNoAsync(Guid tenantId, string memberNo, CancellationToken cancellationToken = default);
 
-    Task<bool> IsMemberNoUniqueAsync(string memberNo, CancellationToken cancellationToken = default);
+    Task<bool> IsMemberNoUniqueAsync(Guid tenantId, string memberNo, CancellationToken cancellationToken = default);
 
-    Task<bool> IsUserIdUniqueAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<bool> IsUserIdUniqueAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);
 
     Task<MemberPointBalance?> GetPointBalanceAsync(Guid memberId, CancellationToken cancellationToken = default);
 
