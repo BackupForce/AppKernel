@@ -50,7 +50,9 @@ public sealed class MembersEndpoints : IEndpoint
 
         group.MapGet(
                 "/{id:guid}",
-                UseCaseInvoker.FromRoute<GetMemberByIdQuery, Guid, MemberDetailDto>(id => new GetMemberByIdQuery(id)))
+                UseCaseInvoker.FromRoute<GetMemberByIdQuery, Guid, MemberDetailDto>(
+                    "id",
+                    id => new GetMemberByIdQuery(id)))
             .RequireAuthorization(Permission.Members.Read.Name)
             .WithMetadata(memberNodeMetadata)
             .Produces<MemberDetailDto>(StatusCodes.Status200OK)
@@ -78,6 +80,7 @@ public sealed class MembersEndpoints : IEndpoint
         group.MapPut(
                 "/{id:guid}",
                 UseCaseInvoker.FromRoute<UpdateMemberProfileCommand, Guid, UpdateMemberProfileRequest>(
+                    "id",
                     (id, request) => new UpdateMemberProfileCommand(id, request.DisplayName)))
             .RequireAuthorization(Permission.Members.Update.Name)
             .WithMetadata(memberNodeMetadata)
@@ -88,6 +91,7 @@ public sealed class MembersEndpoints : IEndpoint
         group.MapPost(
                 "/{id:guid}/suspend",
                 UseCaseInvoker.FromRoute<SuspendMemberCommand, Guid, MemberStatusChangeRequest>(
+                    "id",
                     (id, request) => new SuspendMemberCommand(id, request.Reason)))
             .RequireAuthorization(Permission.Members.Suspend.Name)
             .WithMetadata(memberNodeMetadata)
@@ -98,6 +102,7 @@ public sealed class MembersEndpoints : IEndpoint
         group.MapPost(
                 "/{id:guid}/activate",
                 UseCaseInvoker.FromRoute<ActivateMemberCommand, Guid, MemberStatusChangeRequest>(
+                    "id",
                     (id, request) => new ActivateMemberCommand(id, request.Reason)))
             .RequireAuthorization(Permission.Members.Suspend.Name)
             .WithMetadata(memberNodeMetadata)
@@ -108,6 +113,7 @@ public sealed class MembersEndpoints : IEndpoint
         group.MapGet(
                 "/{id:guid}/points/balance",
                 UseCaseInvoker.FromRoute<GetMemberPointBalanceQuery, Guid, MemberPointBalanceDto>(
+                    "id",
                     id => new GetMemberPointBalanceQuery(id)))
             .RequireAuthorization(Permission.MemberPoints.Read.Name)
             .WithMetadata(memberNodeMetadata)
@@ -141,6 +147,7 @@ public sealed class MembersEndpoints : IEndpoint
         group.MapPost(
                 "/{id:guid}/points/adjust",
                 UseCaseInvoker.FromRoute<AdjustMemberPointsCommand, Guid, AdjustMemberPointsRequest, long>(
+                    "id",
                     (id, request) => new AdjustMemberPointsCommand(
                         id,
                         request.Delta,
@@ -157,6 +164,7 @@ public sealed class MembersEndpoints : IEndpoint
         group.MapGet(
                 "/{id:guid}/assets",
                 UseCaseInvoker.FromRoute<GetMemberAssetsQuery, Guid, IReadOnlyCollection<MemberAssetBalanceDto>>(
+                    "id",
                     id => new GetMemberAssetsQuery(id)))
             .RequireAuthorization(Permission.MemberAssets.Read.Name)
             .WithMetadata(memberNodeMetadata)
@@ -191,6 +199,7 @@ public sealed class MembersEndpoints : IEndpoint
         group.MapPost(
                 "/{id:guid}/assets/adjust",
                 UseCaseInvoker.FromRoute<AdjustMemberAssetCommand, Guid, AdjustMemberAssetRequest, decimal>(
+                    "id",
                     (id, request) => new AdjustMemberAssetCommand(
                         id,
                         request.AssetCode,
