@@ -57,7 +57,7 @@ public sealed class SuperAdminSeeder
 
         var expectedCodes = new HashSet<string>(allPermissionCodes, StringComparer.OrdinalIgnoreCase);
         var existingCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var hasUpdates = false;
+        bool hasUpdates = false;
         foreach (Permission permission in existingPermissions)
         {
             if (string.IsNullOrWhiteSpace(permission.Name))
