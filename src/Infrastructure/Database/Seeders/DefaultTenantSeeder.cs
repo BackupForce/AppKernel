@@ -52,8 +52,7 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             return;
         }
 
-        Tenant? tenant = await _db.Tenants
-            .FirstOrDefaultAsync(existingTenant => existingTenant.Code.ToUpperInvariant() == code);
+        Tenant? tenant = await _db.Tenants.FirstOrDefaultAsync(existingTenant => existingTenant.Code == code);
 
         if (tenant is null)
         {

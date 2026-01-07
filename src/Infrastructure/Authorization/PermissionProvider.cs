@@ -58,7 +58,7 @@ internal sealed class PermissionProvider : IPermissionProvider
             .SelectMany(user => user.Roles.Select(role => role.Id))
             .ToListAsync();
 
-        List<Guid> roleSubjectIds = roleIds
+        var roleSubjectIds = roleIds
             .Select(MapRoleIdToSubjectId)
             .ToList();
 

@@ -20,23 +20,23 @@ public class PermissionProviderTests : BaseIntegrationTest
     [Fact]
     public async Task HasPermissionAsync_Should_Deny_When_NodeTenantMismatch()
     {
-        Guid tenantAId = Guid.NewGuid();
-        Tenant tenantA = Tenant.Create(tenantAId, "TNA", "Tenant A");
-        Guid tenantBId = Guid.NewGuid();
-        Tenant tenantB = Tenant.Create(tenantBId, "TNB", "Tenant B");
+        var tenantAId = Guid.NewGuid();
+        var tenantA = Tenant.Create(tenantAId, "TNA", "Tenant A");
+        var tenantBId = Guid.NewGuid();
+        var tenantB = Tenant.Create(tenantBId, "TNB", "Tenant B");
 
         DbContext.Tenants.AddRange(tenantA, tenantB);
 
         Email email = Email.Create("user1@example.com").Value;
-        Name name = new Name("User One");
-        User user = User.Create(email, name, "hash", true);
+        var name = new Name("User One");
+        var user = User.Create(email, name, "hash", true);
         user.AssignTenant(tenantBId);
         DbContext.Users.Add(user);
 
-        ResourceNode nodeA = ResourceNode.Create("Node A", "node-a", tenantAId);
+        var nodeA = ResourceNode.Create("Node A", "node-a", tenantAId);
         DbContext.ResourceNodes.Add(nodeA);
 
-        PermissionAssignment assignment = PermissionAssignment.Create(
+        var assignment = PermissionAssignment.Create(
             SubjectType.User,
             Decision.Allow,
             user.Id,
@@ -57,21 +57,21 @@ public class PermissionProviderTests : BaseIntegrationTest
     [Fact]
     public async Task HasPermissionAsync_Should_Allow_When_LineageInSameTenant()
     {
-        Guid tenantId = Guid.NewGuid();
-        Tenant tenant = Tenant.Create(tenantId, "TNC", "Tenant C");
+        var tenantId = Guid.NewGuid();
+        var tenant = Tenant.Create(tenantId, "TNC", "Tenant C");
         DbContext.Tenants.Add(tenant);
 
         Email email = Email.Create("user2@example.com").Value;
-        Name name = new Name("User Two");
-        User user = User.Create(email, name, "hash", true);
+        var name = new Name("User Two");
+        var user = User.Create(email, name, "hash", true);
         user.AssignTenant(tenantId);
         DbContext.Users.Add(user);
 
-        ResourceNode rootNode = ResourceNode.Create("Root", "root-lineage", tenantId);
-        ResourceNode childNode = ResourceNode.Create("Child", "child-lineage", tenantId, rootNode.Id);
+        var rootNode = ResourceNode.Create("Root", "root-lineage", tenantId);
+        var childNode = ResourceNode.Create("Child", "child-lineage", tenantId, rootNode.Id);
         DbContext.ResourceNodes.AddRange(rootNode, childNode);
 
-        PermissionAssignment assignment = PermissionAssignment.Create(
+        var assignment = PermissionAssignment.Create(
             SubjectType.User,
             Decision.Allow,
             user.Id,
@@ -92,21 +92,21 @@ public class PermissionProviderTests : BaseIntegrationTest
     [Fact]
     public async Task HasPermissionAsync_Should_Deny_When_LineageHasCycle()
     {
-        Guid tenantId = Guid.NewGuid();
-        Tenant tenant = Tenant.Create(tenantId, "TND", "Tenant D");
+        var tenantId = Guid.NewGuid();
+        var tenant = Tenant.Create(tenantId, "TND", "Tenant D");
         DbContext.Tenants.Add(tenant);
 
         Email email = Email.Create("user3@example.com").Value;
-        Name name = new Name("User Three");
-        User user = User.Create(email, name, "hash", true);
+        var name = new Name("User Three");
+        var user = User.Create(email, name, "hash", true);
         user.AssignTenant(tenantId);
         DbContext.Users.Add(user);
 
-        ResourceNode nodeA = ResourceNode.Create("Node A", "node-a-cycle", tenantId);
-        ResourceNode nodeB = ResourceNode.Create("Node B", "node-b-cycle", tenantId);
+        var nodeA = ResourceNode.Create("Node A", "node-a-cycle", tenantId);
+        var nodeB = ResourceNode.Create("Node B", "node-b-cycle", tenantId);
         DbContext.ResourceNodes.AddRange(nodeA, nodeB);
 
-        PermissionAssignment assignment = PermissionAssignment.Create(
+        var assignment = PermissionAssignment.Create(
             SubjectType.User,
             Decision.Allow,
             user.Id,
