@@ -29,6 +29,28 @@ public sealed class User : Entity
 
     public bool HasPublicProfile { get; set; }
 
+    public bool HasRole(int roleId)
+    {
+        // 中文註解：檢查使用者是否已經擁有指定角色。
+        return _roles.Any(role => role.Id == roleId);
+    }
+
+    public void AssignRole(Role role)
+    {
+        // 中文註解：將角色指派給使用者，避免重複新增。
+        if (role is null)
+        {
+            return;
+        }
+
+        if (HasRole(role.Id))
+        {
+            return;
+        }
+
+        _roles.Add(role);
+    }
+
     public static User Create(Email email, Name name,string passwordhash, bool hasPublicProfile)
     {
         var user = new User(Guid.NewGuid(), email, name, passwordhash, hasPublicProfile);

@@ -40,7 +40,7 @@
 
 - **路由前綴**：`/api/v{version}/users`
 - **API 版本**：端點標記為 `v2.0`，但目前全域版本集合僅註冊 v1；若要呼叫請將 `{version}` 設為 `2`. 【F:src/Web.Api/Program.cs†L34-L44】【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L14-L35】
-- **授權**：需登入；程式碼未標註額外權限（若有後續授權策略請依部署設定）。
+- **授權**：需登入；指派角色端點需 `users:update` 權限，其餘端點未額外標註權限（若有後續授權策略請依部署設定）。【F:src/Domain/Security/Permission.cs†L13-L33】【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L14-L63】
 
 ### GET `/api/v2/users/{id}`
 - **路徑參數**：`id` (GUID)
@@ -66,6 +66,18 @@
   }
   ```
 - **成功回應**：新使用者的 GUID。驗證失敗時回 400。 【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L31-L43】【F:src/Application/Users/Create/CreateUserRequest.cs†L3-L5】
+
+### POST `/api/v2/users/{userId}/roles/{roleId}`
+- **權限**：`users:update`
+- **路徑參數**：`userId` (GUID)、`roleId` (int)
+- **成功回應**
+  ```json
+  {
+    "userId": "guid",
+    "roleIds": [1, 2, 3]
+  }
+  ```
+- **描述**：替使用者指派角色，若使用者或角色不存在回 404，已存在角色回 409。 【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L45-L63】【F:src/Application/Users/AssignRole/AssignRoleToUserResultDto.cs†L1-L3】
 
 ## 會員 (Members) – 管理後台
 

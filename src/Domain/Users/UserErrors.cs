@@ -19,4 +19,8 @@ public static class UserErrors
     public static readonly Error InvalidCredentials = Error.NotFound(
     "Users.InvalidCredentials",
     "Invalid email or password.");
+
+    public static Error RoleAlreadyAssigned(int roleId) => Error.Conflict(
+        "Users.RoleAlreadyAssigned",
+        $"使用者已擁有角色 (Id = {roleId})。");
 }

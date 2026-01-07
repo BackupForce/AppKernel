@@ -11,6 +11,13 @@ internal sealed class UserRepository(ApplicationDbContext context) : IUserReposi
         return context.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
+    public Task<User?> GetByIdWithRolesAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return context.Users
+            .Include(u => u.Roles)
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+    }
+
     public Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default)
     {
         return context.Users.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
