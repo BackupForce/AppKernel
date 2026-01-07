@@ -1,6 +1,8 @@
-﻿using Application.Users.Create;
+﻿using Application.Users.AssignRole;
+using Application.Users.Create;
 using Application.Users.GetById;
 using Asp.Versioning;
+using Domain.Security;
 using MediatR;
 using Web.Api.Common;
 using Web.Api.Endpoints.Users.Handler;
@@ -38,5 +40,16 @@ public class UsersEndpoints : IEndpoint
         .Produces<Guid>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .WithName("CreateUser");
+
+        group.MapPost(
+                "/{userId:guid}/roles/{roleId:int}",
+                UseCaseInvoker.FromRoute<AssignRoleToUserCommand, Guid, int, AssignRoleToUserResultDto>(
+                    (userId, roleId) => new AssignRoleToUserCommand(userId, roleId)))
+            .RequireAuthorization(Permission.Users.Update.Name)
+            .Produces<AssignRoleToUserResultDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithName("AssignRoleToUser");
     }
 }
