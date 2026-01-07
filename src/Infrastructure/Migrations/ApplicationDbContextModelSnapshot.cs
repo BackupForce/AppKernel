@@ -64,6 +64,9 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_members");
 
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_members_user_id");
+
                     b.HasIndex("TenantId", "MemberNo")
                         .IsUnique()
                         .HasDatabaseName("ux_members_tenant_id_member_no");

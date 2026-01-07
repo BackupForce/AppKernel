@@ -10,11 +10,12 @@ public class MemberTests
     public void Create_Should_Fail_When_DisplayName_Empty()
     {
         // 安排
+        var tenantId = Guid.NewGuid();
         Guid? userId = null;
         string memberNo = "M-001";
 
         // 動作
-        Result<Member> result = Member.Create(userId, memberNo, string.Empty, DateTime.UtcNow);
+        Result<Member> result = Member.Create(tenantId, userId, memberNo, string.Empty, DateTime.UtcNow);
 
         // 斷言
         result.IsFailure.Should().BeTrue();
@@ -24,8 +25,9 @@ public class MemberTests
     [Fact]
     public void Status_Flow_Should_Suspend_And_Activate()
     {
+        var tenantId = Guid.NewGuid();
         // 安排
-        Result<Member> memberResult = Member.Create(null, "M-002", "Test Member", DateTime.UtcNow);
+        Result<Member> memberResult = Member.Create(tenantId, null, "M-002", "Test Member", DateTime.UtcNow);
         Member member = memberResult.Value;
 
         // 動作

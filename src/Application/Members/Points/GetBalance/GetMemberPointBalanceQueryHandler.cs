@@ -37,7 +37,7 @@ internal sealed class GetMemberPointBalanceQueryHandler(
             new
             {
                 request.MemberId,
-                TenantId = tenantContext.TenantId
+                tenantContext.TenantId
             });
 
         if (balance is null)

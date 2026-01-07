@@ -20,7 +20,7 @@ public sealed class MemberResourceNodeSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        var rootNodeLookup = await _db.ResourceNodes
+        Dictionary<Guid, Guid?> rootNodeLookup = await _db.ResourceNodes
             .AsNoTracking()
             .Where(node => node.ParentId == null)
             .ToDictionaryAsync(node => node.TenantId, node => (Guid?)node.Id);

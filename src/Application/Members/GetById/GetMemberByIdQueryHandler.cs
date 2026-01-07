@@ -38,7 +38,7 @@ internal sealed class GetMemberByIdQueryHandler(
             new
             {
                 request.MemberId,
-                TenantId = tenantContext.TenantId
+                tenantContext.TenantId
             });
 
         if (member is null)

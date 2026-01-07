@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260102172402_Init")]
+    [Migration("20260107154401_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -52,6 +52,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("status");
 
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -63,13 +67,16 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_members");
 
-                    b.HasIndex("MemberNo")
-                        .IsUnique()
-                        .HasDatabaseName("ix_members_member_no");
-
                     b.HasIndex("UserId")
+                        .HasDatabaseName("ix_members_user_id");
+
+                    b.HasIndex("TenantId", "MemberNo")
                         .IsUnique()
-                        .HasDatabaseName("ix_members_user_id")
+                        .HasDatabaseName("ux_members_tenant_id_member_no");
+
+                    b.HasIndex("TenantId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_members_tenant_id_user_id")
                         .HasFilter("user_id IS NOT NULL");
 
                     b.ToTable("members", "public");
@@ -343,6 +350,29 @@ namespace Infrastructure.Migrations
                     b.ToTable("node_relation", "public");
                 });
 
+            modelBuilder.Entity("Domain.Security.Group", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ExternalKey")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("external_key");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_groups");
+
+                    b.ToTable("groups", "public");
+                });
+
             modelBuilder.Entity("Domain.Security.Permission", b =>
                 {
                     b.Property<int>("Id")
@@ -375,6 +405,97 @@ namespace Infrastructure.Migrations
                     b.ToTable("permission", "public");
                 });
 
+            modelBuilder.Entity("Domain.Security.PermissionAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("integer")
+                        .HasColumnName("decision");
+
+                    b.Property<Guid?>("NodeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("node_id");
+
+                    b.Property<string>("PermissionCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("permission_code");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subject_id");
+
+                    b.Property<int>("SubjectType")
+                        .HasColumnType("integer")
+                        .HasColumnName("subject_type");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_permission_assignments");
+
+                    b.HasIndex("NodeId")
+                        .HasDatabaseName("ix_permission_assignments_node_id");
+
+                    b.HasIndex("PermissionCode")
+                        .HasDatabaseName("ix_permission_assignments_permission_code");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_permission_assignments_tenant_id");
+
+                    b.HasIndex("SubjectType", "SubjectId")
+                        .HasDatabaseName("ix_permission_assignments_subject_type_subject_id");
+
+                    b.ToTable("permission_assignments", "public");
+                });
+
+            modelBuilder.Entity("Domain.Security.ResourceNode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ExternalKey")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("external_key");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_resource_nodes");
+
+                    b.HasIndex("ParentId")
+                        .HasDatabaseName("ix_resource_nodes_parent_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_resource_nodes_tenant_id");
+
+                    b.HasIndex("TenantId", "ExternalKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_resource_nodes_tenant_id_external_key");
+
+                    b.ToTable("resource_nodes", "public");
+                });
+
             modelBuilder.Entity("Domain.Security.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -393,6 +514,55 @@ namespace Infrastructure.Migrations
                         .HasName("pk_role");
 
                     b.ToTable("role", "public");
+                });
+
+            modelBuilder.Entity("Domain.Security.UserGroup", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.HasKey("UserId", "GroupId")
+                        .HasName("pk_user_groups");
+
+                    b.HasIndex("GroupId")
+                        .HasDatabaseName("ix_user_groups_group_id");
+
+                    b.HasIndex("UserId", "GroupId")
+                        .HasDatabaseName("ix_user_groups_user_id_group_id");
+
+                    b.ToTable("user_groups", "public");
+                });
+
+            modelBuilder.Entity("Domain.Tenants.Tenant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tenants");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tenants_code");
+
+                    b.ToTable("tenants", "public");
                 });
 
             modelBuilder.Entity("Domain.Users.User", b =>
@@ -435,6 +605,34 @@ namespace Infrastructure.Migrations
                         .HasName("pk_users");
 
                     b.ToTable("users", "public");
+                });
+
+            modelBuilder.Entity("Domain.Users.UserTenant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_tenants");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_user_tenants_tenant_id");
+
+                    b.HasIndex("UserId", "TenantId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_tenants_user_id_tenant_id");
+
+                    b.ToTable("user_tenants", "public");
                 });
 
             modelBuilder.Entity("Infrastructure.Outbox.OutboxMessage", b =>
@@ -578,6 +776,68 @@ namespace Infrastructure.Migrations
                         .HasConstraintName("fk_permission_role_role_id");
                 });
 
+            modelBuilder.Entity("Domain.Security.PermissionAssignment", b =>
+                {
+                    b.HasOne("Domain.Security.ResourceNode", "Node")
+                        .WithMany()
+                        .HasForeignKey("NodeId")
+                        .HasConstraintName("fk_permission_assignments_resource_nodes_node_id");
+
+                    b.Navigation("Node");
+                });
+
+            modelBuilder.Entity("Domain.Security.ResourceNode", b =>
+                {
+                    b.HasOne("Domain.Security.ResourceNode", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .HasConstraintName("fk_resource_nodes_resource_nodes_parent_id");
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("Domain.Security.UserGroup", b =>
+                {
+                    b.HasOne("Domain.Security.Group", "Group")
+                        .WithMany("UserGroups")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_groups_groups_group_id");
+
+                    b.HasOne("Domain.Users.User", "User")
+                        .WithMany("UserGroups")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_groups_users_user_id");
+
+                    b.Navigation("Group");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Users.UserTenant", b =>
+                {
+                    b.HasOne("Domain.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_tenants_tenants_tenant_id");
+
+                    b.HasOne("Domain.Users.User", "User")
+                        .WithMany("UserTenants")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_tenants_users_user_id");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("RoleUser", b =>
                 {
                     b.HasOne("Domain.Security.Role", null)
@@ -602,9 +862,26 @@ namespace Infrastructure.Migrations
                     b.Navigation("Descendants");
                 });
 
+            modelBuilder.Entity("Domain.Security.Group", b =>
+                {
+                    b.Navigation("UserGroups");
+                });
+
+            modelBuilder.Entity("Domain.Security.ResourceNode", b =>
+                {
+                    b.Navigation("Children");
+                });
+
             modelBuilder.Entity("Domain.Security.Role", b =>
                 {
                     b.Navigation("Permissions");
+                });
+
+            modelBuilder.Entity("Domain.Users.User", b =>
+                {
+                    b.Navigation("UserGroups");
+
+                    b.Navigation("UserTenants");
                 });
 #pragma warning restore 612, 618
         }

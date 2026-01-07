@@ -38,7 +38,7 @@ internal sealed class GetMemberAssetsQueryHandler(
             new
             {
                 request.MemberId,
-                TenantId = tenantContext.TenantId
+                tenantContext.TenantId
             });
 
         return assets.ToArray();

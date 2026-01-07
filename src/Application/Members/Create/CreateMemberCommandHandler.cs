@@ -50,7 +50,7 @@ internal sealed class CreateMemberCommandHandler(
         Member member = memberResult.Value;
         var pointBalance = MemberPointBalance.Create(member.Id, utcNow);
         Guid? parentNodeId = await resourceNodeRepository.GetRootNodeIdAsync(tenantId, cancellationToken);
-        ResourceNode memberNode = ResourceNode.Create(
+        var memberNode = ResourceNode.Create(
             member.DisplayName,
             $"member:{member.Id:D}",
             tenantId,

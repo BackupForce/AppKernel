@@ -104,9 +104,10 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
 
         string? externalValue = rawValue switch
         {
+            null => null,
             Guid guidValue => guidValue.ToString("D"),
             string stringValue => stringValue,
-            _ => rawValue?.ToString()
+            _ => rawValue.ToString()
         };
 
         if (string.IsNullOrWhiteSpace(externalValue))

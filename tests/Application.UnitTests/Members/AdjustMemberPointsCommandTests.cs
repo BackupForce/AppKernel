@@ -17,8 +17,10 @@ public sealed class AdjustMemberPointsCommandTests
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly IDateTimeProvider _dateTimeProvider = Substitute.For<IDateTimeProvider>();
     private readonly IUserContext _userContext = Substitute.For<IUserContext>();
+    private readonly ITenantContext _tenantContext = Substitute.For<ITenantContext>();
     private readonly ICacheService _cacheService = Substitute.For<ICacheService>();
     private readonly IDbTransaction _transaction = Substitute.For<IDbTransaction>();
+     
 
     public AdjustMemberPointsCommandTests()
     {
@@ -30,6 +32,7 @@ public sealed class AdjustMemberPointsCommandTests
             _memberRepository,
             _unitOfWork,
             _dateTimeProvider,
+            _tenantContext,
             _userContext,
             _cacheService);
     }
@@ -37,10 +40,11 @@ public sealed class AdjustMemberPointsCommandTests
     [Fact]
     public async Task Handle_Should_AddPoints_WhenBalanceIsValid()
     {
+        var tenantId = Guid.NewGuid();
         // 安排
-        Result<Member> memberResult = Member.Create(null, "MBR-001", "測試會員", DateTime.UtcNow);
+        Result<Member> memberResult = Member.Create(tenantId, null, "MBR-001", "測試會員", DateTime.UtcNow);
         Member member = memberResult.Value;
-        _memberRepository.GetByIdAsync(member.Id, Arg.Any<CancellationToken>()).Returns(member);
+        _memberRepository.GetByIdAsync(member.TenantId, member.Id, Arg.Any<CancellationToken>()).Returns(member);
         _memberRepository.GetPointBalanceAsync(member.Id, Arg.Any<CancellationToken>())
             .Returns(MemberPointBalance.Create(member.Id, DateTime.UtcNow));
 
@@ -61,9 +65,10 @@ public sealed class AdjustMemberPointsCommandTests
     public async Task Handle_Should_Fail_WhenBalanceWouldBeNegative()
     {
         // 安排
-        Result<Member> memberResult = Member.Create(null, "MBR-002", "測試會員", DateTime.UtcNow);
+        var tenantId = Guid.NewGuid();
+        Result<Member> memberResult = Member.Create(tenantId, null, "MBR-002", "測試會員", DateTime.UtcNow);
         Member member = memberResult.Value;
-        _memberRepository.GetByIdAsync(member.Id, Arg.Any<CancellationToken>()).Returns(member);
+        _memberRepository.GetByIdAsync(member.TenantId, member.Id, Arg.Any<CancellationToken>()).Returns(member);
         var balance = MemberPointBalance.Create(member.Id, DateTime.UtcNow);
         _memberRepository.GetPointBalanceAsync(member.Id, Arg.Any<CancellationToken>()).Returns(balance);
 

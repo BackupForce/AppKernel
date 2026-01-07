@@ -16,6 +16,17 @@ public partial class Init : Migration
             name: "public");
 
         migrationBuilder.CreateTable(
+            name: "groups",
+            schema: "public",
+            columns: table => new
+            {
+                id = table.Column<Guid>(type: "uuid", nullable: false),
+                name = table.Column<string>(type: "text", nullable: false),
+                external_key = table.Column<string>(type: "text", nullable: false)
+            },
+            constraints: table => table.PrimaryKey("pk_groups", x => x.id));
+
+        migrationBuilder.CreateTable(
             name: "node",
             schema: "public",
             columns: table => new
@@ -42,6 +53,28 @@ public partial class Init : Migration
             constraints: table => table.PrimaryKey("pk_outbox_messages", x => x.id));
 
         migrationBuilder.CreateTable(
+            name: "resource_nodes",
+            schema: "public",
+            columns: table => new
+            {
+                id = table.Column<Guid>(type: "uuid", nullable: false),
+                name = table.Column<string>(type: "text", nullable: false),
+                external_key = table.Column<string>(type: "text", nullable: false),
+                tenant_id = table.Column<Guid>(type: "uuid", nullable: false),
+                parent_id = table.Column<Guid>(type: "uuid", nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_resource_nodes", x => x.id);
+                table.ForeignKey(
+                    name: "fk_resource_nodes_resource_nodes_parent_id",
+                    column: x => x.parent_id,
+                    principalSchema: "public",
+                    principalTable: "resource_nodes",
+                    principalColumn: "id");
+            });
+
+        migrationBuilder.CreateTable(
             name: "role",
             schema: "public",
             columns: table => new
@@ -51,6 +84,17 @@ public partial class Init : Migration
                 name = table.Column<string>(type: "text", nullable: false)
             },
             constraints: table => table.PrimaryKey("pk_role", x => x.id));
+
+        migrationBuilder.CreateTable(
+            name: "tenants",
+            schema: "public",
+            columns: table => new
+            {
+                id = table.Column<Guid>(type: "uuid", nullable: false),
+                code = table.Column<string>(type: "text", nullable: false),
+                name = table.Column<string>(type: "text", nullable: false)
+            },
+            constraints: table => table.PrimaryKey("pk_tenants", x => x.id));
 
         migrationBuilder.CreateTable(
             name: "users",
@@ -95,6 +139,30 @@ public partial class Init : Migration
             });
 
         migrationBuilder.CreateTable(
+            name: "permission_assignments",
+            schema: "public",
+            columns: table => new
+            {
+                id = table.Column<Guid>(type: "uuid", nullable: false),
+                subject_type = table.Column<int>(type: "integer", nullable: false),
+                decision = table.Column<int>(type: "integer", nullable: false),
+                subject_id = table.Column<Guid>(type: "uuid", nullable: false),
+                permission_code = table.Column<string>(type: "text", nullable: false),
+                tenant_id = table.Column<Guid>(type: "uuid", nullable: false),
+                node_id = table.Column<Guid>(type: "uuid", nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_permission_assignments", x => x.id);
+                table.ForeignKey(
+                    name: "fk_permission_assignments_resource_nodes_node_id",
+                    column: x => x.node_id,
+                    principalSchema: "public",
+                    principalTable: "resource_nodes",
+                    principalColumn: "id");
+            });
+
+        migrationBuilder.CreateTable(
             name: "permission",
             schema: "public",
             columns: table => new
@@ -123,6 +191,7 @@ public partial class Init : Migration
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 user_id = table.Column<Guid>(type: "uuid", nullable: true),
+                tenant_id = table.Column<Guid>(type: "uuid", nullable: false),
                 member_no = table.Column<string>(type: "text", nullable: false),
                 display_name = table.Column<string>(type: "text", nullable: false),
                 status = table.Column<short>(type: "smallint", nullable: false),
@@ -161,6 +230,61 @@ public partial class Init : Migration
                 table.ForeignKey(
                     name: "fk_role_user_users_users_id",
                     column: x => x.users_id,
+                    principalSchema: "public",
+                    principalTable: "users",
+                    principalColumn: "id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "user_groups",
+            schema: "public",
+            columns: table => new
+            {
+                user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                group_id = table.Column<Guid>(type: "uuid", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_user_groups", x => new { x.user_id, x.group_id });
+                table.ForeignKey(
+                    name: "fk_user_groups_groups_group_id",
+                    column: x => x.group_id,
+                    principalSchema: "public",
+                    principalTable: "groups",
+                    principalColumn: "id",
+                    onDelete: ReferentialAction.Cascade);
+                table.ForeignKey(
+                    name: "fk_user_groups_users_user_id",
+                    column: x => x.user_id,
+                    principalSchema: "public",
+                    principalTable: "users",
+                    principalColumn: "id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "user_tenants",
+            schema: "public",
+            columns: table => new
+            {
+                id = table.Column<Guid>(type: "uuid", nullable: false),
+                user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                tenant_id = table.Column<Guid>(type: "uuid", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_user_tenants", x => x.id);
+                table.ForeignKey(
+                    name: "fk_user_tenants_tenants_tenant_id",
+                    column: x => x.tenant_id,
+                    principalSchema: "public",
+                    principalTable: "tenants",
+                    principalColumn: "id",
+                    onDelete: ReferentialAction.Cascade);
+                table.ForeignKey(
+                    name: "fk_user_tenants_users_user_id",
+                    column: x => x.user_id,
                     principalSchema: "public",
                     principalTable: "users",
                     principalColumn: "id",
@@ -326,17 +450,23 @@ public partial class Init : Migration
             columns: new[] { "reference_type", "reference_id" });
 
         migrationBuilder.CreateIndex(
-            name: "ix_members_member_no",
-            schema: "public",
-            table: "members",
-            column: "member_no",
-            unique: true);
-
-        migrationBuilder.CreateIndex(
             name: "ix_members_user_id",
             schema: "public",
             table: "members",
-            column: "user_id",
+            column: "user_id");
+
+        migrationBuilder.CreateIndex(
+            name: "ux_members_tenant_id_member_no",
+            schema: "public",
+            table: "members",
+            columns: new[] { "tenant_id", "member_no" },
+            unique: true);
+
+        migrationBuilder.CreateIndex(
+            name: "ux_members_tenant_id_user_id",
+            schema: "public",
+            table: "members",
+            columns: new[] { "tenant_id", "user_id" },
             unique: true,
             filter: "user_id IS NOT NULL");
 
@@ -353,10 +483,85 @@ public partial class Init : Migration
             column: "role_id");
 
         migrationBuilder.CreateIndex(
+            name: "ix_permission_assignments_node_id",
+            schema: "public",
+            table: "permission_assignments",
+            column: "node_id");
+
+        migrationBuilder.CreateIndex(
+            name: "ix_permission_assignments_permission_code",
+            schema: "public",
+            table: "permission_assignments",
+            column: "permission_code");
+
+        migrationBuilder.CreateIndex(
+            name: "ix_permission_assignments_subject_type_subject_id",
+            schema: "public",
+            table: "permission_assignments",
+            columns: new[] { "subject_type", "subject_id" });
+
+        migrationBuilder.CreateIndex(
+            name: "ix_permission_assignments_tenant_id",
+            schema: "public",
+            table: "permission_assignments",
+            column: "tenant_id");
+
+        migrationBuilder.CreateIndex(
+            name: "ix_resource_nodes_parent_id",
+            schema: "public",
+            table: "resource_nodes",
+            column: "parent_id");
+
+        migrationBuilder.CreateIndex(
+            name: "ix_resource_nodes_tenant_id",
+            schema: "public",
+            table: "resource_nodes",
+            column: "tenant_id");
+
+        migrationBuilder.CreateIndex(
+            name: "ux_resource_nodes_tenant_id_external_key",
+            schema: "public",
+            table: "resource_nodes",
+            columns: new[] { "tenant_id", "external_key" },
+            unique: true);
+
+        migrationBuilder.CreateIndex(
             name: "ix_role_user_users_id",
             schema: "public",
             table: "role_user",
             column: "users_id");
+
+        migrationBuilder.CreateIndex(
+            name: "ix_tenants_code",
+            schema: "public",
+            table: "tenants",
+            column: "code",
+            unique: true);
+
+        migrationBuilder.CreateIndex(
+            name: "ix_user_groups_group_id",
+            schema: "public",
+            table: "user_groups",
+            column: "group_id");
+
+        migrationBuilder.CreateIndex(
+            name: "ix_user_groups_user_id_group_id",
+            schema: "public",
+            table: "user_groups",
+            columns: new[] { "user_id", "group_id" });
+
+        migrationBuilder.CreateIndex(
+            name: "ix_user_tenants_tenant_id",
+            schema: "public",
+            table: "user_tenants",
+            column: "tenant_id");
+
+        migrationBuilder.CreateIndex(
+            name: "ix_user_tenants_user_id_tenant_id",
+            schema: "public",
+            table: "user_tenants",
+            columns: new[] { "user_id", "tenant_id" },
+            unique: true);
     }
 
     /// <inheritdoc />
@@ -395,7 +600,19 @@ public partial class Init : Migration
             schema: "public");
 
         migrationBuilder.DropTable(
+            name: "permission_assignments",
+            schema: "public");
+
+        migrationBuilder.DropTable(
             name: "role_user",
+            schema: "public");
+
+        migrationBuilder.DropTable(
+            name: "user_groups",
+            schema: "public");
+
+        migrationBuilder.DropTable(
+            name: "user_tenants",
             schema: "public");
 
         migrationBuilder.DropTable(
@@ -407,7 +624,19 @@ public partial class Init : Migration
             schema: "public");
 
         migrationBuilder.DropTable(
+            name: "resource_nodes",
+            schema: "public");
+
+        migrationBuilder.DropTable(
             name: "role",
+            schema: "public");
+
+        migrationBuilder.DropTable(
+            name: "groups",
+            schema: "public");
+
+        migrationBuilder.DropTable(
+            name: "tenants",
             schema: "public");
 
         migrationBuilder.DropTable(

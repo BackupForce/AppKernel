@@ -39,7 +39,7 @@ internal sealed class GetMemberActivityLogQueryHandler(
         var parameters = new DynamicParameters(new
         {
             request.MemberId,
-            TenantId = tenantContext.TenantId
+            tenantContext.TenantId
         });
 
         if (request.StartDate.HasValue)

@@ -44,7 +44,7 @@ internal sealed class GetMemberAssetHistoryQueryHandler(
         {
             request.MemberId,
             request.AssetCode,
-            TenantId = tenantContext.TenantId
+            tenantContext.TenantId
         });
 
         if (request.StartDate.HasValue)
