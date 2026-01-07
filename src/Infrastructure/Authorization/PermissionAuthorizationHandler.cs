@@ -40,27 +40,30 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
 
         Guid userId = context.User.GetUserId();
         string requiredPermission = requirement.PermissionCode;
-        Guid? nodeId = await ResolveNodeIdAsync(context);
+        (Guid? nodeId, Guid? tenantId) = await ResolveAuthorizationContextAsync(context);
 
-        if (await _permissionProvider.HasPermissionAsync(userId, requiredPermission, nodeId))
+        if (await _permissionProvider.HasPermissionAsync(userId, requiredPermission, nodeId, tenantId))
         {
             context.Succeed(requirement);
         }
     }
 
-    private async Task<Guid?> ResolveNodeIdAsync(AuthorizationHandlerContext context)
+    private async Task<(Guid? nodeId, Guid? tenantId)> ResolveAuthorizationContextAsync(
+        AuthorizationHandlerContext context)
     {
         HttpContext? httpContext = context.Resource as HttpContext ?? _httpContextAccessor.HttpContext;
         if (httpContext is null)
         {
-            return null;
+            return (null, null);
         }
+
+        Guid? tenantId = TryResolveTenantId(httpContext);
 
         if (httpContext.Request.RouteValues.TryGetValue("id", out object? idValue))
         {
             if (TryGetGuid(idValue, out Guid id))
             {
-                return id;
+                return (id, tenantId);
             }
         }
 
@@ -68,7 +71,7 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
         {
             if (TryGetGuid(externalKeyValue, out Guid externalKeyGuid))
             {
-                return externalKeyGuid;
+                return (externalKeyGuid, tenantId);
             }
 
             string? externalKey = externalKeyValue?.ToString();
@@ -82,12 +85,21 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
 
                 if (nodeId != Guid.Empty)
                 {
-                    return nodeId;
+                    return (nodeId, tenantId);
                 }
             }
         }
 
-        return null;
+        if (tenantId.HasValue)
+        {
+            Guid tenantNodeId = await ResolveTenantNodeIdAsync(tenantId.Value);
+            if (tenantNodeId != Guid.Empty)
+            {
+                return (tenantNodeId, tenantId);
+            }
+        }
+
+        return (null, tenantId);
     }
 
     private static bool TryGetGuid(object? value, out Guid id)
@@ -106,5 +118,46 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
 
         id = Guid.Empty;
         return false;
+    }
+
+    private static Guid? TryResolveTenantId(HttpContext httpContext)
+    {
+        if (httpContext.Request.RouteValues.TryGetValue("tenantId", out object? tenantValue))
+        {
+            if (TryGetGuid(tenantValue, out Guid tenantId))
+            {
+                return tenantId;
+            }
+        }
+
+        if (httpContext.Items.TryGetValue("TenantId", out object? tenantItem))
+        {
+            if (TryGetGuid(tenantItem, out Guid tenantId))
+            {
+                return tenantId;
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<Guid> ResolveTenantNodeIdAsync(Guid tenantId)
+    {
+        Guid nodeId = await _dbContext.ResourceNodes
+            .AsNoTracking()
+            .Where(node => node.Id == tenantId)
+            .Select(node => node.Id)
+            .SingleOrDefaultAsync();
+
+        if (nodeId != Guid.Empty)
+        {
+            return nodeId;
+        }
+
+        return await _dbContext.ResourceNodes
+            .AsNoTracking()
+            .Where(node => node.ExternalKey == tenantId.ToString("D"))
+            .Select(node => node.Id)
+            .SingleOrDefaultAsync();
     }
 }

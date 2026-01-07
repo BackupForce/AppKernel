@@ -18,14 +18,14 @@ internal sealed class PermissionProvider : IPermissionProvider
         _cacheService = cacheService;
     }
 
-    public async Task<bool> HasPermissionAsync(Guid userId, string permissionCode, Guid? nodeId)
+    public async Task<bool> HasPermissionAsync(Guid userId, string permissionCode, Guid? nodeId, Guid? tenantId)
     {
         if (string.IsNullOrWhiteSpace(permissionCode))
         {
             return false;
         }
 
-        string cacheKey = AuthzCacheKeys.ForUser(userId);
+        string cacheKey = AuthzCacheKeys.ForUserTenant(userId, tenantId);
         UserPermissionMatrix? cachedMatrix =
             await _cacheService.GetAsync<UserPermissionMatrix>(cacheKey);
 
