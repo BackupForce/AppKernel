@@ -52,7 +52,7 @@ public static class UseCaseInvoker
         Func<TIn, TRequest> toRequest)
         where TRequest : IRequest<Result<TResult>>
     {
-        return CreateFromRouteHandler(
+        return CreateFromRouteHandler<TIn>(
             routeName,
             async (input, sender, ct) =>
             {
