@@ -94,7 +94,6 @@ public sealed class DefaultTenantSeeder : IDataSeeder
         Email rootEmail = emailResult.Value;
 
         User? rootUser = await _db.Users
-            .Include(user => user.UserTenants)
             .FirstOrDefaultAsync(user => user.Email == rootEmail);
 
         if (rootUser is null)
@@ -103,13 +102,16 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             return;
         }
 
-        if (rootUser.HasTenant(tenantId))
+        bool hasTenant = await _db.UserTenants
+            .AnyAsync(userTenant => userTenant.UserId == rootUser.Id && userTenant.TenantId == tenantId);
+
+        if (hasTenant)
         {
             _logger.LogInformation("✅ Root user already bound to default tenant: {Email}", email);
             return;
         }
 
-        rootUser.AssignTenant(tenantId);
+        _db.UserTenants.Add(UserTenant.Create(rootUser.Id, tenantId));
         await _db.SaveChangesAsync();
 
         _logger.LogInformation("✅ Root user bound to default tenant: {Email}", email);
