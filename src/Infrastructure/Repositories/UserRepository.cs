@@ -29,6 +29,14 @@ internal sealed class UserRepository(ApplicationDbContext context) : IUserReposi
     {
         return context.Users.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
+
+    public Task<bool> IsInTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        return context.UserTenants
+            .AsNoTracking()
+            .AnyAsync(userTenant => userTenant.UserId == userId && userTenant.TenantId == tenantId, cancellationToken);
+    }
+
     public async Task<bool> IsEmailUniqueAsync(Email email)
     {
         return !await context.Users.AnyAsync(u => u.Email == email);

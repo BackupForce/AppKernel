@@ -24,6 +24,9 @@ public sealed class User : Entity
     private readonly List<UserGroup> _userGroups = new();
     public IReadOnlyCollection<UserGroup> UserGroups => _userGroups.ToList();
 
+    private readonly List<UserTenant> _userTenants = new();
+    public IReadOnlyCollection<UserTenant> UserTenants => _userTenants.ToList();
+
     public Email Email { get; private set; }
 
     public Name Name { get; private set; }
@@ -98,5 +101,31 @@ public sealed class User : Entity
         }
 
         _userGroups.Remove(target);
+    }
+
+    public bool HasTenant(Guid tenantId)
+    {
+        return _userTenants.Any(userTenant => userTenant.TenantId == tenantId);
+    }
+
+    public void AssignTenant(Guid tenantId)
+    {
+        if (HasTenant(tenantId))
+        {
+            return;
+        }
+
+        _userTenants.Add(UserTenant.Create(Id, tenantId));
+    }
+
+    public void RemoveTenant(Guid tenantId)
+    {
+        UserTenant? target = _userTenants.FirstOrDefault(userTenant => userTenant.TenantId == tenantId);
+        if (target is null)
+        {
+            return;
+        }
+
+        _userTenants.Remove(target);
     }
 }

@@ -9,6 +9,7 @@ using Application.Abstractions.Infrastructure;
 using Dapper;
 using Domain.Members;
 using Domain.Security;
+using Domain.Tenants;
 using Domain.Users;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -97,6 +98,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IMemberRepository, MemberRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IGroupRepository, GroupRepository>();
 
         return services;

@@ -9,4 +9,4 @@ using MediatR;
 using SharedKernel;
 
 namespace Application.Auth;
-public sealed record LoginCommand(string Email, string Password) : ICommand<LoginResponse>;
+public sealed record LoginCommand(string Email, string Password, string TenantCode) : ICommand<LoginResponse>;

@@ -24,6 +24,7 @@ public class JwtService : IJwtService
     public string GenerateToken(
          Guid userId,
          string userName,
+         Guid tenantId,
          IEnumerable<string> roles,
          IEnumerable<Guid> nodeIds,
          IEnumerable<string> permissions)
@@ -32,6 +33,7 @@ public class JwtService : IJwtService
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name, userName),
+            new Claim("tenantId", tenantId.ToString("D")),
             new Claim(ClaimTypes.Role, string.Join(",", roles)),
             new Claim("nodes", string.Join(",", nodeIds)),
             new Claim("permissions", string.Join(",", permissions))
@@ -72,15 +74,18 @@ public class JwtService : IJwtService
             string? userIdStr = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             string? userName = principal.FindFirst(ClaimTypes.Name)?.Value;
             string? rolesStr = principal.FindFirst(ClaimTypes.Role)?.Value;
+            string? tenantIdStr = principal.FindFirst("tenantId")?.Value;
             string? nodesStr = principal.FindFirst("nodes")?.Value;
             string? permissionsStr = principal.FindFirst("permissions")?.Value;
 
             Guid userId = Guid.TryParse(userIdStr, out Guid parsedUserId) ? parsedUserId : Guid.Empty;
+            Guid tenantId = Guid.TryParse(tenantIdStr, out Guid parsedTenantId) ? parsedTenantId : Guid.Empty;
 
             return new JwtPayloadDto
             {
                 UserId = userId,
                 UserName = userName ?? string.Empty,
+                TenantId = tenantId,
                 Roles = (rolesStr ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
                 NodeIds = (nodesStr ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Select(id => Guid.TryParse(id, out Guid g) ? g : Guid.Empty)
