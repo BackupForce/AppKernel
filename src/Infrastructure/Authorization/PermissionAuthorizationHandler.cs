@@ -1,86 +1,110 @@
-﻿using System.Security.Claims;
+﻿using Application.Abstractions.Authorization;
+using Infrastructure.Authentication;
+using Infrastructure.Database;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Authorization;
 
-// 基於 JWT permissions claim 的授權處理器，直接解析權限字串，不查詢資料庫
+// 基於 permission provider 的授權處理器，支援資源節點授權判斷
 internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
 {
-    protected override Task HandleRequirementAsync(
+    private readonly IPermissionProvider _permissionProvider;
+    private readonly ApplicationDbContext _dbContext;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public PermissionAuthorizationHandler(
+        IPermissionProvider permissionProvider,
+        ApplicationDbContext dbContext,
+        IHttpContextAccessor httpContextAccessor)
+    {
+        _permissionProvider = permissionProvider;
+        _dbContext = dbContext;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
         if (context.User is null || context.User.Identity is null)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         if (!context.User.Identity.IsAuthenticated)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        Claim? permissionsClaim = context.User.FindFirst("permissions");
-        if (permissionsClaim is null || string.IsNullOrWhiteSpace(permissionsClaim.Value))
-        {
-            // 沒有權限清單直接拒絕
-            return Task.CompletedTask;
-        }
-
-        // 解析 JWT 的 permissions claim
-        string[] userPermissions = permissionsClaim.Value.Split(
-            ',',
-            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
+        Guid userId = context.User.GetUserId();
         string requiredPermission = requirement.PermissionCode;
+        Guid? nodeId = await ResolveNodeIdAsync(context);
 
-        if (UserHasExactPermission(userPermissions, requiredPermission))
-        {
-            context.Succeed(requirement);
-            return Task.CompletedTask;
-        }
-
-        // 支援 "xxx:*" 的 wildcard 權限
-        if (UserHasWildcardPermission(userPermissions, requiredPermission))
+        if (await _permissionProvider.HasPermissionAsync(userId, requiredPermission, nodeId))
         {
             context.Succeed(requirement);
         }
-
-        return Task.CompletedTask;
     }
 
-    private static bool UserHasExactPermission(string[] userPermissions, string requiredPermission)
+    private async Task<Guid?> ResolveNodeIdAsync(AuthorizationHandlerContext context)
     {
-        for (int index = 0; index < userPermissions.Length; index++)
+        HttpContext? httpContext = context.Resource as HttpContext ?? _httpContextAccessor.HttpContext;
+        if (httpContext is null)
         {
-            if (string.Equals(userPermissions[index], requiredPermission, StringComparison.OrdinalIgnoreCase))
+            return null;
+        }
+
+        if (httpContext.Request.RouteValues.TryGetValue("id", out object? idValue))
+        {
+            if (TryGetGuid(idValue, out Guid id))
             {
-                return true;
+                return id;
             }
         }
 
-        return false;
-    }
-
-    private static bool UserHasWildcardPermission(string[] userPermissions, string requiredPermission)
-    {
-        int separatorIndex = requiredPermission.IndexOf(':');
-        if (separatorIndex <= 0)
+        if (httpContext.Request.RouteValues.TryGetValue("externalKey", out object? externalKeyValue))
         {
-            return false;
-        }
-
-        string requiredPrefix = requiredPermission.Substring(0, separatorIndex);
-        string wildcardPermission = requiredPrefix + ":*";
-
-        for (int index = 0; index < userPermissions.Length; index++)
-        {
-            if (string.Equals(userPermissions[index], wildcardPermission, StringComparison.OrdinalIgnoreCase) && requiredPermission.StartsWith(requiredPrefix + ":", StringComparison.OrdinalIgnoreCase))
+            if (TryGetGuid(externalKeyValue, out Guid externalKeyGuid))
             {
-                return true;
+                return externalKeyGuid;
+            }
+
+            string? externalKey = externalKeyValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(externalKey))
+            {
+                Guid nodeId = await _dbContext.ResourceNodes
+                    .AsNoTracking()
+                    .Where(node => node.ExternalKey == externalKey)
+                    .Select(node => node.Id)
+                    .SingleOrDefaultAsync();
+
+                if (nodeId != Guid.Empty)
+                {
+                    return nodeId;
+                }
             }
         }
 
+        return null;
+    }
+
+    private static bool TryGetGuid(object? value, out Guid id)
+    {
+        if (value is Guid guidValue)
+        {
+            id = guidValue;
+            return true;
+        }
+
+        if (value is string stringValue && Guid.TryParse(stringValue, out Guid parsedId))
+        {
+            id = parsedId;
+            return true;
+        }
+
+        id = Guid.Empty;
         return false;
     }
 }
