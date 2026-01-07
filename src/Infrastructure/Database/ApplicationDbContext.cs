@@ -22,6 +22,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<PermissionAssignment> PermissionAssignments { get; set; }
     public DbSet<Group> Groups { get; set; }
     public DbSet<UserGroup> UserGroups { get; set; }
+    public DbSet<UserTenant> UserTenants { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

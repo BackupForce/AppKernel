@@ -25,6 +25,19 @@ internal sealed class PermissionProvider : IPermissionProvider
             return false;
         }
 
+        if (!tenantId.HasValue)
+        {
+            return false;
+        }
+
+        bool isInTenant = await _dbContext.UserTenants
+            .AsNoTracking()
+            .AnyAsync(userTenant => userTenant.UserId == userId && userTenant.TenantId == tenantId.Value);
+        if (!isInTenant)
+        {
+            return false;
+        }
+
         string cacheKey = AuthzCacheKeys.ForUserTenant(userId, tenantId);
         UserPermissionMatrix? cachedMatrix =
             await _cacheService.GetAsync<UserPermissionMatrix>(cacheKey);
@@ -35,7 +48,7 @@ internal sealed class PermissionProvider : IPermissionProvider
             await _cacheService.SetAsync(cacheKey, cachedMatrix, CacheTtl);
         }
 
-        return await EvaluatePermissionAsync(cachedMatrix, permissionCode, nodeId);
+        return await EvaluatePermissionAsync(cachedMatrix, permissionCode, nodeId, tenantId);
     }
 
     private async Task<UserPermissionMatrix> BuildUserPermissionMatrixAsync(Guid userId)
@@ -87,7 +100,8 @@ internal sealed class PermissionProvider : IPermissionProvider
     private async Task<bool> EvaluatePermissionAsync(
         UserPermissionMatrix matrix,
         string permissionCode,
-        Guid? nodeId)
+        Guid? nodeId,
+        Guid? tenantId)
     {
         string normalizedCode = NormalizePermissionCode(permissionCode);
         if (!matrix.Decisions.TryGetValue(normalizedCode, out List<PermissionDecisionEntry>? decisions))
@@ -95,9 +109,11 @@ internal sealed class PermissionProvider : IPermissionProvider
             return false;
         }
 
-        IEnumerable<Guid?> nodeScope = nodeId.HasValue
-            ? await GetNodeScopeAsync(nodeId.Value)
-            : new Guid?[] { null };
+        IReadOnlyList<Guid?> nodeScope = await GetNodeScopeAsync(nodeId, tenantId);
+        if (nodeScope.Count == 0)
+        {
+            return false;
+        }
 
         var nodeScopeSet = new HashSet<Guid?>(nodeScope);
 
@@ -113,11 +129,27 @@ internal sealed class PermissionProvider : IPermissionProvider
         return relevantDecisions.Any(entry => entry.Decision == Decision.Allow);
     }
 
-    private async Task<IReadOnlyList<Guid?>> GetNodeScopeAsync(Guid nodeId)
+    private async Task<IReadOnlyList<Guid?>> GetNodeScopeAsync(Guid? nodeId, Guid? tenantId)
     {
-        var lineage = new List<Guid?> { nodeId };
-        var visited = new HashSet<Guid> { nodeId };
-        Guid? currentId = nodeId;
+        if (!tenantId.HasValue)
+        {
+            return Array.Empty<Guid?>();
+        }
+
+        if (tenantId.HasValue && !nodeId.HasValue)
+        {
+            return new List<Guid?> { tenantId.Value };
+        }
+
+        if (!nodeId.HasValue)
+        {
+            return new List<Guid?> { null };
+        }
+
+        Guid currentNodeId = nodeId.Value;
+        var lineage = new List<Guid?> { currentNodeId };
+        var visited = new HashSet<Guid> { currentNodeId };
+        Guid? currentId = currentNodeId;
 
         while (currentId.HasValue)
         {
@@ -139,6 +171,16 @@ internal sealed class PermissionProvider : IPermissionProvider
 
             lineage.Add(node.ParentId);
             currentId = node.ParentId;
+        }
+
+        if (tenantId.HasValue)
+        {
+            if (!lineage.Contains(tenantId.Value))
+            {
+                return Array.Empty<Guid?>();
+            }
+
+            return lineage;
         }
 
         lineage.Add(null);
