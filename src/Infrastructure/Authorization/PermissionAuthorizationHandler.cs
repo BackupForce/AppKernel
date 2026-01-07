@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Authorization;
 
-// 基於 permission provider 的授權處理器，支援資源節點授權判斷
+// 基於 permission provider 的授權處理器，支援 tenant 資源節點授權判斷
 internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
 {
     private readonly IPermissionProvider _permissionProvider;
@@ -58,34 +58,6 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
         }
 
         Guid? tenantId = TryResolveTenantId(httpContext);
-
-        if (httpContext.Request.RouteValues.TryGetValue("id", out object? idValue) && TryGetGuid(idValue, out Guid id))
-        {
-            return (id, tenantId);
-        }
-
-        if (httpContext.Request.RouteValues.TryGetValue("externalKey", out object? externalKeyValue))
-        {
-            if (TryGetGuid(externalKeyValue, out Guid externalKeyGuid))
-            {
-                return (externalKeyGuid, tenantId);
-            }
-
-            string? externalKey = externalKeyValue?.ToString();
-            if (!string.IsNullOrWhiteSpace(externalKey) && tenantId.HasValue)
-            {
-                Guid nodeId = await _dbContext.ResourceNodes
-                    .AsNoTracking()
-                    .Where(node => node.TenantId == tenantId.Value && node.ExternalKey == externalKey)
-                    .Select(node => node.Id)
-                    .SingleOrDefaultAsync();
-
-                if (nodeId != Guid.Empty)
-                {
-                    return (nodeId, tenantId);
-                }
-            }
-        }
 
         if (tenantId.HasValue)
         {

@@ -6,6 +6,7 @@
 
 - **JWT Bearer**：除標示 `AllowAnonymous` 以外的端點都需要在 `Authorization` 標頭帶入 `Bearer <token>`。
 - **權限控制**：部分路由額外要求特定權限（例如 `members:read`）；權限常數定義於 `Domain.Security.Permission`。 【F:src/Domain/Security/Permission.cs†L9-L83】
+- **節點授權**：授權處理器僅會以 `tenantId`/`TenantId` 解析 tenant node 作為 fallback，不會再自動從路由的 `id`/`externalKey` 解析節點。若 API 需要節點授權，請在 handler 內自行從 query/header/body 解析 `nodeId` 或 `externalKey` 並手動指定。
 - **錯誤響應**：使用 RFC 7807 的 `application/problem+json`，`title`/`detail` 會依錯誤類型填入，驗證錯誤會在 `extensions.errors` 帶回欄位訊息。 【F:src/Web.Api/Infrastructure/CustomResults.cs†L6-L73】
 
 ## 基本端點
