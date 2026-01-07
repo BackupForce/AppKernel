@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Data;
+﻿using Application.Abstractions.Authorization;
+using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Security;
 using SharedKernel;
@@ -7,6 +8,7 @@ namespace Application.Roles.Permissions;
 
 internal sealed class RemoveRolePermissionsCommandHandler(
     IRoleRepository roleRepository,
+    IAuthzCacheInvalidator invalidator,
     IUnitOfWork unitOfWork)
     : ICommandHandler<RemoveRolePermissionsCommand>
 {
@@ -35,6 +37,7 @@ internal sealed class RemoveRolePermissionsCommandHandler(
 
         await roleRepository.RemovePermissionsAsync(request.RoleId, codes, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await invalidator.InvalidateRoleAsync(request.RoleId, cancellationToken);
 
         return Result.Success();
     }

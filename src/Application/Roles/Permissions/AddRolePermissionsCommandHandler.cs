@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Data;
+﻿using Application.Abstractions.Authorization;
+using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Security;
 using SharedKernel;
@@ -7,6 +8,7 @@ namespace Application.Roles.Permissions;
 
 internal sealed class AddRolePermissionsCommandHandler(
     IRoleRepository roleRepository,
+    IAuthzCacheInvalidator invalidator,
     IUnitOfWork unitOfWork)
     : ICommandHandler<AddRolePermissionsCommand>
 {
@@ -56,6 +58,7 @@ internal sealed class AddRolePermissionsCommandHandler(
 
         await roleRepository.AddPermissionsAsync(permissionsToAdd, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await invalidator.InvalidateRoleAsync(request.RoleId, cancellationToken);
 
         return Result.Success();
     }
