@@ -1,4 +1,5 @@
-﻿using SharedKernel;
+﻿using Domain.Tenants;
+using SharedKernel;
 
 namespace Domain.Users;
 
@@ -19,6 +20,7 @@ public sealed class UserTenant : Entity
     public Guid TenantId { get; private set; }
 
     public User User { get; private set; } = null!;
+    public Tenant Tenant { get; private set; } = null!;
 
     public static UserTenant Create(Guid userId, Guid tenantId)
     {

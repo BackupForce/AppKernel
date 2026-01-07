@@ -1,4 +1,5 @@
-﻿using Domain.Users;
+﻿using Domain.Tenants;
+using Domain.Users;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -25,5 +26,9 @@ internal sealed class UserTenantConfiguration : IEntityTypeConfiguration<UserTen
         builder.HasOne(userTenant => userTenant.User)
             .WithMany(user => user.UserTenants)
             .HasForeignKey(userTenant => userTenant.UserId);
+
+        builder.HasOne(userTenant => userTenant.Tenant)
+            .WithMany()
+            .HasForeignKey(userTenant => userTenant.TenantId);
     }
 }

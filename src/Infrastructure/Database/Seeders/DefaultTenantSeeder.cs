@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Application.Abstractions.Infrastructure;
 using Domain.Security;
+using Domain.Tenants;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -51,13 +52,13 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             return;
         }
 
-        ResourceNode? tenantNode = await _db.ResourceNodes
-            .FirstOrDefaultAsync(node => node.ExternalKey == code);
+        Tenant? tenant = await _db.Tenants
+            .FirstOrDefaultAsync(existingTenant => existingTenant.Code == code);
 
-        if (tenantNode is null)
+        if (tenant is null)
         {
-            tenantNode = ResourceNode.Create(name, code);
-            _db.ResourceNodes.Add(tenantNode);
+            tenant = Tenant.Create(Guid.NewGuid(), code, name);
+            _db.Tenants.Add(tenant);
             await _db.SaveChangesAsync();
 
             _logger.LogInformation("✅ Default tenant created: {Code} - {Name}", code, name);
@@ -67,7 +68,17 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             _logger.LogInformation("✅ Default tenant already exists: {Code}", code);
         }
 
-        await EnsureRootUserTenantAsync(tenantNode.Id);
+        ResourceNode? tenantNode = await _db.ResourceNodes
+            .FirstOrDefaultAsync(node => node.ExternalKey == code);
+
+        if (tenantNode is null)
+        {
+            tenantNode = ResourceNode.Create(name, code);
+            _db.ResourceNodes.Add(tenantNode);
+            await _db.SaveChangesAsync();
+        }
+
+        await EnsureRootUserTenantAsync(tenant.Id);
     }
 
     private async Task EnsureRootUserTenantAsync(Guid tenantId)
