@@ -26,9 +26,13 @@ internal sealed class PermissionAssignmentConfiguration : IEntityTypeConfigurati
         builder.Property(assignment => assignment.PermissionCode)
             .IsRequired();
 
+        builder.Property(assignment => assignment.TenantId)
+            .IsRequired();
+
         builder.HasIndex(assignment => new { assignment.SubjectType, assignment.SubjectId });
         builder.HasIndex(assignment => assignment.PermissionCode);
         builder.HasIndex(assignment => assignment.NodeId);
+        builder.HasIndex(assignment => assignment.TenantId);
 
         builder.HasOne(assignment => assignment.Node)
             .WithMany()

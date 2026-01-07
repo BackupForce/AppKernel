@@ -2,5 +2,5 @@
 
 public interface IResourceNodeRepository
 {
-    Task<ResourceNode?> GetByExternalKeyAsync(string externalKey, CancellationToken cancellationToken);
+    Task<ResourceNode?> GetByExternalKeyAsync(Guid tenantId, string externalKey, CancellationToken cancellationToken);
 }
