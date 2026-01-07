@@ -22,9 +22,8 @@
 
 ## Authorization conventions
 ### ResourceNode 來源
-- **route**：資源識別來自路由參數（例如 `/nodes/{nodeId}`），以路由值解析資源節點。
-- **body**：資源識別來自 request body（例如 `nodeId` 欄位），由 payload 解析資源節點。
-- **externalKey**：資源識別來自外部鍵值（例如第三方系統對應碼），透過對應表或查詢轉換成資源節點。
+- **tenant fallback**：授權處理器僅會從 `tenantId` 路由參數或 `HttpContext.Items["TenantId"]` 解析租戶，再以 `ResolveTenantNodeIdAsync` 對應到 tenant node 作為權限判斷的節點。
+- **節點授權**：若 API 需要針對特定資源節點授權，需在端點 handler 內自行解析 `nodeId` 或 `externalKey`（可來自 query/header/body），並手動指定給權限判斷流程。
 
 ### PermissionCode 命名規範
 - 格式：`{domain}:{action}`（全部小寫，使用底線 `_` 分隔複合詞）。
