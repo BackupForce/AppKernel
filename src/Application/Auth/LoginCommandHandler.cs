@@ -7,6 +7,7 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Users.Create;
+using Domain.Tenants;
 using Domain.Security;
 using Domain.Users;
 using MediatR;
@@ -16,7 +17,7 @@ namespace Application.Auth;
 
 internal sealed class LoginCommandHandler(
 	IUserRepository userRepository,
-    IResourceNodeRepository resourceNodeRepository,
+    ITenantRepository tenantRepository,
 	IJwtService _jwtService,
     IPasswordHasher hasher
     ) : ICommandHandler<LoginCommand, LoginResponse>
@@ -56,14 +57,13 @@ internal sealed class LoginCommandHandler(
             return Result.Failure<LoginResponse>(UserErrors.InvalidCredentials);
         }
 
-        ResourceNode? tenantNode = await resourceNodeRepository
-            .GetByExternalKeyAsync(tenantCode, cancellationToken);
-        if (tenantNode is null)
+        Tenant? tenant = await tenantRepository.GetByCodeAsync(tenantCode, cancellationToken);
+        if (tenant is null)
         {
             return Result.Failure<LoginResponse>(AuthErrors.TenantNotFound);
         }
 
-        bool isInTenant = await userRepository.IsInTenantAsync(user.Id, tenantNode.Id, cancellationToken);
+        bool isInTenant = await userRepository.IsInTenantAsync(user.Id, tenant.Id, cancellationToken);
         if (!isInTenant)
         {
             return Result.Failure<LoginResponse>(AuthErrors.TenantNotFound);
@@ -72,14 +72,14 @@ internal sealed class LoginCommandHandler(
 		// Generate token and directly use it in the response
 		return Result.Success(new LoginResponse
 		{
-			Token = _jwtService.GenerateToken(
-				user.Id,
-				user.Name.ToString(),
-                tenantNode.Id,
-				user.Roles.Select(r => r.Name).ToArray(),
-				Array.Empty<Guid>(),
-				Array.Empty<string>())
-		});
+				Token = _jwtService.GenerateToken(
+					user.Id,
+					user.Name.ToString(),
+	                tenant.Id,
+					user.Roles.Select(r => r.Name).ToArray(),
+					Array.Empty<Guid>(),
+					Array.Empty<string>())
+			});
 	}
 
     private static bool IsValidTenantCode(string tenantCode)

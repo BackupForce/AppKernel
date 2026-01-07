@@ -1,4 +1,4 @@
-﻿using Domain.Security;
+﻿using Domain.Tenants;
 
 namespace Web.Api.Middleware;
 
@@ -7,7 +7,7 @@ public class TenantResolutionMiddleware(RequestDelegate next)
     private const string TenantIdHeaderName = "X-Tenant-Id";
     private const string TenantCodeHeaderName = "X-Tenant-Code";
 
-    public async Task Invoke(HttpContext context, IResourceNodeRepository resourceNodeRepository)
+    public async Task Invoke(HttpContext context, ITenantRepository tenantRepository)
     {
         Guid? tenantId = TryResolveTenantIdFromRoute(context) ?? TryResolveTenantIdFromHeader(context);
 
@@ -16,12 +16,19 @@ public class TenantResolutionMiddleware(RequestDelegate next)
             string? tenantCode = TryResolveTenantCode(context);
             if (!string.IsNullOrWhiteSpace(tenantCode) && IsValidTenantCode(tenantCode))
             {
-                ResourceNode? tenantNode =
-                    await resourceNodeRepository.GetByExternalKeyAsync(tenantCode, context.RequestAborted);
-                if (tenantNode is not null)
+                Tenant? tenant = await tenantRepository.GetByCodeAsync(tenantCode, context.RequestAborted);
+                if (tenant is not null)
                 {
-                    tenantId = tenantNode.Id;
+                    tenantId = tenant.Id;
                 }
+            }
+        }
+        else
+        {
+            Tenant? tenant = await tenantRepository.GetByIdAsync(tenantId.Value, context.RequestAborted);
+            if (tenant is null)
+            {
+                tenantId = null;
             }
         }
 

@@ -120,7 +120,7 @@ public sealed class User : Entity
 
     public void RemoveTenant(Guid tenantId)
     {
-        UserTenant? target = _userTenants.Find(userTenant => userTenant.TenantId == tenantId);
+        UserTenant? target = _userTenants.FirstOrDefault(userTenant => userTenant.TenantId == tenantId);
         if (target is null)
         {
             return;
