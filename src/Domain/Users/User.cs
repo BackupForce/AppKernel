@@ -5,7 +5,6 @@ namespace Domain.Users;
 
 public sealed class User : Entity
 {
-    
     private User(Guid id, Email email, Name name, string passwordhash, bool hasPublicProfile)
         : base(id)
     {
@@ -18,8 +17,12 @@ public sealed class User : Entity
     private User()
     {
     }
+
     private readonly List<Role> _roles = new();
     public IReadOnlyCollection<Role> Roles => _roles.ToList();
+
+    private readonly List<UserGroup> _userGroups = new();
+    public IReadOnlyCollection<UserGroup> UserGroups => _userGroups.ToList();
 
     public Email Email { get; private set; }
 
@@ -51,7 +54,7 @@ public sealed class User : Entity
         _roles.Add(role);
     }
 
-    public static User Create(Email email, Name name,string passwordhash, bool hasPublicProfile)
+    public static User Create(Email email, Name name, string passwordhash, bool hasPublicProfile)
     {
         var user = new User(Guid.NewGuid(), email, name, passwordhash, hasPublicProfile);
 
@@ -59,5 +62,41 @@ public sealed class User : Entity
         //寫入初始Role
 
         return user;
+    }
+
+    public bool HasGroup(Guid groupId)
+    {
+        return _userGroups.Any(userGroup => userGroup.GroupId == groupId);
+    }
+
+    public void AssignGroup(Group group)
+    {
+        if (group is null)
+        {
+            return;
+        }
+
+        if (HasGroup(group.Id))
+        {
+            return;
+        }
+
+        _userGroups.Add(UserGroup.Create(Id, group.Id));
+    }
+
+    public void RemoveGroup(Group group)
+    {
+        if (group is null)
+        {
+            return;
+        }
+
+        UserGroup? target = _userGroups.FirstOrDefault(userGroup => userGroup.GroupId == group.Id);
+        if (target is null)
+        {
+            return;
+        }
+
+        _userGroups.Remove(target);
     }
 }

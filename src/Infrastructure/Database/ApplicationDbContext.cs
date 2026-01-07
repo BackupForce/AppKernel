@@ -20,6 +20,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<MemberActivityLog> MemberActivityLogs { get; set; }
     public DbSet<ResourceNode> ResourceNodes { get; set; }
     public DbSet<PermissionAssignment> PermissionAssignments { get; set; }
+    public DbSet<Group> Groups { get; set; }
+    public DbSet<UserGroup> UserGroups { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

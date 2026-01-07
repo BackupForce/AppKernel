@@ -23,4 +23,12 @@ public static class UserErrors
     public static Error RoleAlreadyAssigned(int roleId) => Error.Conflict(
         "Users.RoleAlreadyAssigned",
         $"使用者已擁有角色 (Id = {roleId})。");
+
+    public static Error GroupAlreadyAssigned(Guid groupId) => Error.Conflict(
+        "Users.GroupAlreadyAssigned",
+        $"使用者已擁有群組 (Id = {groupId})。");
+
+    public static Error GroupNotAssigned(Guid groupId) => Error.NotFound(
+        "Users.GroupNotAssigned",
+        $"使用者未指派群組 (Id = {groupId})。");
 }
