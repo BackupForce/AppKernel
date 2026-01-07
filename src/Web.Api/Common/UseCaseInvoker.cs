@@ -52,7 +52,6 @@ public static class UseCaseInvoker
         Func<TIn, TRequest> toRequest)
         where TRequest : IRequest<Result<TResult>>
     {
-        // 將 CreateFromRouteHandler 呼叫加上明確的型別參數
         return CreateFromRouteHandler<TIn>(
             routeName,
             async (input, sender, ct) =>
