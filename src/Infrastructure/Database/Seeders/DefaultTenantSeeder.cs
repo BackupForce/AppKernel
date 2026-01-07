@@ -37,7 +37,7 @@ public sealed class DefaultTenantSeeder : IDataSeeder
         string code = _config["DefaultTenant:Code"] ?? FallbackTenantCode;
         string name = _config["DefaultTenant:Name"] ?? FallbackTenantName;
 
-        code = code.Trim();
+        code = code.Trim().ToUpperInvariant();
         name = name.Trim();
 
         if (!IsValidTenantCode(code))
@@ -53,7 +53,7 @@ public sealed class DefaultTenantSeeder : IDataSeeder
         }
 
         Tenant? tenant = await _db.Tenants
-            .FirstOrDefaultAsync(existingTenant => existingTenant.Code == code);
+            .FirstOrDefaultAsync(existingTenant => existingTenant.Code.ToUpperInvariant() == code);
 
         if (tenant is null)
         {
@@ -68,15 +68,17 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             _logger.LogInformation("✅ Default tenant already exists: {Code}", code);
         }
 
-        ResourceNode? tenantNode = await _db.ResourceNodes
-            .FirstOrDefaultAsync(node => node.ExternalKey == code);
+        ResourceNode? rootNode = await _db.ResourceNodes
+            .FirstOrDefaultAsync(node => node.TenantId == tenant.Id && node.ExternalKey == "root");
 
-        if (tenantNode is null)
+        if (rootNode is null)
         {
-            tenantNode = ResourceNode.Create(name, code);
-            _db.ResourceNodes.Add(tenantNode);
+            rootNode = ResourceNode.Create(name, "root", tenant.Id);
+            _db.ResourceNodes.Add(rootNode);
             await _db.SaveChangesAsync();
         }
+
+        await EnsureSampleResourceTreeAsync(tenant.Id, rootNode.Id);
 
         await EnsureRootUserTenantAsync(tenant.Id);
     }
@@ -115,6 +117,29 @@ public sealed class DefaultTenantSeeder : IDataSeeder
         await _db.SaveChangesAsync();
 
         _logger.LogInformation("✅ Root user bound to default tenant: {Email}", email);
+    }
+
+    private async Task EnsureSampleResourceTreeAsync(Guid tenantId, Guid rootNodeId)
+    {
+        ResourceNode? departmentNode = await _db.ResourceNodes
+            .FirstOrDefaultAsync(node => node.TenantId == tenantId && node.ExternalKey == "department");
+
+        if (departmentNode is null)
+        {
+            departmentNode = ResourceNode.Create("Default Department", "department", tenantId, rootNodeId);
+            _db.ResourceNodes.Add(departmentNode);
+            await _db.SaveChangesAsync();
+        }
+
+        ResourceNode? projectNode = await _db.ResourceNodes
+            .FirstOrDefaultAsync(node => node.TenantId == tenantId && node.ExternalKey == "project");
+
+        if (projectNode is null)
+        {
+            projectNode = ResourceNode.Create("Default Project", "project", tenantId, departmentNode.Id);
+            _db.ResourceNodes.Add(projectNode);
+            await _db.SaveChangesAsync();
+        }
     }
 
     private static bool IsValidTenantCode(string tenantCode)

@@ -44,21 +44,21 @@ internal sealed class PermissionProvider : IPermissionProvider
 
         if (cachedMatrix is null)
         {
-            cachedMatrix = await BuildUserPermissionMatrixAsync(userId);
+            cachedMatrix = await BuildUserPermissionMatrixAsync(userId, tenantId.Value);
             await _cacheService.SetAsync(cacheKey, cachedMatrix, CacheTtl);
         }
 
         return await EvaluatePermissionAsync(cachedMatrix, permissionCode, nodeId, tenantId);
     }
 
-    private async Task<UserPermissionMatrix> BuildUserPermissionMatrixAsync(Guid userId)
+    private async Task<UserPermissionMatrix> BuildUserPermissionMatrixAsync(Guid userId, Guid tenantId)
     {
         List<int> roleIds = await _dbContext.Users
             .Where(user => user.Id == userId)
             .SelectMany(user => user.Roles.Select(role => role.Id))
             .ToListAsync();
 
-        var roleSubjectIds = roleIds
+        List<Guid> roleSubjectIds = roleIds
             .Select(MapRoleIdToSubjectId)
             .ToList();
 
@@ -70,6 +70,7 @@ internal sealed class PermissionProvider : IPermissionProvider
 
         List<PermissionAssignment> assignments = await _dbContext.PermissionAssignments
             .AsNoTracking()
+            .Where(assignment => assignment.TenantId == tenantId)
             .Where(assignment =>
                 assignment.SubjectType == SubjectType.User && assignment.SubjectId == userId
                 || assignment.SubjectType == SubjectType.Role && roleSubjectIds.Contains(assignment.SubjectId)
@@ -136,14 +137,21 @@ internal sealed class PermissionProvider : IPermissionProvider
             return Array.Empty<Guid?>();
         }
 
-        if (tenantId.HasValue && !nodeId.HasValue)
-        {
-            return new List<Guid?> { tenantId.Value };
-        }
-
         if (!nodeId.HasValue)
         {
+            // 中文註解：NodeId = null 代表租戶層級授權，不允許跨租戶共用。
             return new List<Guid?> { null };
+        }
+
+        ResourceNodeParent? initialNode = await _dbContext.ResourceNodes
+            .AsNoTracking()
+            .Where(resourceNode => resourceNode.Id == nodeId.Value)
+            .Select(resourceNode => new ResourceNodeParent(resourceNode.Id, resourceNode.ParentId, resourceNode.TenantId))
+            .SingleOrDefaultAsync();
+
+        if (initialNode is null || initialNode.TenantId != tenantId.Value)
+        {
+            return Array.Empty<Guid?>();
         }
 
         Guid currentNodeId = nodeId.Value;
@@ -156,31 +164,26 @@ internal sealed class PermissionProvider : IPermissionProvider
             ResourceNodeParent? node = await _dbContext.ResourceNodes
                 .AsNoTracking()
                 .Where(resourceNode => resourceNode.Id == currentId.Value)
-                .Select(resourceNode => new ResourceNodeParent(resourceNode.Id, resourceNode.ParentId))
+                .Select(resourceNode => new ResourceNodeParent(resourceNode.Id, resourceNode.ParentId, resourceNode.TenantId))
                 .SingleOrDefaultAsync();
 
-            if (node is null || node.ParentId is null)
+            if (node is null || node.TenantId != tenantId.Value)
+            {
+                return Array.Empty<Guid?>();
+            }
+
+            if (node.ParentId is null)
             {
                 break;
             }
 
             if (!visited.Add(node.ParentId.Value))
             {
-                break;
+                return Array.Empty<Guid?>();
             }
 
             lineage.Add(node.ParentId);
             currentId = node.ParentId;
-        }
-
-        if (tenantId.HasValue)
-        {
-            if (!lineage.Contains(tenantId.Value))
-            {
-                return Array.Empty<Guid?>();
-            }
-
-            return lineage;
         }
 
         lineage.Add(null);
@@ -238,5 +241,5 @@ internal sealed class PermissionProvider : IPermissionProvider
         public Dictionary<string, List<PermissionDecisionEntry>> Decisions { get; init; } = new();
     }
 
-    private sealed record ResourceNodeParent(Guid Id, Guid? ParentId);
+    private sealed record ResourceNodeParent(Guid Id, Guid? ParentId, Guid TenantId);
 }

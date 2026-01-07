@@ -18,13 +18,20 @@ public sealed class PermissionAssignment : Entity
         Decision decision,
         Guid subjectId,
         string permissionCode,
+        Guid tenantId,
         Guid? nodeId)
         : base(id)
     {
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("TenantId cannot be empty.", nameof(tenantId));
+        }
+
         SubjectType = subjectType;
         Decision = decision;
         SubjectId = subjectId;
         PermissionCode = permissionCode;
+        TenantId = tenantId;
         NodeId = nodeId;
     }
 
@@ -49,7 +56,12 @@ public sealed class PermissionAssignment : Entity
     public string PermissionCode { get; private set; } = string.Empty;
 
     /// <summary>
-    /// 資源節點識別碼，為 null 代表全域權限；指定節點則代表資源範圍內的權限。
+    /// 租戶識別碼，用來隔離不同租戶的權限指派。
+    /// </summary>
+    public Guid TenantId { get; private set; }
+
+    /// <summary>
+    /// 資源節點識別碼，為 null 代表租戶層級權限；指定節點則代表資源範圍內的權限。
     /// </summary>
     public Guid? NodeId { get; private set; }
 
@@ -59,15 +71,16 @@ public sealed class PermissionAssignment : Entity
     public ResourceNode? Node { get; set; }
 
     /// <summary>
-    /// 建立新的權限指派，指定主體、決策、權限代碼與可選的資源節點。
+    /// 建立新的權限指派，指定主體、決策、權限代碼、租戶識別碼與可選的資源節點。
     /// </summary>
     public static PermissionAssignment Create(
         SubjectType subjectType,
         Decision decision,
         Guid subjectId,
         string permissionCode,
+        Guid tenantId,
         Guid? nodeId = null)
     {
-        return new PermissionAssignment(Guid.NewGuid(), subjectType, decision, subjectId, permissionCode, nodeId);
+        return new PermissionAssignment(Guid.NewGuid(), subjectType, decision, subjectId, permissionCode, tenantId, nodeId);
     }
 }

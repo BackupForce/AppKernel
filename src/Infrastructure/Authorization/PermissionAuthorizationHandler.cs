@@ -72,11 +72,11 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
             }
 
             string? externalKey = externalKeyValue?.ToString();
-            if (!string.IsNullOrWhiteSpace(externalKey))
+            if (!string.IsNullOrWhiteSpace(externalKey) && tenantId.HasValue)
             {
                 Guid nodeId = await _dbContext.ResourceNodes
                     .AsNoTracking()
-                    .Where(node => node.ExternalKey == externalKey)
+                    .Where(node => node.TenantId == tenantId.Value && node.ExternalKey == externalKey)
                     .Select(node => node.Id)
                     .SingleOrDefaultAsync();
 
@@ -136,7 +136,7 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
     {
         Guid nodeId = await _dbContext.ResourceNodes
             .AsNoTracking()
-            .Where(node => node.Id == tenantId)
+            .Where(node => node.TenantId == tenantId && node.ParentId == null)
             .Select(node => node.Id)
             .SingleOrDefaultAsync();
 
@@ -155,7 +155,7 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
         {
             nodeId = await _dbContext.ResourceNodes
                 .AsNoTracking()
-                .Where(node => node.ExternalKey == tenantCode)
+                .Where(node => node.TenantId == tenantId && node.ExternalKey == tenantCode)
                 .Select(node => node.Id)
                 .SingleOrDefaultAsync();
 
@@ -167,7 +167,7 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
 
         return await _dbContext.ResourceNodes
             .AsNoTracking()
-            .Where(node => node.ExternalKey == tenantId.ToString("D"))
+            .Where(node => node.TenantId == tenantId && node.ExternalKey == tenantId.ToString("D"))
             .Select(node => node.Id)
             .SingleOrDefaultAsync();
     }
