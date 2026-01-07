@@ -20,4 +20,10 @@ public interface IAuthzCacheInvalidator
     Task TrackRoleUserAsync(int roleId, Guid userId, CancellationToken cancellationToken = default);
 
     Task RemoveRoleIndexAsync(int roleId, CancellationToken cancellationToken = default);
+
+    Task TrackGroupUserAsync(Guid groupId, Guid userId, CancellationToken cancellationToken = default);
+
+    Task UntrackGroupUserAsync(Guid groupId, Guid userId, CancellationToken cancellationToken = default);
+
+    Task RemoveGroupIndexAsync(Guid groupId, CancellationToken cancellationToken = default);
 }

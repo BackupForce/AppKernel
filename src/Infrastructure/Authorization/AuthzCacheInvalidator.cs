@@ -1,29 +1,28 @@
 ﻿using System.Net;
 using Application.Abstractions.Authorization;
-using Application.Abstractions.Caching;
 using Domain.Security;
 using StackExchange.Redis;
 
 namespace Infrastructure.Authorization;
 
 internal sealed class AuthzCacheInvalidator(
-    ICacheService cacheService,
     IConnectionMultiplexer connectionMultiplexer)
     : IAuthzCacheInvalidator
 {
+    private const string GroupUsersPrefix = "authz:group-users:";
     private const string RoleUsersPrefix = "authz:role-users:";
     private readonly IDatabase _database = connectionMultiplexer.GetDatabase();
 
     public Task InvalidateUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return cacheService.RemoveAsync(AuthzCacheKeys.ForUser(userId), cancellationToken);
+        return RemoveKeysByPatternAsync($"{AuthzCacheKeys.ForUser(userId)}*", cancellationToken);
     }
 
     public Task InvalidateUsersAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
     {
         Task[] tasks = userIds
             .Distinct()
-            .Select(userId => cacheService.RemoveAsync(AuthzCacheKeys.ForUser(userId), cancellationToken))
+            .Select(userId => InvalidateUserAsync(userId, cancellationToken))
             .ToArray();
 
         return Task.WhenAll(tasks);
@@ -44,7 +43,29 @@ internal sealed class AuthzCacheInvalidator(
         {
             if (Guid.TryParse(member.ToString(), out Guid userId))
             {
-                tasks.Add(cacheService.RemoveAsync(AuthzCacheKeys.ForUser(userId), cancellationToken));
+                tasks.Add(InvalidateUserAsync(userId, cancellationToken));
+            }
+        }
+
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task InvalidateGroupAsync(Guid groupId, CancellationToken cancellationToken = default)
+    {
+        RedisKey groupUsersKey = GroupUsersKey(groupId);
+        RedisValue[] members = await _database.SetMembersAsync(groupUsersKey);
+
+        if (members.Length == 0)
+        {
+            return;
+        }
+
+        var tasks = new List<Task>(members.Length);
+        foreach (RedisValue member in members)
+        {
+            if (Guid.TryParse(member.ToString(), out Guid userId))
+            {
+                tasks.Add(InvalidateUserAsync(userId, cancellationToken));
             }
         }
 
@@ -60,7 +81,7 @@ internal sealed class AuthzCacheInvalidator(
         {
             SubjectType.User => InvalidateUserAsync(subjectId, cancellationToken),
             SubjectType.Role => InvalidateRoleAsync(ExtractRoleId(subjectId), cancellationToken),
-            SubjectType.Group => InvalidateAllMatricesAsync(cancellationToken),
+            SubjectType.Group => InvalidateGroupAsync(subjectId, cancellationToken),
             _ => InvalidateAllMatricesAsync(cancellationToken)
         };
     }
@@ -78,6 +99,21 @@ internal sealed class AuthzCacheInvalidator(
     public Task RemoveRoleIndexAsync(int roleId, CancellationToken cancellationToken = default)
     {
         return _database.KeyDeleteAsync(RoleUsersKey(roleId));
+    }
+
+    public Task TrackGroupUserAsync(Guid groupId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return _database.SetAddAsync(GroupUsersKey(groupId), userId.ToString("D"));
+    }
+
+    public Task UntrackGroupUserAsync(Guid groupId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return _database.SetRemoveAsync(GroupUsersKey(groupId), userId.ToString("D"));
+    }
+
+    public Task RemoveGroupIndexAsync(Guid groupId, CancellationToken cancellationToken = default)
+    {
+        return _database.KeyDeleteAsync(GroupUsersKey(groupId));
     }
 
     private static int ExtractRoleId(Guid subjectId)
@@ -108,4 +144,6 @@ internal sealed class AuthzCacheInvalidator(
     }
 
     private static RedisKey RoleUsersKey(int roleId) => $"{RoleUsersPrefix}{roleId}";
+
+    private static RedisKey GroupUsersKey(Guid groupId) => $"{GroupUsersPrefix}{groupId:D}";
 }

@@ -39,6 +39,7 @@ internal sealed class AssignGroupToUserCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         await invalidator.InvalidateSubjectAsync(SubjectType.Group, group.Id, cancellationToken);
+        await invalidator.TrackGroupUserAsync(group.Id, user.Id, cancellationToken);
         await invalidator.InvalidateUserAsync(user.Id, cancellationToken);
 
         var groupIds = user.UserGroups.Select(userGroup => userGroup.GroupId).OrderBy(id => id).ToList();
