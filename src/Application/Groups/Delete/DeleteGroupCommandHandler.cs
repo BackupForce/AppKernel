@@ -25,6 +25,7 @@ internal sealed class DeleteGroupCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         await invalidator.InvalidateSubjectAsync(SubjectType.Group, group.Id, cancellationToken);
+        await invalidator.RemoveGroupIndexAsync(group.Id, cancellationToken);
 
         return Result.Success();
     }
