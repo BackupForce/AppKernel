@@ -33,10 +33,7 @@ builder.Services
     .AddInfrastructure(builder.Configuration);
 
 builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
-builder.Services.Configure<SuperAdminSeedOptions>(options =>
-{
-    options.Enabled = builder.Environment.IsDevelopment();
-});
+builder.Services.Configure<SuperAdminSeedOptions>(options => options.Enabled = builder.Environment.IsDevelopment());
 
 WebApplication app = builder.Build();
 
@@ -102,15 +99,13 @@ using (IServiceScope scope = app.Services.CreateScope())
 
 if (app.Environment.IsDevelopment())
 {
-    using (IServiceScope scope = app.Services.CreateScope())
+    using IServiceScope scope = app.Services.CreateScope();
+    IOptions<SuperAdminSeedOptions> seedOptions =
+        scope.ServiceProvider.GetRequiredService<IOptions<SuperAdminSeedOptions>>();
+    if (seedOptions.Value.Enabled)
     {
-        IOptions<SuperAdminSeedOptions> seedOptions =
-            scope.ServiceProvider.GetRequiredService<IOptions<SuperAdminSeedOptions>>();
-        if (seedOptions.Value.Enabled)
-        {
-            SuperAdminSeeder superAdminSeeder = scope.ServiceProvider.GetRequiredService<SuperAdminSeeder>();
-            await superAdminSeeder.SeedAsync(app.Lifetime.ApplicationStopping);
-        }
+        SuperAdminSeeder superAdminSeeder = scope.ServiceProvider.GetRequiredService<SuperAdminSeeder>();
+        await superAdminSeeder.SeedAsync(app.Lifetime.ApplicationStopping);
     }
 }
 

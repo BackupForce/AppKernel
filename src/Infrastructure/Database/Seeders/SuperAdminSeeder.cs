@@ -40,8 +40,9 @@ public sealed class SuperAdminSeeder
 
         Role? role = await _db.Set<Role>()
             .FirstOrDefaultAsync(
-                r => string.Equals(r.Name, _options.RoleName, StringComparison.OrdinalIgnoreCase),
+                r => r.Name != null && r.Name == _options.RoleName,
                 cancellationToken);
+
 
         if (role is null)
         {
