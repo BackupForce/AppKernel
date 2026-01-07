@@ -2,6 +2,7 @@
 using Application.Abstractions.Data;
 using Domain.Members;
 using Domain.Security;
+using Domain.Tenants;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -19,6 +20,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<MemberAssetLedger> MemberAssetLedgers { get; set; }
     public DbSet<MemberActivityLog> MemberActivityLogs { get; set; }
     public DbSet<ResourceNode> ResourceNodes { get; set; }
+    public DbSet<Tenant> Tenants { get; set; }
     public DbSet<PermissionAssignment> PermissionAssignments { get; set; }
     public DbSet<Group> Groups { get; set; }
     public DbSet<UserGroup> UserGroups { get; set; }

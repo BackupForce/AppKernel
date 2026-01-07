@@ -145,6 +145,26 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
             return nodeId;
         }
 
+        string? tenantCode = await _dbContext.Tenants
+            .AsNoTracking()
+            .Where(tenant => tenant.Id == tenantId)
+            .Select(tenant => tenant.Code)
+            .SingleOrDefaultAsync();
+
+        if (!string.IsNullOrWhiteSpace(tenantCode))
+        {
+            nodeId = await _dbContext.ResourceNodes
+                .AsNoTracking()
+                .Where(node => node.ExternalKey == tenantCode)
+                .Select(node => node.Id)
+                .SingleOrDefaultAsync();
+
+            if (nodeId != Guid.Empty)
+            {
+                return nodeId;
+            }
+        }
+
         return await _dbContext.ResourceNodes
             .AsNoTracking()
             .Where(node => node.ExternalKey == tenantId.ToString("D"))

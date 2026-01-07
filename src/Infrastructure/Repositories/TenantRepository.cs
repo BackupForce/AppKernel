@@ -1,5 +1,4 @@
-﻿using Domain.Security;
-using Domain.Tenants;
+﻿using Domain.Tenants;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,19 +8,19 @@ internal sealed class TenantRepository(ApplicationDbContext context) : ITenantRe
 {
     public async Task<Tenant?> GetByIdAsync(Guid tenantId, CancellationToken cancellationToken)
     {
-        ResourceNode? node = await context.ResourceNodes
+        Tenant? tenant = await context.Tenants
             .AsNoTracking()
-            .FirstOrDefaultAsync(resourceNode => resourceNode.Id == tenantId, cancellationToken);
+            .FirstOrDefaultAsync(tenant => tenant.Id == tenantId, cancellationToken);
 
-        return node is null ? null : Tenant.Create(node.Id, node.ExternalKey, node.Name);
+        return tenant is null ? null : Tenant.Create(tenant.Id, tenant.Code, tenant.Name);
     }
 
     public async Task<Tenant?> GetByCodeAsync(string code, CancellationToken cancellationToken)
     {
-        ResourceNode? node = await context.ResourceNodes
+        Tenant? tenant = await context.Tenants
             .AsNoTracking()
-            .FirstOrDefaultAsync(resourceNode => resourceNode.ExternalKey == code, cancellationToken);
+            .FirstOrDefaultAsync(tenant => tenant.Code == code, cancellationToken);
 
-        return node is null ? null : Tenant.Create(node.Id, node.ExternalKey, node.Name);
+        return tenant is null ? null : Tenant.Create(tenant.Id, tenant.Code, tenant.Name);
     }
 }
