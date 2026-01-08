@@ -4,10 +4,10 @@ namespace Domain.Security;
 
 public static class PermissionCatalog
 {
+    private static List<Permission> AllPermissions { get; } = BuildAllPermissions();
     public static IReadOnlyCollection<string> AllPermissionCodes { get; } = BuildAllPermissionCodes();
     public static IReadOnlyDictionary<string, PermissionScope> PermissionScopes { get; } = BuildPermissionScopes();
 
-    private static List<Permission> AllPermissions { get; } = BuildAllPermissions();
 
     private static string[] BuildAllPermissionCodes()
     {
@@ -48,19 +48,37 @@ public static class PermissionCatalog
 
     private static List<Permission> BuildAllPermissions()
     {
-        List<Permission> permissions = new List<Permission>();
+        List<Permission> permissions = new();
 
-        permissions.AddRange(Permission.Users.AllPermissions);
-        permissions.AddRange(Permission.Members.AllPermissions);
-        permissions.AddRange(Permission.MemberPoints.AllPermissions);
-        permissions.AddRange(Permission.MemberAssets.AllPermissions);
-        permissions.AddRange(Permission.MemberAudit.AllPermissions);
-        permissions.AddRange(Permission.Roles.AllPermissions);
-        permissions.AddRange(Permission.Tenants.AllPermissions);
-        permissions.AddRange(Permission.Points.AllPermissions);
+        void Add(string moduleName, IEnumerable<Permission>? source)
+        {
+            if (source is null)
+            {
+                throw new InvalidOperationException(
+                    $"Permission module '{moduleName}' AllPermissions is null.");
+            }
+
+            if (source.Any(p => p is null))
+            {
+                throw new InvalidOperationException(
+                    $"Permission module '{moduleName}' contains null permission definition.");
+            }
+
+            permissions.AddRange(source);
+        }
+
+        Add(nameof(Permission.Users), Permission.Users.AllPermissions);
+        Add(nameof(Permission.Members), Permission.Members.AllPermissions);
+        Add(nameof(Permission.MemberPoints), Permission.MemberPoints.AllPermissions);
+        Add(nameof(Permission.MemberAssets), Permission.MemberAssets.AllPermissions);
+        Add(nameof(Permission.MemberAudit), Permission.MemberAudit.AllPermissions);
+        Add(nameof(Permission.Roles), Permission.Roles.AllPermissions);
+        Add(nameof(Permission.Tenants), Permission.Tenants.AllPermissions);
+        Add(nameof(Permission.Points), Permission.Points.AllPermissions);
 
         return permissions;
     }
+
 
     public static PermissionScope ResolveScope(string permissionCode)
     {
@@ -69,9 +87,9 @@ public static class PermissionCatalog
             return scope;
         }
 
-        // 中文註解：找不到對應的權限定義時，預設視為租戶層級。
-        return PermissionScope.Tenant;
+        throw new InvalidOperationException($"未知的權限代碼，無法解析 Scope：{permissionCode}");
     }
+
 
     public static bool TryGetScope(string permissionCode, out PermissionScope scope)
     {
