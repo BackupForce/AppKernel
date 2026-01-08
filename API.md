@@ -38,6 +38,39 @@
 - **授權**：不需要。
 - **描述**：ASP.NET Core Health Checks UI 格式的健康檢查結果。 【F:src/Web.Api/Program.cs†L62-L70】
 
+### GET `/api/v1/permissions/catalog`
+- **授權**：需要登入（無額外權限）。
+- **成功回應**
+  ```json
+  {
+    "version": "1.0",
+    "scopes": [
+      {
+        "scope": 0,
+        "displayName": "平台",
+        "modules": [
+          {
+            "moduleKey": "TENANTS",
+            "displayName": "租戶管理",
+            "masterPermissionCode": "TENANTS:*",
+            "items": [
+              {
+                "code": "TENANTS:CREATE",
+                "displayName": "建立租戶",
+                "description": "建立新的租戶",
+                "sortOrder": 10,
+                "isDangerous": false,
+                "hidden": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+  ```
+- **描述**：回傳前端可用的 UI 友善權限目錄。 【F:src/Web.Api/Endpoints/Permissions/PermissionsEndpoints.cs†L6-L25】【F:src/Application/Authorization/PermissionCatalogDto.cs†L7-L28】【F:src/Application/Authorization/PermissionUiCatalogProvider.cs†L15-L156】
+
 ## 使用者 (Users) – 管理後台
 
 - **路由前綴**：`/api/v{version}/users`

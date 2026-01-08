@@ -20,6 +20,8 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
+        services.AddSingleton<Authorization.PermissionUiCatalogProvider>();
+        services.AddSingleton<Authorization.PermissionSelectionNormalizer>();
 
         return services;
     }
