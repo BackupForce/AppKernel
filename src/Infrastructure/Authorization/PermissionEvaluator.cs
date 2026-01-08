@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Authorization;
+using AppPermissionRequirement = Application.Abstractions.Authorization.PermissionRequirement;
 using Domain.Security;
 
 namespace Infrastructure.Authorization;
@@ -13,7 +14,7 @@ public sealed class PermissionEvaluator : IPermissionEvaluator
     }
 
     public async Task<bool> AuthorizeAsync(
-        PermissionRequirement requirement,
+        AppPermissionRequirement requirement,
         CallerContext callerContext,
         CancellationToken cancellationToken)
     {

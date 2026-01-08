@@ -7,7 +7,7 @@ public static class PermissionCatalog
     public static IReadOnlyCollection<string> AllPermissionCodes { get; } = BuildAllPermissionCodes();
     public static IReadOnlyDictionary<string, PermissionScope> PermissionScopes { get; } = BuildPermissionScopes();
 
-    private static IReadOnlyList<Permission> AllPermissions { get; } = BuildAllPermissions();
+    private static List<Permission> AllPermissions { get; } = BuildAllPermissions();
 
     private static string[] BuildAllPermissionCodes()
     {
@@ -28,7 +28,7 @@ public static class PermissionCatalog
         return codes.ToArray();
     }
 
-    private static IReadOnlyDictionary<string, PermissionScope> BuildPermissionScopes()
+    private static Dictionary<string, PermissionScope> BuildPermissionScopes()
     {
         Dictionary<string, PermissionScope> scopes = new Dictionary<string, PermissionScope>();
 
@@ -46,7 +46,7 @@ public static class PermissionCatalog
         return scopes;
     }
 
-    private static IReadOnlyList<Permission> BuildAllPermissions()
+    private static List<Permission> BuildAllPermissions()
     {
         List<Permission> permissions = new List<Permission>();
 
