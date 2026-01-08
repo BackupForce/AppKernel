@@ -203,6 +203,8 @@ public static class DependencyInjection
 
         services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
         services.AddScoped<IPermissionProvider, PermissionProvider>();
+        services.AddScoped<IGrantedPermissionProvider, GrantedPermissionProvider>();
+        services.AddScoped<IPermissionEvaluator, PermissionEvaluator>();
 
         return services;
     }
