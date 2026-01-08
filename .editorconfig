@@ -89,6 +89,8 @@ csharp_style_prefer_not_pattern = true:suggestion
 csharp_style_prefer_extended_property_pattern = true:suggestion
 csharp_space_around_binary_operators = before_and_after
 dotnet_diagnostic.CA1515.severity = suggestion
+# 設定 IDE0007 規則為不顯示 (關閉)
+dotnet_diagnostic.IDE0007.severity = none
 
 [*.{cs,vb}]
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
