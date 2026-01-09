@@ -8,11 +8,11 @@ namespace Infrastructure.Database.Seeders;
 internal static class SeederSchemaGuard
 {
     public static async Task<bool> HasColumnAsync(
-        ApplicationDbContext db,
-        string tableName,
-        string columnName,
-        ILogger logger,
-        CancellationToken cancellationToken = default)
+    ApplicationDbContext db,
+    string tableName,
+    string columnName,
+    ILogger logger,
+    CancellationToken cancellationToken = default)
     {
         if (!db.Database.IsRelational())
         {
@@ -21,6 +21,7 @@ internal static class SeederSchemaGuard
 
         DbConnection connection = db.Database.GetDbConnection();
         bool openedHere = false;
+
         try
         {
             if (connection.State != ConnectionState.Open)
@@ -29,21 +30,26 @@ internal static class SeederSchemaGuard
                 openedHere = true;
             }
 
-            DataTable schema = connection.GetSchema("Columns");
-            string normalizedTable = tableName.Trim().ToUpperInvariant();
-            string normalizedColumn = columnName.Trim().ToUpperInvariant();
+            DataTable schema = await connection.GetSchemaAsync(
+                "Columns",
+                cancellationToken);
+
+            string normalizedTable = tableName.Trim();
+            string normalizedColumn = columnName.Trim();
 
             foreach (DataRow row in schema.Rows)
             {
                 string? table = row["TABLE_NAME"]?.ToString();
                 string? column = row["COLUMN_NAME"]?.ToString();
-                if (string.IsNullOrWhiteSpace(table) || string.IsNullOrWhiteSpace(column))
+
+                if (string.IsNullOrWhiteSpace(table)
+                    || string.IsNullOrWhiteSpace(column))
                 {
                     continue;
                 }
 
-                if (table.Trim().ToUpperInvariant() == normalizedTable
-                    && column.Trim().ToUpperInvariant() == normalizedColumn)
+                if (string.Equals(table.Trim(), normalizedTable, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(column.Trim(), normalizedColumn, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
@@ -52,8 +58,12 @@ internal static class SeederSchemaGuard
         catch (Exception ex)
         {
             // 中文註解：若無法判斷 Schema，先略過 Seeder，避免整體啟動失敗。
-            logger.LogWarning(ex, "無法確認資料表欄位 {Table}.{Column} 是否存在，Seeder 將略過該欄位。",
-                tableName, columnName);
+            logger.LogWarning(
+                ex,
+                "無法確認資料表欄位 {Table}.{Column} 是否存在，Seeder 將略過該欄位。",
+                tableName,
+                columnName);
+
             return false;
         }
         finally
@@ -66,4 +76,5 @@ internal static class SeederSchemaGuard
 
         return false;
     }
+
 }

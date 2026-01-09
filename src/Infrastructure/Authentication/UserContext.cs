@@ -24,11 +24,7 @@ internal sealed class UserContext : IUserContext
 
     private JwtUserContext ResolveContext()
     {
-        HttpContext? httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext is null)
-        {
-            throw new ApplicationException("User context is unavailable");
-        }
+        HttpContext? httpContext = _httpContextAccessor.HttpContext ?? throw new ApplicationException("User context is unavailable");
 
         if (!JwtUserContext.TryFromClaims(httpContext.User, out JwtUserContext? context) || context is null)
         {

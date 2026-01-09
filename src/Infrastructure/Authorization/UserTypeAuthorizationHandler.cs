@@ -118,7 +118,7 @@ internal sealed class UserTypeAuthorizationHandler : AuthorizationHandler<UserTy
         }
 
         if (normalizedPath.StartsWith("/API/V", StringComparison.Ordinal)
-            && normalizedPath.IndexOf("/PLATFORM", StringComparison.Ordinal) >= 0)
+            && normalizedPath.Contains("/PLATFORM"))
         {
             return true;
         }

@@ -29,14 +29,17 @@ internal sealed class CreateUserCommandHandler(
         }
 
         Guid? contextTenantId = null;
-        bool hasTenantContext = false;
+        bool hasTenantContext;
+
         try
         {
+            // 中文註解：TenantContext 可能在非租戶請求中不存在；此處用 try 取得，避免依賴特定例外型別。
             contextTenantId = tenantContext.TenantId;
             hasTenantContext = true;
         }
-        catch (ApplicationException)
+        catch
         {
+            contextTenantId = null;
             hasTenantContext = false;
         }
 

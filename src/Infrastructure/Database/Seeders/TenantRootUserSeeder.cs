@@ -125,7 +125,7 @@ public sealed class TenantRootUserSeeder : IDataSeeder
             .AsTracking()
             .FirstOrDefaultAsync(r => r.TenantId == tenantId
                 && r.Name != null
-                && r.Name.Trim().ToUpperInvariant() == normalizedRoleName);
+                && r.Name.Trim().Equals(normalizedRoleName, StringComparison.OrdinalIgnoreCase));
 
         if (role is null)
         {
