@@ -31,13 +31,6 @@ public sealed class SuperAdminSeeder
             return;
         }
 
-        if (!await SeederSchemaGuard.HasColumnAsync(_db, "Roles", "TenantId", _logger, cancellationToken))
-        {
-            // TODO: 中文註解：若資料表尚未加入 Role.TenantId 欄位，先略過平台角色種子流程。
-            _logger.LogWarning("⚠️ Roles.TenantId 欄位尚未準備，略過 SuperAdmin 角色建立。");
-            return;
-        }
-
         List<string> platformPermissionCodes = PermissionCatalog.AllPermissionCodes
             .Where(code =>
                 PermissionCatalog.TryGetScope(code, out PermissionScope scope)
@@ -51,7 +44,7 @@ public sealed class SuperAdminSeeder
             .FirstOrDefaultAsync(
                 r => r.TenantId == null
                     && r.Name != null
-                    && r.Name.Trim().Equals(normalizedRoleName, StringComparison.OrdinalIgnoreCase),
+                    && r.Name == normalizedRoleName,
                 cancellationToken);
 
 

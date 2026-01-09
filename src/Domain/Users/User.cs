@@ -36,7 +36,7 @@ public sealed class User : Entity
     public IReadOnlyCollection<UserGroup> UserGroups => _userGroups.ToList();
 
     private readonly List<UserTenant> _userTenants = new();
-    public IReadOnlyCollection<UserTenant> UserTenants => _userTenants.ToList();
+    public IReadOnlyCollection<UserTenant> UserTenants => _userTenants;
 
     public Email Email { get; private set; }
 
