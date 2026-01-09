@@ -28,9 +28,27 @@ internal sealed class CreateUserCommandHandler(
             return Result.Failure<Guid>(UserErrors.EmailNotUnique);
         }
 
+        Guid? contextTenantId = null;
+        bool hasTenantContext = false;
+        try
+        {
+            contextTenantId = tenantContext.TenantId;
+            hasTenantContext = true;
+        }
+        catch (ApplicationException)
+        {
+            hasTenantContext = false;
+        }
+
         UserType resolvedType = UserType.Tenant;
         if (!string.IsNullOrWhiteSpace(command.UserType) && !UserTypeParser.TryParse(command.UserType, out resolvedType))
         {
+            return Result.Failure<Guid>(UserErrors.UserTypeInvalid);
+        }
+
+        if (resolvedType == UserType.Platform && hasTenantContext)
+        {
+            // 中文註解：租戶操作時禁止建立平台使用者，避免權限提升。
             return Result.Failure<Guid>(UserErrors.UserTypeInvalid);
         }
 
@@ -44,14 +62,12 @@ internal sealed class CreateUserCommandHandler(
         if (resolvedType != UserType.Platform && !resolvedTenantId.HasValue)
         {
             // 中文註解：避免依賴外部輸入時缺失租戶，優先嘗試使用租戶上下文。
-            try
-            {
-                resolvedTenantId = tenantContext.TenantId;
-            }
-            catch (ApplicationException)
+            if (!hasTenantContext)
             {
                 return Result.Failure<Guid>(UserErrors.TenantIdRequired);
             }
+
+            resolvedTenantId = contextTenantId;
         }
 
         var name = new Name(command.Name);
