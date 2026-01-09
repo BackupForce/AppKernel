@@ -27,19 +27,19 @@ public sealed class JwtUserContext
             return false;
         }
 
-        string? userIdValue = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        string? userIdValue = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdValue, out Guid userId) || userId == Guid.Empty)
         {
             return false;
         }
 
-        string? userTypeValue = principal.FindFirstValue(JwtClaimNames.UserType);
+        string? userTypeValue = principal.FindFirst(JwtClaimNames.UserType)?.Value;
         if (!UserTypeParser.TryParse(userTypeValue, out UserType userType))
         {
             return false;
         }
 
-        string? tenantValue = principal.FindFirstValue(JwtClaimNames.TenantId);
+        string? tenantValue = principal.FindFirst(JwtClaimNames.TenantId)?.Value;
         Guid? tenantId = null;
 
         if (userType == UserType.Platform)

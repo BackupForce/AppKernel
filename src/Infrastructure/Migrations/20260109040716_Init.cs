@@ -104,10 +104,16 @@ public partial class Init : Migration
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 password_hash = table.Column<string>(type: "text", nullable: false),
                 has_public_profile = table.Column<bool>(type: "boolean", nullable: false),
+                type = table.Column<int>(type: "integer", nullable: false),
+                tenant_id = table.Column<Guid>(type: "uuid", nullable: true),
                 email = table.Column<string>(type: "text", nullable: false),
                 name = table.Column<string>(type: "text", nullable: false)
             },
-            constraints: table => table.PrimaryKey("pk_users", x => x.id));
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_users", x => x.id);
+                table.CheckConstraint("CK_user_type", "\"type\" IN (0, 1, 2)");
+            });
 
         migrationBuilder.CreateTable(
             name: "node_relation",
@@ -171,6 +177,7 @@ public partial class Init : Migration
                     .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                 name = table.Column<string>(type: "text", nullable: false),
                 description = table.Column<string>(type: "text", nullable: false),
+                scope = table.Column<int>(type: "integer", nullable: false),
                 role_id = table.Column<int>(type: "integer", nullable: true)
             },
             constraints: table =>
@@ -562,6 +569,12 @@ public partial class Init : Migration
             table: "user_tenants",
             columns: new[] { "user_id", "tenant_id" },
             unique: true);
+
+        migrationBuilder.CreateIndex(
+            name: "ix_users_tenant_id",
+            schema: "public",
+            table: "users",
+            column: "tenant_id");
     }
 
     /// <inheritdoc />

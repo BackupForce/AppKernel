@@ -42,7 +42,7 @@ public class GetUserTests : BaseFunctionalTest
 
     private async Task<Guid> CreateUserAsync()
     {
-        var request = new CreateUserRequest("test@test.com", "name", "123456", true);
+        var request = new CreateUserRequest("test", "name", "123456", true, null, null);
 
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync("api/v1/users", request);
 

@@ -28,8 +28,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(u => u.TenantId);
 
-        builder.HasCheckConstraint(
-            "ck_users_type_tenant_id",
-            "(\"type\" = 0 AND tenant_id IS NULL) OR (\"type\" <> 0 AND tenant_id IS NOT NULL)");
+        builder.ToTable(t => t.HasCheckConstraint(
+     "CK_user_type",
+     "\"type\" IN (0, 1, 2)"
+ ));
     }
 }

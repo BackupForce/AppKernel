@@ -29,12 +29,9 @@ internal sealed class CreateUserCommandHandler(
         }
 
         UserType resolvedType = UserType.Tenant;
-        if (!string.IsNullOrWhiteSpace(command.UserType))
+        if (!string.IsNullOrWhiteSpace(command.UserType) && !UserTypeParser.TryParse(command.UserType, out resolvedType))
         {
-            if (!UserTypeParser.TryParse(command.UserType, out resolvedType))
-            {
-                return Result.Failure<Guid>(UserErrors.UserTypeInvalid);
-            }
+            return Result.Failure<Guid>(UserErrors.UserTypeInvalid);
         }
 
         Guid? resolvedTenantId = command.TenantId;

@@ -582,6 +582,14 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
+
                     b.ComplexProperty<Dictionary<string, object>>("Email", "Domain.Users.User.Email#Email", b1 =>
                         {
                             b1.IsRequired();
@@ -605,7 +613,13 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_users");
 
-                    b.ToTable("users", "public");
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_users_tenant_id");
+
+                    b.ToTable("users", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_user_type", "\"type\" IN (0, 1, 2)");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Users.UserTenant", b =>
