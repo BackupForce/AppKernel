@@ -30,7 +30,6 @@ public class PermissionProviderTests : BaseIntegrationTest
         Email email = Email.Create("user1@example.com").Value;
         var name = new Name("User One");
         var user = User.Create(email, name, "hash", true, UserType.Tenant, tenantBId);
-        user.AssignTenant(tenantBId);
         DbContext.Users.Add(user);
 
         var nodeA = ResourceNode.Create("Node A", "node-a", tenantAId);
@@ -64,7 +63,6 @@ public class PermissionProviderTests : BaseIntegrationTest
         Email email = Email.Create("user2@example.com").Value;
         var name = new Name("User Two");
         var user = User.Create(email, name, "hash", true, UserType.Tenant, tenantId);
-        user.AssignTenant(tenantId);
         DbContext.Users.Add(user);
 
         var rootNode = ResourceNode.Create("Root", "root-lineage", tenantId);
@@ -99,7 +97,6 @@ public class PermissionProviderTests : BaseIntegrationTest
         Email email = Email.Create("user3@example.com").Value;
         var name = new Name("User Three");
         var user = User.Create(email, name, "hash", true, UserType.Tenant, tenantId);
-        user.AssignTenant(tenantId);
         DbContext.Users.Add(user);
 
         var nodeA = ResourceNode.Create("Node A", "node-a-cycle", tenantId);

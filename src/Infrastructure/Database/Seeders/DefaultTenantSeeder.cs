@@ -130,15 +130,6 @@ public sealed class DefaultTenantSeeder : IDataSeeder
         // 中文註解：一次性補齊租戶綁定與角色綁定，避免同一個 User 在 Seeder 期間多次 SaveChanges 造成樂觀併發衝突。
         bool changed = false;
 
-        bool tenantLinkExists = await _db.Set<UserTenant>()
-            .AnyAsync(x => x.UserId == user.Id && x.TenantId == tenant.Id);
-
-        if (!tenantLinkExists)
-        {
-            UserTenant link = UserTenant.Create(user.Id, tenant.Id);
-            await _db.Set<UserTenant>().AddAsync(link);
-            changed = true;
-        }
         if (!user.HasRole(role.Id))
         {
             user.AssignRole(role);
@@ -150,6 +141,7 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             _logger.LogInformation("✅ DEF 租戶預設使用者綁定已完整: {Email}", DefaultTenantAdminEmail);
             return;
         }
+        await _db.SaveChangesAsync();
     }
 
     private async Task<Role?> EnsureTenantAdminRoleAsync(Guid tenantId)
@@ -159,7 +151,7 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             .AsTracking()
             .FirstOrDefaultAsync(r => r.TenantId == tenantId
                 && r.Name != null
-                && r.Name.Trim().ToUpperInvariant() == normalizedRoleName);
+                && r.Name == normalizedRoleName);
 
         if (role is null)
         {

@@ -43,7 +43,7 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
                 role =>
                     role.Id != excludedId &&
                     role.Name != null &&
-                    role.Name.Trim().ToUpperInvariant() == normalizedName,
+                    role.Name == normalizedName,
                 cancellationToken);
 
             return !exists;
@@ -51,7 +51,7 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
         else
         {
             bool exists = await query.AnyAsync(
-                role => role.Name != null && role.Name.Trim().ToUpperInvariant() == normalizedName,
+                role => role.Name != null && role.Name == normalizedName,
                 cancellationToken);
 
             return !exists;
@@ -101,7 +101,7 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
         IQueryable<Role> query = ApplyTenantFilter(context.Set<Role>(), tenantId);
 
         return query.FirstOrDefaultAsync(
-            role => role.Name != null && role.Name.Trim().ToUpperInvariant() == normalizedCode,
+            role => role.Name != null && role.Name == normalizedCode,
             cancellationToken);
     }
 

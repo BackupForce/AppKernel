@@ -31,14 +31,14 @@ internal sealed class GroupRepository(ApplicationDbContext context) : IGroupRepo
                 group =>
                     group.Id != excludedId &&
                     group.Name != null &&
-                    group.Name.Trim().ToUpperInvariant() == normalizedName,
+                    group.Name == normalizedName,
                 cancellationToken);
 
             return !exists;
         }
 
         bool nameExists = await query.AnyAsync(
-            group => group.Name != null && group.Name.Trim().ToUpperInvariant() == normalizedName,
+            group => group.Name != null && group.Name == normalizedName,
             cancellationToken);
 
         return !nameExists;

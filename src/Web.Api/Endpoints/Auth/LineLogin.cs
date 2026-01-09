@@ -1,6 +1,7 @@
 ﻿using Application.Auth;
 using MediatR;
 using SharedKernel;
+using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Auth;
