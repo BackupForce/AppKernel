@@ -30,9 +30,9 @@ internal sealed class PermissionProvider : IPermissionProvider
             return false;
         }
 
-        bool isInTenant = await _dbContext.UserTenants
+        bool isInTenant = await _dbContext.Users
             .AsNoTracking()
-            .AnyAsync(userTenant => userTenant.UserId == userId && userTenant.TenantId == tenantId.Value);
+            .AnyAsync(user => user.Id == userId && user.TenantId == tenantId.Value);
         if (!isInTenant)
         {
             return false;
@@ -60,7 +60,7 @@ internal sealed class PermissionProvider : IPermissionProvider
                 .Select(role => role.Id))
             .ToListAsync();
 
-        var roleSubjectIds = roleIds
+        List<Guid> roleSubjectIds = roleIds
             .Select(MapRoleIdToSubjectId)
             .ToList();
 
@@ -85,7 +85,7 @@ internal sealed class PermissionProvider : IPermissionProvider
             .Select(permission => permission.Name)
             .ToListAsync();
 
-        var matrix = new UserPermissionMatrix();
+        UserPermissionMatrix matrix = new UserPermissionMatrix();
 
         foreach (PermissionAssignment assignment in assignments)
         {
@@ -118,9 +118,9 @@ internal sealed class PermissionProvider : IPermissionProvider
             return false;
         }
 
-        var nodeScopeSet = new HashSet<Guid?>(nodeScope);
+        HashSet<Guid?> nodeScopeSet = new HashSet<Guid?>(nodeScope);
 
-        var relevantDecisions = decisions
+        List<PermissionDecisionEntry> relevantDecisions = decisions
             .Where(entry => nodeScopeSet.Contains(entry.NodeId))
             .ToList();
 
@@ -157,8 +157,8 @@ internal sealed class PermissionProvider : IPermissionProvider
         }
 
         Guid currentNodeId = nodeId.Value;
-        var lineage = new List<Guid?> { currentNodeId };
-        var visited = new HashSet<Guid> { currentNodeId };
+        List<Guid?> lineage = new List<Guid?> { currentNodeId };
+        HashSet<Guid> visited = new HashSet<Guid> { currentNodeId };
         Guid? currentId = currentNodeId;
 
         while (currentId.HasValue)

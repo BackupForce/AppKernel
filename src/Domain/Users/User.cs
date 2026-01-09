@@ -12,7 +12,8 @@ public sealed class User : Entity
         string passwordhash,
         bool hasPublicProfile,
         UserType type,
-        Guid? tenantId)
+        Guid? tenantId,
+        string? lineUserId)
         : base(id)
     {
         Email = email;
@@ -21,6 +22,8 @@ public sealed class User : Entity
         PasswordHash = passwordhash;
         Type = type;
         TenantId = tenantId;
+        NormalizedEmail = NormalizeForLookup(email.Value);
+        SetLineUserId(lineUserId);
 
         EnsureTypeInvariant(type, tenantId);
     }
@@ -35,10 +38,9 @@ public sealed class User : Entity
     private readonly List<UserGroup> _userGroups = new();
     public IReadOnlyCollection<UserGroup> UserGroups => _userGroups.ToList();
 
-    private readonly List<UserTenant> _userTenants = new();
-    public IReadOnlyCollection<UserTenant> UserTenants => _userTenants;
-
     public Email Email { get; private set; }
+
+    public string NormalizedEmail { get; private set; } = string.Empty;
 
     public Name Name { get; private set; }
 
@@ -49,6 +51,10 @@ public sealed class User : Entity
     public UserType Type { get; private set; }
 
     public Guid? TenantId { get; private set; }
+
+    public string? LineUserId { get; private set; }
+
+    public string? NormalizedLineUserId { get; private set; }
 
     public bool HasRole(int roleId)
     {
@@ -78,12 +84,13 @@ public sealed class User : Entity
         string passwordhash,
         bool hasPublicProfile,
         UserType type,
-        Guid? tenantId)
+        Guid? tenantId,
+        string? lineUserId = null)
     {
         // 中文註解：建立使用者時先檢查型別與租戶不變式，避免建立非法資料。
         EnsureTypeInvariant(type, tenantId);
 
-        var user = new User(Guid.NewGuid(), email, name, passwordhash, hasPublicProfile, type, tenantId);
+        User user = new User(Guid.NewGuid(), email, name, passwordhash, hasPublicProfile, type, tenantId, lineUserId);
 
         user.Raise(new UserCreatedDomainEvent(user.Id));
         //寫入初始Role
@@ -162,32 +169,6 @@ public sealed class User : Entity
         _userGroups.Remove(target);
     }
 
-    public bool HasTenant(Guid tenantId)
-    {
-        return _userTenants.Any(userTenant => userTenant.TenantId == tenantId);
-    }
-
-    public void AssignTenant(Guid tenantId)
-    {
-        if (HasTenant(tenantId))
-        {
-            return;
-        }
-
-        _userTenants.Add(UserTenant.Create(Id, tenantId));
-    }
-
-    public void RemoveTenant(Guid tenantId)
-    {
-        UserTenant? target = _userTenants.Find(userTenant => userTenant.TenantId == tenantId);
-        if (target is null)
-        {
-            return;
-        }
-
-        _userTenants.Remove(target);
-    }
-
     private static void EnsureTypeInvariant(UserType type, Guid? tenantId)
     {
         // 中文註解：Platform 必須沒有 TenantId，Tenant/Member 必須有 TenantId。
@@ -200,5 +181,21 @@ public sealed class User : Entity
         {
             throw new InvalidOperationException("Tenant/Member user must have tenant id.");
         }
+    }
+
+    public void SetLineUserId(string? lineUserId)
+    {
+        if (string.IsNullOrWhiteSpace(lineUserId))
+        {
+            return;
+        }
+
+        LineUserId = lineUserId.Trim();
+        NormalizedLineUserId = NormalizeForLookup(lineUserId);
+    }
+
+    private static string NormalizeForLookup(string value)
+    {
+        return value.Trim().ToUpperInvariant();
     }
 }

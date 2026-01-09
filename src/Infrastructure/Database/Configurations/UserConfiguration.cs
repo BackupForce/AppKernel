@@ -14,6 +14,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             u => u.Email,
             b => b.Property(e => e.Value).HasColumnName("email"));
 
+        builder.Property(u => u.NormalizedEmail)
+            .HasColumnName("normalized_email");
+
         builder.ComplexProperty(
             u => u.Name,
             b => b.Property(e => e.Value).HasColumnName("name"));
@@ -25,6 +28,12 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.TenantId)
             .HasColumnName("tenant_id");
+
+        builder.Property(u => u.LineUserId)
+            .HasColumnName("line_user_id");
+
+        builder.Property(u => u.NormalizedLineUserId)
+            .HasColumnName("normalized_line_user_id");
 
         builder.HasIndex(u => u.TenantId);
 

@@ -20,6 +20,15 @@ internal sealed class MemberRepository(ApplicationDbContext context) : IMemberRe
             cancellationToken);
     }
 
+    public Task<Member?> GetByUserIdAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return context.Members
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+            m => m.TenantId == tenantId && m.UserId == userId,
+            cancellationToken);
+    }
+
     public Task<bool> IsMemberNoUniqueAsync(Guid tenantId, string memberNo, CancellationToken cancellationToken = default)
     {
         return context.Members.AllAsync(

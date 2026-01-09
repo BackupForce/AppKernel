@@ -19,6 +19,7 @@ internal sealed class GroupRepository(ApplicationDbContext context) : IGroupRepo
         }
 
         string candidateName = name.Trim();
+        string normalizedName = candidateName.ToUpperInvariant();
 
         IQueryable<Group> query = context.Set<Group>();
 
@@ -29,14 +30,15 @@ internal sealed class GroupRepository(ApplicationDbContext context) : IGroupRepo
             bool exists = await query.AnyAsync(
                 group =>
                     group.Id != excludedId &&
-                    string.Equals(group.Name, candidateName, StringComparison.OrdinalIgnoreCase),
+                    group.Name != null &&
+                    group.Name.Trim().ToUpperInvariant() == normalizedName,
                 cancellationToken);
 
             return !exists;
         }
 
         bool nameExists = await query.AnyAsync(
-            group => string.Equals(group.Name, candidateName, StringComparison.OrdinalIgnoreCase),
+            group => group.Name != null && group.Name.Trim().ToUpperInvariant() == normalizedName,
             cancellationToken);
 
         return !nameExists;

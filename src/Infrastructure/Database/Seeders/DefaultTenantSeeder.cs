@@ -150,33 +150,6 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             _logger.LogInformation("✅ DEF 租戶預設使用者綁定已完整: {Email}", DefaultTenantAdminEmail);
             return;
         }
-
-        try
-        {
-            await _db.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            // 中文註解：Seeder 在多實例或重入情境下可能發生併發；重新載入後以冪等方式重做一次即可。
-            await _db.Entry(user).ReloadAsync();
-
-            await _db.Entry(user).Collection(u => u.Roles).LoadAsync();
-            await _db.Entry(user).Collection(u => u.UserTenants).LoadAsync();
-
-            if (!user.HasTenant(tenant.Id))
-            {
-                user.AssignTenant(tenant.Id);
-            }
-
-            if (!user.HasRole(role.Id))
-            {
-                user.AssignRole(role);
-            }
-
-            await _db.SaveChangesAsync();
-        }
-
-        _logger.LogInformation("✅ 已補齊 DEF 租戶預設使用者綁定: {Email}", DefaultTenantAdminEmail);
     }
 
     private async Task<Role?> EnsureTenantAdminRoleAsync(Guid tenantId)
@@ -186,7 +159,7 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             .AsTracking()
             .FirstOrDefaultAsync(r => r.TenantId == tenantId
                 && r.Name != null
-                && r.Name == normalizedRoleName);
+                && r.Name.Trim().ToUpperInvariant() == normalizedRoleName);
 
         if (role is null)
         {
@@ -210,7 +183,6 @@ public sealed class DefaultTenantSeeder : IDataSeeder
         Email defaultEmail = Email.Create(DefaultTenantAdminEmail).Value;
         User? existing = await _db.Users
             .Include(user => user.Roles)
-            .Include(user => user.UserTenants)
             .FirstOrDefaultAsync(user => user.Email == defaultEmail);
 
         if (existing is not null)
