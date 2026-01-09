@@ -9,6 +9,7 @@ using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry.Trace;
 
 namespace Infrastructure.Database.Seeders;
 
@@ -114,13 +115,6 @@ public sealed class DefaultTenantSeeder : IDataSeeder
 
     private async Task EnsureDefaultTenantAdminAsync(Tenant tenant)
     {
-        if (!await SeederSchemaGuard.HasColumnAsync(_db, "Roles", "TenantId", _logger))
-        {
-            // 中文註解：若資料表尚未加入 Role.TenantId 欄位，先略過租戶角色種子流程。
-            _logger.LogWarning("⚠️ Roles.TenantId 欄位尚未準備，略過 DEF 租戶管理者建立。");
-            return;
-        }
-
         Role? role = await EnsureTenantAdminRoleAsync(tenant.Id);
         if (role is null)
         {
@@ -133,11 +127,28 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             return;
         }
 
+        // 中文註解：一次性補齊租戶綁定與角色綁定，避免同一個 User 在 Seeder 期間多次 SaveChanges 造成樂觀併發衝突。
+        bool changed = false;
+
+        bool tenantLinkExists = await _db.Set<UserTenant>()
+            .AnyAsync(x => x.UserId == user.Id && x.TenantId == tenant.Id);
+
+        if (!tenantLinkExists)
+        {
+            UserTenant link = UserTenant.Create(user.Id, tenant.Id);
+            await _db.Set<UserTenant>().AddAsync(link);
+            changed = true;
+        }
         if (!user.HasRole(role.Id))
         {
             user.AssignRole(role);
-            await _db.SaveChangesAsync();
-            _logger.LogInformation("✅ 已補齊 DEF 租戶管理者角色綁定: {Email}", DefaultTenantAdminEmail);
+            changed = true;
+        }
+
+        if (!changed)
+        {
+            _logger.LogInformation("✅ DEF 租戶預設使用者綁定已完整: {Email}", DefaultTenantAdminEmail);
+            return;
         }
     }
 
@@ -179,8 +190,9 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             if (existing.Type != UserType.Tenant || existing.TenantId != tenant.Id)
             {
                 // 中文註解：修正既有帳號型別與租戶綁定，避免錯誤分流。
+                // 注意：此處不要立刻 SaveChanges；統一由呼叫端在補齊 Role/Tenant 綁定後一次性存檔，
+                // 可降低 Seeder 重入/多實例啟動時的樂觀併發衝突機率。
                 existing.UpdateType(UserType.Tenant, tenant.Id);
-                await _db.SaveChangesAsync();
             }
 
             _logger.LogInformation("✅ DEF 租戶預設使用者已存在: {Email}", DefaultTenantAdminEmail);

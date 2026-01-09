@@ -82,13 +82,6 @@ public class RootUserSeeder : IDataSeeder
 
     private async Task EnsurePlatformAdminRoleBindingAsync(User user)
     {
-        if (!await SeederSchemaGuard.HasColumnAsync(_db, "Roles", "TenantId", _logger))
-        {
-            // TODO: 中文註解：若資料表尚未加入 Role.TenantId 欄位，先略過角色種子流程。
-            _logger.LogWarning("⚠️ Roles.TenantId 欄位尚未準備，略過平台角色建立與指派。");
-            return;
-        }
-
         Role? role = await EnsurePlatformAdminRoleAsync();
         if (role is null)
         {
@@ -107,6 +100,7 @@ public class RootUserSeeder : IDataSeeder
     private async Task<Role?> EnsurePlatformAdminRoleAsync()
     {
         string normalizedRoleName = PlatformAdminRoleName.Trim().ToUpperInvariant();
+
         Role? role = await _db.Set<Role>()
             .AsTracking()
             .FirstOrDefaultAsync(r => r.TenantId == null
