@@ -7,7 +7,7 @@ public sealed class PermissionUiCatalogProvider
 {
     private static readonly PermissionCatalogDto Catalog = BuildCatalog();
 
-    public PermissionCatalogDto GetCatalog()
+    public static PermissionCatalogDto GetCatalog()
     {
         return Catalog;
     }

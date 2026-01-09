@@ -3,7 +3,7 @@
 // 中文註解：用來整理角色勾選的權限，避免 master 與 child 同時存在。
 public sealed class PermissionSelectionNormalizer
 {
-    public IReadOnlySet<string> NormalizeSelections(
+    public static IReadOnlySet<string> NormalizeSelections(
         IEnumerable<string> selectedCodes,
         PermissionCatalogDto catalog)
     {
