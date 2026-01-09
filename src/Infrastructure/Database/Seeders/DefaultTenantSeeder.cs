@@ -4,12 +4,9 @@ using System.Threading.Tasks;
 using Application.Abstractions.Infrastructure;
 using Domain.Security;
 using Domain.Tenants;
-using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SharedKernel;
-using SharedKernel.Identity;
 
 namespace Infrastructure.Database.Seeders;
 
@@ -78,44 +75,6 @@ public sealed class DefaultTenantSeeder : IDataSeeder
         }
 
         await EnsureSampleResourceTreeAsync(tenant.Id, rootNode.Id);
-
-        await EnsureRootUserTenantAsync(tenant.Id);
-    }
-
-    private async Task EnsureRootUserTenantAsync(Guid tenantId)
-    {
-        string email = _config["RootUser:Email"] ?? RootUser.DefaultEmail;
-        Result<Email> emailResult = Email.Create(email);
-        if (emailResult.IsFailure)
-        {
-            _logger.LogWarning("Root user email invalid: {Email}", email);
-            return;
-        }
-
-        Email rootEmail = emailResult.Value;
-
-        User? rootUser = await _db.Users
-            .FirstOrDefaultAsync(user => user.Email == rootEmail);
-
-        if (rootUser is null)
-        {
-            _logger.LogWarning("Root user not found for tenant binding: {Email}", email);
-            return;
-        }
-
-        bool hasTenant = await _db.UserTenants
-            .AnyAsync(userTenant => userTenant.UserId == rootUser.Id && userTenant.TenantId == tenantId);
-
-        if (hasTenant)
-        {
-            _logger.LogInformation("✅ Root user already bound to default tenant: {Email}", email);
-            return;
-        }
-
-        _db.UserTenants.Add(UserTenant.Create(rootUser.Id, tenantId));
-        await _db.SaveChangesAsync();
-
-        _logger.LogInformation("✅ Root user bound to default tenant: {Email}", email);
     }
 
     private async Task EnsureSampleResourceTreeAsync(Guid tenantId, Guid rootNodeId)

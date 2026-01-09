@@ -5,13 +5,24 @@ namespace Domain.Users;
 
 public sealed class User : Entity
 {
-    private User(Guid id, Email email, Name name, string passwordhash, bool hasPublicProfile)
+    private User(
+        Guid id,
+        Email email,
+        Name name,
+        string passwordhash,
+        bool hasPublicProfile,
+        UserType type,
+        Guid? tenantId)
         : base(id)
     {
         Email = email;
         Name = name;
         HasPublicProfile = hasPublicProfile;
         PasswordHash = passwordhash;
+        Type = type;
+        TenantId = tenantId;
+
+        EnsureTypeInvariant(type, tenantId);
     }
 
     private User()
@@ -35,6 +46,10 @@ public sealed class User : Entity
 
     public bool HasPublicProfile { get; set; }
 
+    public UserType Type { get; private set; }
+
+    public Guid? TenantId { get; private set; }
+
     public bool HasRole(int roleId)
     {
         // 中文註解：檢查使用者是否已經擁有指定角色。
@@ -57,14 +72,58 @@ public sealed class User : Entity
         _roles.Add(role);
     }
 
-    public static User Create(Email email, Name name, string passwordhash, bool hasPublicProfile)
+    public static User Create(
+        Email email,
+        Name name,
+        string passwordhash,
+        bool hasPublicProfile,
+        UserType type,
+        Guid? tenantId)
     {
-        var user = new User(Guid.NewGuid(), email, name, passwordhash, hasPublicProfile);
+        // 中文註解：建立使用者時先檢查型別與租戶不變式，避免建立非法資料。
+        EnsureTypeInvariant(type, tenantId);
+
+        var user = new User(Guid.NewGuid(), email, name, passwordhash, hasPublicProfile, type, tenantId);
 
         user.Raise(new UserCreatedDomainEvent(user.Id));
         //寫入初始Role
 
         return user;
+    }
+
+    public void UpdateType(UserType type, Guid? tenantId)
+    {
+        // 中文註解：變更使用者型別時也必須遵守租戶不變式，避免權限混亂。
+        EnsureTypeInvariant(type, tenantId);
+
+        Type = type;
+        TenantId = tenantId;
+    }
+
+    public bool IsPlatform()
+    {
+        return Type == UserType.Platform;
+    }
+
+    public bool IsTenantUser()
+    {
+        return Type == UserType.Tenant;
+    }
+
+    public bool IsMember()
+    {
+        return Type == UserType.Member;
+    }
+
+    public Guid RequireTenantId()
+    {
+        // 中文註解：租戶/會員使用者必須綁定 TenantId，缺失就直接阻擋。
+        if (!TenantId.HasValue)
+        {
+            throw new InvalidOperationException("User TenantId is required but missing.");
+        }
+
+        return TenantId.Value;
     }
 
     public bool HasGroup(Guid groupId)
@@ -127,5 +186,19 @@ public sealed class User : Entity
         }
 
         _userTenants.Remove(target);
+    }
+
+    private static void EnsureTypeInvariant(UserType type, Guid? tenantId)
+    {
+        // 中文註解：Platform 必須沒有 TenantId，Tenant/Member 必須有 TenantId。
+        if (type == UserType.Platform && tenantId.HasValue)
+        {
+            throw new InvalidOperationException("Platform user cannot have tenant id.");
+        }
+
+        if (type != UserType.Platform && !tenantId.HasValue)
+        {
+            throw new InvalidOperationException("Tenant/Member user must have tenant id.");
+        }
     }
 }

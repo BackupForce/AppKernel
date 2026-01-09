@@ -1,4 +1,5 @@
-﻿using Application.Users.AssignRole;
+﻿using Application.Abstractions.Authorization;
+using Application.Users.AssignRole;
 using Application.Users.Create;
 using Application.Users.GetById;
 using Asp.Versioning;
@@ -15,7 +16,7 @@ public class UsersEndpoints : IEndpoint
         RouteGroupBuilder group = app.MapGroup("/users")
             .WithGroupName("admin-v1")
             .WithMetadata(new ApiVersion(2, 0))
-            .RequireAuthorization()
+            .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
             .WithTags("Users");
 
         // 改用顯式 handler 參數宣告，避免 Minimal API 推斷參數造成綁定錯誤。
@@ -44,7 +45,9 @@ public class UsersEndpoints : IEndpoint
                     request.Email,
                     request.Name,
                     request.Password,
-                    request.HasPublicProfile);
+                    request.HasPublicProfile,
+                    request.UserType,
+                    request.TenantId);
                 return await UseCaseInvoker.Send<CreateUserCommand, Guid>(
                     command,
                     sender,
