@@ -97,10 +97,25 @@
     "email": "user@example.com",
     "name": "User Name",
     "password": "string",
+    "hasPublicProfile": false,
+    "userType": "string|null",
+    "tenantId": "guid|null"
+  }
+  ```
+- **成功回應**：新使用者的 GUID。驗證失敗時回 400。 【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L31-L43】【F:src/Application/Users/Create/CreateUserRequest.cs†L3-L8】
+
+### POST `/api/v2/users/tenant`
+- **權限**：`users:create`
+- **請求體**
+  ```json
+  {
+    "email": "user@example.com",
+    "name": "User Name",
+    "password": "string",
     "hasPublicProfile": false
   }
   ```
-- **成功回應**：新使用者的 GUID。驗證失敗時回 400。 【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L31-L43】【F:src/Application/Users/Create/CreateUserRequest.cs†L3-L5】
+- **成功回應**：新租戶使用者的 GUID。驗證失敗時回 400。 【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L63-L79】【F:src/Application/Users/Create/CreateTenantUserRequest.cs†L3-L7】
 
 ### POST `/api/v2/users/{userId}/roles/{roleId}`
 - **權限**：`users:update`
@@ -113,6 +128,83 @@
   }
   ```
 - **描述**：替使用者指派角色，若使用者或角色不存在回 404，已存在角色回 409。 【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L45-L63】【F:src/Application/Users/AssignRole/AssignRoleToUserResultDto.cs†L1-L3】
+
+## 角色 (Roles) – 管理後台
+
+- **路由前綴**：`/api/v1/roles`
+- **API 版本**：v1。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L17-L24】
+- **授權**：需要登入且需具備各端點指定的權限（見下方）。【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L25-L112】
+
+### POST `/api/v1/roles`
+- **權限**：`roles:create`
+- **請求體**
+  ```json
+  { "name": "Admin" }
+  ```
+- **成功回應**：新角色 ID（int）。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L25-L41】【F:src/Web.Api/Endpoints/Roles/Requests/CreateRoleRequest.cs†L1-L3】
+
+### PUT `/api/v1/roles/{id}`
+- **權限**：`roles:update`
+- **路徑參數**：`id` (int)
+- **請求體**
+  ```json
+  { "name": "Administrator" }
+  ```
+- **描述**：更新角色名稱，成功回 200 無內容。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L43-L57】【F:src/Web.Api/Endpoints/Roles/Requests/UpdateRoleRequest.cs†L1-L3】
+
+### DELETE `/api/v1/roles/{id}`
+- **權限**：`roles:delete`
+- **路徑參數**：`id` (int)
+- **描述**：刪除角色，找不到回 404。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L59-L71】
+
+### GET `/api/v1/roles/{id}`
+- **權限**：`roles:view`
+- **路徑參數**：`id` (int)
+- **成功回應**
+  ```json
+  {
+    "id": 1,
+    "name": "Admin",
+    "permissionCodes": ["roles:view"]
+  }
+  ```
+- **描述**：取得角色詳情。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L73-L87】【F:src/Application/Roles/Dtos/RoleDetailDto.cs†L1-L5】
+
+### GET `/api/v1/roles`
+- **權限**：`roles:view`
+- **成功回應**
+  ```json
+  [
+    {
+      "id": 1,
+      "name": "Admin",
+      "permissionCount": 3
+    }
+  ]
+  ```
+- **描述**：列出角色清單。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L89-L102】【F:src/Application/Roles/Dtos/RoleListItemDto.cs†L1-L5】
+
+### GET `/api/v1/roles/{id}/permissions`
+- **權限**：`roles:view`
+- **路徑參數**：`id` (int)
+- **成功回應**：角色的權限代碼清單。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L104-L118】
+
+### POST `/api/v1/roles/{id}/permissions`
+- **權限**：`roles:update`
+- **路徑參數**：`id` (int)
+- **請求體**
+  ```json
+  {
+    "permissionCodes": ["roles:view", "roles:create"]
+  }
+  ```
+- **描述**：新增角色權限。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L120-L135】【F:src/Web.Api/Endpoints/Roles/Requests/UpdateRolePermissionsRequest.cs†L1-L3】
+
+### POST `/api/v1/roles/{id}/permissions/remove`
+- **權限**：`roles:update`
+- **路徑參數**：`id` (int)
+- **請求體** 同上。
+- **描述**：移除角色權限。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L137-L152】【F:src/Web.Api/Endpoints/Roles/Requests/UpdateRolePermissionsRequest.cs†L1-L3】
 
 ## 會員 (Members) – 管理後台
 
