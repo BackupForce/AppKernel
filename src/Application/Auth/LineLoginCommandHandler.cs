@@ -1,13 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Net.Http;
-using System.Text.Json;
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Identity;
 using Application.Abstractions.Messaging;
 using Domain.Members;
 using Domain.Security;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
 
@@ -22,11 +19,10 @@ internal sealed class LineLoginCommandHandler(
     IJwtService jwtService,
     IPasswordHasher passwordHasher,
     IUnitOfWork unitOfWork,
-    IHttpClientFactory httpClientFactory,
+    IExternalIdentityVerifier externalIdentityVerifier,
     ILogger<LineLoginCommandHandler> logger)
     : ICommandHandler<LineLoginCommand, LineLoginResponse>
 {
-    private const string LineVerifyUrl = "https://api.line.me/oauth2/v2.1/verify";
     private const string DefaultMemberDisplayName = "LINE會員";
 
     public async Task<Result<LineLoginResponse>> Handle(
@@ -48,17 +44,22 @@ internal sealed class LineLoginCommandHandler(
             return Result.Failure<LineLoginResponse>(AuthErrors.TenantContextMissing);
         }
 
-        string? lineUserId = await VerifyLineUserIdAsync(command.AccessToken, cancellationToken);
-        if (lineUserId is null)
+        // 中文註解：Application 只知道「拿 token 換 user id」，不關心 HTTP/JSON 細節。
+        ExternalIdentityResult verifyResult = await externalIdentityVerifier.VerifyLineAccessTokenAsync(
+            command.AccessToken,
+            cancellationToken);
+
+        if (!verifyResult.IsValid)
         {
             return Result.Failure<LineLoginResponse>(AuthErrors.LineVerifyFailed);
         }
 
-        if (string.IsNullOrWhiteSpace(lineUserId))
+        if (string.IsNullOrWhiteSpace(verifyResult.LineUserId))
         {
             return Result.Failure<LineLoginResponse>(AuthErrors.LineUserIdMissing);
         }
 
+        string lineUserId = verifyResult.LineUserId;
         string normalizedLineUserId = NormalizeForLookup(lineUserId);
 
         User? user = await userRepository.GetMemberByNormalizedLineUserIdAsync(
@@ -79,7 +80,7 @@ internal sealed class LineLoginCommandHandler(
                 user = creation.User;
                 member = creation.Member;
             }
-            catch (DbUpdateException ex)
+            catch (UniqueConstraintViolationException ex)
             {
                 logger.LogWarning(ex, "中文註解：LINE 登入併發新增失敗，改走重查流程。");
                 user = await userRepository.GetMemberByNormalizedLineUserIdAsync(
@@ -103,7 +104,7 @@ internal sealed class LineLoginCommandHandler(
                 {
                     member = await CreateMemberForExistingUserAsync(tenantId, user.Id, cancellationToken);
                 }
-                catch (DbUpdateException ex)
+                catch (UniqueConstraintViolationException ex)
                 {
                     logger.LogWarning(ex, "中文註解：補齊會員資料時發生競態，改用重查結果。");
                     member = await memberRepository.GetByUserIdAsync(tenantId, user.Id, cancellationToken);
@@ -135,49 +136,6 @@ internal sealed class LineLoginCommandHandler(
         };
 
         return response;
-    }
-
-    private async Task<string?> VerifyLineUserIdAsync(string accessToken, CancellationToken cancellationToken)
-    {
-        HttpClient httpClient = httpClientFactory.CreateClient();
-        using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, LineVerifyUrl)
-        {
-            Content = new FormUrlEncodedContent(new[]
-            {
-                new KeyValuePair<string, string>("token", accessToken)
-            })
-        };
-
-        HttpResponseMessage response;
-        try
-        {
-            response = await httpClient.SendAsync(request, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "中文註解：LINE verify 連線失敗。");
-            return null;
-        }
-
-        if (!response.IsSuccessStatusCode)
-        {
-            string responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            logger.LogWarning(
-                "中文註解：LINE verify 回應失敗，Status={StatusCode}, Body={Body}",
-                (int)response.StatusCode,
-                responseBody);
-            return null;
-        }
-
-        string payload = await response.Content.ReadAsStringAsync(cancellationToken);
-        LineVerifyResponse? verifyResponse = JsonSerializer.Deserialize<LineVerifyResponse>(payload);
-        if (verifyResponse is null || string.IsNullOrWhiteSpace(verifyResponse.LineUserId))
-        {
-            logger.LogWarning("中文註解：LINE verify 回應缺少使用者識別碼。");
-            return string.Empty;
-        }
-
-        return verifyResponse.LineUserId;
     }
 
     private async Task<MemberLoginCreation> CreateMemberUserAsync(
