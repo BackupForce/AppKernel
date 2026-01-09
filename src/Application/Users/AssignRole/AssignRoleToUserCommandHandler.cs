@@ -30,6 +30,12 @@ internal sealed class AssignRoleToUserCommandHandler(
             return Result.Failure<AssignRoleToUserResultDto>(RoleErrors.NotFound);
         }
 
+        if (!CanAssignRole(user, role))
+        {
+            // 中文註解：依 UserType 與 TenantId 分流，避免跨租戶/Member 角色污染。
+            return Result.Failure<AssignRoleToUserResultDto>(UserErrors.RoleAssignmentNotAllowed);
+        }
+
         if (user.HasRole(role.Id))
         {
             return Result.Failure<AssignRoleToUserResultDto>(UserErrors.RoleAlreadyAssigned(role.Id));
@@ -40,9 +46,27 @@ internal sealed class AssignRoleToUserCommandHandler(
         await invalidator.TrackRoleUserAsync(role.Id, user.Id, cancellationToken);
         await invalidator.InvalidateUserAsync(user.Id, cancellationToken);
 
-        var roleIds = user.Roles.Select(r => r.Id).OrderBy(id => id).ToList();
-        var response = new AssignRoleToUserResultDto(user.Id, roleIds);
+        List<int> roleIds = user.Roles.Select(r => r.Id).OrderBy(id => id).ToList();
+        AssignRoleToUserResultDto response = new AssignRoleToUserResultDto(user.Id, roleIds);
 
         return Result.Success(response);
+    }
+
+    private static bool CanAssignRole(User user, Role role)
+    {
+        if (user.Type == UserType.Platform)
+        {
+            return role.IsPlatformRole();
+        }
+
+        if (user.Type == UserType.Tenant)
+        {
+            return user.TenantId.HasValue
+                && role.TenantId.HasValue
+                && role.TenantId.Value == user.TenantId.Value;
+        }
+
+        // 中文註解：Member 不允許指派角色，Fail Closed。
+        return false;
     }
 }

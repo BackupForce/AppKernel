@@ -28,6 +28,19 @@ internal sealed class UserTypeAuthorizationHandler : AuthorizationHandler<UserTy
             return Task.CompletedTask;
         }
 
+        if ((jwtContext.UserType == UserType.Tenant || jwtContext.UserType == UserType.Member)
+            && !jwtContext.TenantId.HasValue)
+        {
+            // 中文註解：Tenant/Member 必須有 tenant_id，缺失直接拒絕。
+            return Task.CompletedTask;
+        }
+
+        if (jwtContext.UserType == UserType.Platform && !IsPlatformRoute(context))
+        {
+            // 中文註解：平台帳號僅允許進入平台路徑，避免誤入租戶端點。
+            return Task.CompletedTask;
+        }
+
         if (requirement.EnforceTenantMatch && jwtContext.UserType != UserType.Platform)
         {
             Guid? routeTenantId = ResolveTenantId(context);
@@ -80,6 +93,36 @@ internal sealed class UserTypeAuthorizationHandler : AuthorizationHandler<UserTy
         }
 
         id = Guid.Empty;
+        return false;
+    }
+
+    private bool IsPlatformRoute(AuthorizationHandlerContext context)
+    {
+        HttpContext? httpContext = context.Resource as HttpContext ?? _httpContextAccessor.HttpContext;
+        if (httpContext is null)
+        {
+            return false;
+        }
+
+        PathString path = httpContext.Request.Path;
+        if (!path.HasValue || path.Value is null)
+        {
+            return false;
+        }
+
+        string pathValue = path.Value;
+        string normalizedPath = pathValue.ToUpperInvariant();
+        if (normalizedPath.StartsWith("/API/PLATFORM", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (normalizedPath.StartsWith("/API/V", StringComparison.Ordinal)
+            && normalizedPath.IndexOf("/PLATFORM", StringComparison.Ordinal) >= 0)
+        {
+            return true;
+        }
+
         return false;
     }
 }

@@ -117,9 +117,6 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
                 }
 
                 break;
-            case PermissionScope.Self:
-                // 中文註解：Self scope 需要目標使用者資訊，缺失時拒絕。
-                return;
             default:
                 return;
         }

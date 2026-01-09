@@ -19,7 +19,9 @@ internal sealed class GrantedPermissionProvider : IGrantedPermissionProvider
         List<int> roleIds = await _dbContext.Users
             .AsNoTracking()
             .Where(user => user.Id == callerUserId)
-            .SelectMany(user => user.Roles.Select(role => role.Id))
+            .SelectMany(user => user.Roles
+                .Where(role => role.TenantId == null)
+                .Select(role => role.Id))
             .ToListAsync(ct);
 
         List<string> rolePermissionCodes = await _dbContext.Set<Permission>()
@@ -48,7 +50,9 @@ internal sealed class GrantedPermissionProvider : IGrantedPermissionProvider
         List<int> roleIds = await _dbContext.Users
             .AsNoTracking()
             .Where(user => user.Id == callerUserId)
-            .SelectMany(user => user.Roles.Select(role => role.Id))
+            .SelectMany(user => user.Roles
+                .Where(role => role.TenantId == tenantId)
+                .Select(role => role.Id))
             .ToListAsync(ct);
 
         List<Guid> roleSubjectIds = roleIds

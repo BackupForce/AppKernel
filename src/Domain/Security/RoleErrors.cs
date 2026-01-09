@@ -19,4 +19,12 @@ public static class RoleErrors
     public static readonly Error PermissionCodesRequired = Error.Validation(
         "Role.PermissionCodesRequired",
         "至少需要一個權限代碼。");
+
+    public static readonly Error OperationNotAllowed = Error.Forbidden(
+        "Role.OperationNotAllowed",
+        "目前使用者無權執行角色操作。");
+
+    public static readonly Error PermissionScopeMismatch = Error.Validation(
+        "Role.PermissionScopeMismatch",
+        "權限 Scope 與角色類型不一致。");
 }

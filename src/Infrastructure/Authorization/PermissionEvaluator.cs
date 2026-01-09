@@ -44,21 +44,6 @@ public sealed class PermissionEvaluator : IPermissionEvaluator
                     requirement.TenantId.Value,
                     cancellationToken);
                 break;
-            case PermissionScope.Self:
-                if (!requirement.TargetUserId.HasValue)
-                {
-                    return false;
-                }
-
-                if (callerContext.CallerUserId != requirement.TargetUserId.Value)
-                {
-                    return false;
-                }
-
-                grantedPermissions = await _grantedPermissionProvider.GetPlatformPermissionsAsync(
-                    callerContext.CallerUserId,
-                    cancellationToken);
-                break;
             default:
                 return false;
         }

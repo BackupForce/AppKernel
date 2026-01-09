@@ -24,6 +24,10 @@ public static class UserErrors
         "Users.RoleAlreadyAssigned",
         $"使用者已擁有角色 (Id = {roleId})。");
 
+    public static readonly Error RoleAssignmentNotAllowed = Error.Forbidden(
+        "Users.RoleAssignmentNotAllowed",
+        "依照使用者類型與租戶規則，禁止指派該角色。");
+
     public static Error GroupAlreadyAssigned(Guid groupId) => Error.Conflict(
         "Users.GroupAlreadyAssigned",
         $"使用者已擁有群組 (Id = {groupId})。");

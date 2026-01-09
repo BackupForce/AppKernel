@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Domain.Security;
+﻿using Domain.Security;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -36,17 +31,33 @@ public sealed class SuperAdminSeeder
             return;
         }
 
-        IReadOnlyCollection<string> allPermissionCodes = PermissionCatalog.AllPermissionCodes;
+        if (!await SeederSchemaGuard.HasColumnAsync(_db, "Roles", "TenantId", _logger, cancellationToken))
+        {
+            // TODO: 中文註解：若資料表尚未加入 Role.TenantId 欄位，先略過平台角色種子流程。
+            _logger.LogWarning("⚠️ Roles.TenantId 欄位尚未準備，略過 SuperAdmin 角色建立。");
+            return;
+        }
+
+        List<string> platformPermissionCodes = PermissionCatalog.AllPermissionCodes
+            .Where(code =>
+                PermissionCatalog.TryGetScope(code, out PermissionScope scope)
+                && scope == PermissionScope.Platform)
+            .Select(code => code.Trim().ToUpperInvariant())
+            .ToList();
+
+        string normalizedRoleName = _options.RoleName.Trim().ToUpperInvariant();
 
         Role? role = await _db.Set<Role>()
             .FirstOrDefaultAsync(
-                r => r.Name != null && r.Name == _options.RoleName,
+                r => r.TenantId == null
+                    && r.Name != null
+                    && r.Name.Trim().ToUpperInvariant() == normalizedRoleName,
                 cancellationToken);
 
 
         if (role is null)
         {
-            role = Role.Create(_options.RoleName);
+            role = Role.Create(_options.RoleName, null);
             _db.Set<Role>().Add(role);
             await _db.SaveChangesAsync(cancellationToken);
         }
@@ -55,8 +66,8 @@ public sealed class SuperAdminSeeder
             .Where(permission => permission.RoleId == role.Id)
             .ToListAsync(cancellationToken);
 
-        var expectedCodes = new HashSet<string>(allPermissionCodes, StringComparer.OrdinalIgnoreCase);
-        var existingCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> expectedCodes = new HashSet<string>(platformPermissionCodes, StringComparer.Ordinal);
+        HashSet<string> existingCodes = new HashSet<string>(StringComparer.Ordinal);
         bool hasUpdates = false;
         foreach (Permission permission in existingPermissions)
         {
@@ -75,21 +86,42 @@ public sealed class SuperAdminSeeder
             existingCodes.Add(normalizedName);
         }
 
-        var permissionsToAdd = new List<Permission>();
-        foreach (string code in allPermissionCodes)
+        List<Permission> permissionsToAdd = new List<Permission>();
+        List<Permission> permissionsToRemove = new List<Permission>();
+        foreach (string code in platformPermissionCodes)
         {
             if (existingCodes.Contains(code))
             {
                 continue;
             }
 
-            var permissionToAdd = Permission.CreateForRole(code, code, role.Id);
+            Permission permissionToAdd = Permission.CreateForRole(code, code, role.Id);
             permissionsToAdd.Add(permissionToAdd);
+        }
+
+        foreach (Permission permission in existingPermissions)
+        {
+            if (string.IsNullOrWhiteSpace(permission.Name))
+            {
+                continue;
+            }
+
+            string normalizedName = permission.Name.Trim().ToUpperInvariant();
+            if (!expectedCodes.Contains(normalizedName))
+            {
+                permissionsToRemove.Add(permission);
+            }
         }
 
         if (permissionsToAdd.Count > 0)
         {
             await _db.Set<Permission>().AddRangeAsync(permissionsToAdd, cancellationToken);
+            hasUpdates = true;
+        }
+
+        if (permissionsToRemove.Count > 0)
+        {
+            _db.Set<Permission>().RemoveRange(permissionsToRemove);
             hasUpdates = true;
         }
 

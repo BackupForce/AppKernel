@@ -19,9 +19,10 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
     }
 
     public async Task<bool> IsNameUniqueAsync(
-    string name,
-    int? excludingRoleId,
-    CancellationToken cancellationToken)
+        string name,
+        Guid? tenantId,
+        int? excludingRoleId,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -29,8 +30,10 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
         }
 
         string candidateName = name.Trim();
+        string normalizedName = candidateName.ToUpperInvariant();
 
         IQueryable<Role> query = context.Set<Role>();
+        query = ApplyTenantFilter(query, tenantId);
 
         if (excludingRoleId.HasValue)
         {
@@ -39,7 +42,8 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
             bool exists = await query.AnyAsync(
                 role =>
                     role.Id != excludedId &&
-                    string.Equals(role.Name, candidateName, StringComparison.OrdinalIgnoreCase),
+                    role.Name != null &&
+                    role.Name.Trim().ToUpperInvariant() == normalizedName,
                 cancellationToken);
 
             return !exists;
@@ -47,7 +51,7 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
         else
         {
             bool exists = await query.AnyAsync(
-                role => string.Equals(role.Name, candidateName, StringComparison.OrdinalIgnoreCase),
+                role => role.Name != null && role.Name.Trim().ToUpperInvariant() == normalizedName,
                 cancellationToken);
 
             return !exists;
@@ -62,6 +66,43 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
             .ToListAsync(cancellationToken);
 
         return roles;
+    }
+
+    public async Task<IReadOnlyList<Role>> GetPlatformRolesAsync(CancellationToken cancellationToken)
+    {
+        List<Role> roles = await context.Set<Role>()
+            .Include(role => role.Permissions)
+            .AsNoTracking()
+            .Where(role => role.TenantId == null)
+            .ToListAsync(cancellationToken);
+
+        return roles;
+    }
+
+    public async Task<IReadOnlyList<Role>> GetTenantRolesAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        List<Role> roles = await context.Set<Role>()
+            .Include(role => role.Permissions)
+            .AsNoTracking()
+            .Where(role => role.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        return roles;
+    }
+
+    public Task<Role?> GetByCodeAsync(Guid? tenantId, string code, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return Task.FromResult<Role?>(null);
+        }
+
+        string normalizedCode = code.Trim().ToUpperInvariant();
+        IQueryable<Role> query = ApplyTenantFilter(context.Set<Role>(), tenantId);
+
+        return query.FirstOrDefaultAsync(
+            role => role.Name != null && role.Name.Trim().ToUpperInvariant() == normalizedCode,
+            cancellationToken);
     }
 
     public async Task<IReadOnlyList<Permission>> GetPermissionsByRoleIdAsync(int roleId, CancellationToken cancellationToken)
@@ -86,7 +127,7 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
 
     public Task AddPermissionsAsync(IEnumerable<Permission> permissions, CancellationToken cancellationToken)
     {
-        var permissionList = permissions.ToList();
+        List<Permission> permissionList = permissions.ToList();
 
         return context.Set<Permission>().AddRangeAsync(permissionList, cancellationToken);
     }
@@ -101,10 +142,11 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
             return;
         }
 
-        var targets = permissionCodes
+        HashSet<string> targets = permissionCodes
             .Where(code => !string.IsNullOrWhiteSpace(code))
             .Select(code => code.Trim())
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .Select(code => code.ToUpperInvariant())
+            .ToHashSet(StringComparer.Ordinal);
 
         if (targets.Count == 0)
         {
@@ -120,8 +162,9 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
             return;
         }
 
-        var toRemove = permissionsForRole
-            .Where(permission => targets.Contains(permission.Name))
+        List<Permission> toRemove = permissionsForRole
+            .Where(permission => permission.Name != null
+                && targets.Contains(permission.Name.Trim().ToUpperInvariant()))
             .ToList();
 
         if (toRemove.Count == 0)
@@ -146,5 +189,15 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
         }
 
         context.Set<Permission>().RemoveRange(permissions);
+    }
+
+    private static IQueryable<Role> ApplyTenantFilter(IQueryable<Role> query, Guid? tenantId)
+    {
+        if (!tenantId.HasValue)
+        {
+            return query.Where(role => role.TenantId == null);
+        }
+
+        return query.Where(role => role.TenantId == tenantId.Value);
     }
 }
