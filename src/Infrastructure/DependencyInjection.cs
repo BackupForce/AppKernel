@@ -70,7 +70,6 @@ public static class DependencyInjection
         services.AddScoped<IRootUserService, RootUserService>();
         services.AddScoped<IDataSeeder, RootUserSeeder>();
         services.AddScoped<IDataSeeder, DefaultTenantSeeder>();
-        services.AddScoped<IDataSeeder, TenantRootUserSeeder>();
         services.AddScoped<IDataSeeder, MemberResourceNodeSeeder>();
         services.AddScoped<SuperAdminSeeder>();
 

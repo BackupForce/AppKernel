@@ -30,6 +30,11 @@ public class RootUserSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        await SeedPlatformRootAsync();
+    }
+
+    private async Task SeedPlatformRootAsync()
+    {
         string email = _config["RootUser:Email"] ?? RootUser.DefaultEmail;
         string? password = _config["RootUser:Password"];
 
@@ -67,7 +72,7 @@ public class RootUserSeeder : IDataSeeder
             UserType.Platform,
             null);
 
-        _db.Users.Add(user);
+        await _db.Users.AddAsync(user);
         await _db.SaveChangesAsync();
 
         await EnsurePlatformAdminRoleBindingAsync(user);
@@ -111,8 +116,13 @@ public class RootUserSeeder : IDataSeeder
         if (role is null)
         {
             role = Role.Create(PlatformAdminRoleName, null);
-            _db.Set<Role>().Add(role);
+            await _db.Set<Role>().AddAsync(role);
             await _db.SaveChangesAsync();
+            _logger.LogInformation("✅ 已建立平台角色: {RoleName}", PlatformAdminRoleName);
+        }
+        else
+        {
+            _logger.LogInformation("✅ 平台角色已存在: {RoleName}", role.Name);
         }
 
         await EnsureRolePermissionsAsync(role, PermissionScope.Platform);
@@ -145,7 +155,6 @@ public class RootUserSeeder : IDataSeeder
             .ToList();
 
         List<Permission> toAdd = new List<Permission>();
-        List<Permission> toRemove = new List<Permission>();
         foreach (string code in expectedCodes)
         {
             if (existingCodes.Contains(code))
@@ -157,34 +166,12 @@ public class RootUserSeeder : IDataSeeder
             toAdd.Add(permission);
         }
 
-        foreach (Permission permission in existingPermissions)
-        {
-            if (string.IsNullOrWhiteSpace(permission.Name))
-            {
-                continue;
-            }
-
-            string normalizedName = permission.Name.Trim().ToUpperInvariant();
-            if (!expectedCodes.Contains(normalizedName))
-            {
-                toRemove.Add(permission);
-            }
-        }
-
-        if (toAdd.Count == 0 && toRemove.Count == 0)
+        if (toAdd.Count == 0)
         {
             return;
         }
 
-        if (toRemove.Count > 0)
-        {
-            _db.Set<Permission>().RemoveRange(toRemove);
-        }
-
-        if (toAdd.Count > 0)
-        {
-            await _db.Set<Permission>().AddRangeAsync(toAdd);
-        }
+        await _db.Set<Permission>().AddRangeAsync(toAdd);
         await _db.SaveChangesAsync();
     }
 }
