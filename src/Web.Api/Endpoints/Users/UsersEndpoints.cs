@@ -59,6 +59,28 @@ public class UsersEndpoints : IEndpoint
         .WithName("CreateUser");
 
         group.MapPost(
+                "/tenant",
+                async (CreateTenantUserRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    CreateUserCommand command = new CreateUserCommand(
+                        request.Email,
+                        request.Name,
+                        request.Password,
+                        request.HasPublicProfile,
+                        null,
+                        null);
+                    return await UseCaseInvoker.Send<CreateUserCommand, Guid>(
+                        command,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Users.Create.Name)
+            .Produces<Guid>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("CreateTenantUser");
+
+        group.MapPost(
                 "/{userId:guid}/roles/{roleId:int}",
                 async (Guid userId, int roleId, ISender sender, CancellationToken ct) =>
                 {
