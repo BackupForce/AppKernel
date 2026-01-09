@@ -213,10 +213,26 @@ public static class DependencyInjection
                 policy.AddRequirements(new UserTypeRequirement(
                     new[] { UserType.Member },
                     true)));
+            options.AddPolicy(AuthorizationPolicyNames.MemberActive, policy =>
+            {
+                policy.AddRequirements(new UserTypeRequirement(
+                    new[] { UserType.Member },
+                    true));
+                policy.AddRequirements(new ActiveMemberRequirement());
+            });
+            options.AddPolicy(AuthorizationPolicyNames.MemberOwner, policy =>
+            {
+                policy.AddRequirements(new UserTypeRequirement(
+                    new[] { UserType.Member },
+                    true));
+                policy.AddRequirements(new MemberOwnerRequirement());
+            });
         });
 
         services.AddTransient<IAuthorizationHandler, PermissionAuthorizationHandler>();
         services.AddTransient<IAuthorizationHandler, UserTypeAuthorizationHandler>();
+        services.AddTransient<IAuthorizationHandler, ActiveMemberAuthorizationHandler>();
+        services.AddTransient<IAuthorizationHandler, MemberOwnerAuthorizationHandler>();
 
         services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
         services.AddScoped<IPermissionProvider, PermissionProvider>();

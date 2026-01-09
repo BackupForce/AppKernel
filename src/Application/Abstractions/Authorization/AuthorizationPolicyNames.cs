@@ -6,4 +6,6 @@ public static class AuthorizationPolicyNames
     public const string Platform = "Platform";
     public const string TenantUser = "TenantUser";
     public const string Member = "Member";
+    public const string MemberActive = "MemberActive";
+    public const string MemberOwner = "MemberOwner";
 }

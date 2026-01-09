@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Authentication;
+using Domain.Users;
 using Microsoft.AspNetCore.Http;
 
 namespace Infrastructure.Authentication;
@@ -13,9 +14,27 @@ internal sealed class UserContext : IUserContext
     }
 
     public Guid UserId =>
-        _httpContextAccessor
-            .HttpContext?
-            .User
-            .GetUserId() ??
-        throw new ApplicationException("User context is unavailable");
+        ResolveContext().UserId;
+
+    public UserType UserType =>
+        ResolveContext().UserType;
+
+    public Guid? TenantId =>
+        ResolveContext().TenantId;
+
+    private JwtUserContext ResolveContext()
+    {
+        HttpContext? httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext is null)
+        {
+            throw new ApplicationException("User context is unavailable");
+        }
+
+        if (!JwtUserContext.TryFromClaims(httpContext.User, out JwtUserContext? context) || context is null)
+        {
+            throw new ApplicationException("User context is unavailable");
+        }
+
+        return context;
+    }
 }

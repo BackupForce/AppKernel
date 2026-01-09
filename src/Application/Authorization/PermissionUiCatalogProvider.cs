@@ -19,8 +19,7 @@ public sealed class PermissionUiCatalogProvider
             new List<ScopeGroupDto>
             {
                 BuildPlatformScope(),
-                BuildTenantScope(),
-                BuildSelfScope()
+                BuildTenantScope()
             });
 
         ValidateCatalog(catalog);
@@ -198,6 +197,21 @@ public sealed class PermissionUiCatalogProvider
                     false)
             });
 
+        ModuleGroupDto pointsModule = new ModuleGroupDto(
+            "POINTS",
+            "自身點數",
+            "POINTS:ME:*",
+            new List<PermissionItemDto>
+            {
+                new PermissionItemDto(
+                    "POINTS:ME:VIEW",
+                    "檢視點數",
+                    "檢視自身點數",
+                    10,
+                    false,
+                    false)
+            });
+
         ModuleGroupDto rolesModule = new ModuleGroupDto(
             "ROLES",
             "角色管理",
@@ -244,31 +258,9 @@ public sealed class PermissionUiCatalogProvider
                 memberPointsModule,
                 memberAssetsModule,
                 memberAuditModule,
+                pointsModule,
                 rolesModule
             });
-    }
-
-    private static ScopeGroupDto BuildSelfScope()
-    {
-        ModuleGroupDto pointsModule = new ModuleGroupDto(
-            "POINTS",
-            "自身點數",
-            "POINTS:ME:*",
-            new List<PermissionItemDto>
-            {
-                new PermissionItemDto(
-                    "POINTS:ME:VIEW",
-                    "檢視點數",
-                    "檢視自身點數",
-                    10,
-                    false,
-                    false)
-            });
-
-        return new ScopeGroupDto(
-            PermissionScope.Self,
-            "個人",
-            new List<ModuleGroupDto> { pointsModule });
     }
 
     private static void ValidateCatalog(PermissionCatalogDto catalog)

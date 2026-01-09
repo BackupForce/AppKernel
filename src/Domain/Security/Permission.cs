@@ -75,12 +75,12 @@ public sealed class Permission
     }
 
     /// <summary>
-    /// 個人點數權限定義（Self Scope 範例）
+    /// 個人點數權限定義（依租戶授權，Member 不走 RBAC）
     /// </summary>
     public static class Points
     {
-        public static readonly Permission All = new(70, "POINTS:ME:*", "自身點數所有權限", PermissionScope.Self);
-        public static readonly Permission View = new(71, "POINTS:ME:VIEW", "檢視自身點數", PermissionScope.Self);
+        public static readonly Permission All = new(70, "POINTS:ME:*", "自身點數所有權限", PermissionScope.Tenant);
+        public static readonly Permission View = new(71, "POINTS:ME:VIEW", "檢視自身點數", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {

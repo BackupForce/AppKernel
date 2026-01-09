@@ -55,7 +55,9 @@ internal sealed class PermissionProvider : IPermissionProvider
     {
         List<int> roleIds = await _dbContext.Users
             .Where(user => user.Id == userId)
-            .SelectMany(user => user.Roles.Select(role => role.Id))
+            .SelectMany(user => user.Roles
+                .Where(role => role.TenantId == tenantId)
+                .Select(role => role.Id))
             .ToListAsync();
 
         var roleSubjectIds = roleIds
