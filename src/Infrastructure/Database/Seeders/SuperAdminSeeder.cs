@@ -58,7 +58,7 @@ public sealed class SuperAdminSeeder
         if (role is null)
         {
             role = Role.Create(_options.RoleName, null);
-            _db.Set<Role>().Add(role);
+            await _db.Set<Role>().AddAsync(role, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
         }
 
@@ -66,9 +66,7 @@ public sealed class SuperAdminSeeder
             .Where(permission => permission.RoleId == role.Id)
             .ToListAsync(cancellationToken);
 
-        HashSet<string> expectedCodes = new HashSet<string>(platformPermissionCodes, StringComparer.Ordinal);
         HashSet<string> existingCodes = new HashSet<string>(StringComparer.Ordinal);
-        bool hasUpdates = false;
         foreach (Permission permission in existingPermissions)
         {
             if (string.IsNullOrWhiteSpace(permission.Name))
@@ -77,17 +75,10 @@ public sealed class SuperAdminSeeder
             }
 
             string normalizedName = permission.Name.Trim().ToUpperInvariant();
-            if (expectedCodes.Contains(normalizedName) && permission.Name != normalizedName)
-            {
-                permission.Name = normalizedName;
-                hasUpdates = true;
-            }
-
             existingCodes.Add(normalizedName);
         }
 
         List<Permission> permissionsToAdd = new List<Permission>();
-        List<Permission> permissionsToRemove = new List<Permission>();
         foreach (string code in platformPermissionCodes)
         {
             if (existingCodes.Contains(code))
@@ -99,34 +90,9 @@ public sealed class SuperAdminSeeder
             permissionsToAdd.Add(permissionToAdd);
         }
 
-        foreach (Permission permission in existingPermissions)
-        {
-            if (string.IsNullOrWhiteSpace(permission.Name))
-            {
-                continue;
-            }
-
-            string normalizedName = permission.Name.Trim().ToUpperInvariant();
-            if (!expectedCodes.Contains(normalizedName))
-            {
-                permissionsToRemove.Add(permission);
-            }
-        }
-
         if (permissionsToAdd.Count > 0)
         {
             await _db.Set<Permission>().AddRangeAsync(permissionsToAdd, cancellationToken);
-            hasUpdates = true;
-        }
-
-        if (permissionsToRemove.Count > 0)
-        {
-            _db.Set<Permission>().RemoveRange(permissionsToRemove);
-            hasUpdates = true;
-        }
-
-        if (hasUpdates)
-        {
             await _db.SaveChangesAsync(cancellationToken);
         }
 
