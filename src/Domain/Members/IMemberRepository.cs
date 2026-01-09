@@ -6,6 +6,8 @@ public interface IMemberRepository
 
     Task<Member?> GetByMemberNoAsync(Guid tenantId, string memberNo, CancellationToken cancellationToken = default);
 
+    Task<Member?> GetByUserIdAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);
+
     Task<bool> IsMemberNoUniqueAsync(Guid tenantId, string memberNo, CancellationToken cancellationToken = default);
 
     Task<bool> IsUserIdUniqueAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);

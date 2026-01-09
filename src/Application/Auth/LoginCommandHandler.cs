@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
-using Application.Users.Create;
 using Domain.Tenants;
-using Domain.Security;
 using Domain.Users;
-using MediatR;
 using SharedKernel;
 
 namespace Application.Auth;
@@ -37,13 +29,23 @@ internal sealed class LoginCommandHandler(
             return Result.Failure<LoginResponse>(AuthErrors.TenantCodeInvalidFormat);
         }
 
+        Tenant? tenant = await tenantRepository.GetByCodeAsync(tenantCode, cancellationToken);
+        if (tenant is null)
+        {
+            return Result.Failure<LoginResponse>(AuthErrors.TenantNotFound);
+        }
+
 		Result<Email> emailResult = Email.Create(command.Email);
 		if (emailResult.IsFailure)
 		{
 			return Result.Failure<LoginResponse>(emailResult.Error);
 		}
 
-		User user = await userRepository.GetByEmailAsync(emailResult.Value, cancellationToken);
+        string normalizedEmail = NormalizeForLookup(command.Email);
+		User? user = await userRepository.GetTenantUserByNormalizedEmailAsync(
+            tenant.Id,
+            normalizedEmail,
+            cancellationToken);
         if (user == null)
         {
             return Result.Failure<LoginResponse>(UserErrors.NotFoundByEmail);
@@ -57,28 +59,10 @@ internal sealed class LoginCommandHandler(
             return Result.Failure<LoginResponse>(UserErrors.InvalidCredentials);
         }
 
-        if (user.IsMember())
-        {
-            // 中文註解：會員帳號禁止使用管理者登入流程，避免權限錯置。
-            return Result.Failure<LoginResponse>(AuthErrors.MemberLoginNotAllowed);
-        }
-
         if (user.IsTenantUser() && !user.TenantId.HasValue)
         {
             // 中文註解：租戶使用者缺少 TenantId 時直接拒絕，避免產生不完整 Token。
             return Result.Failure<LoginResponse>(UserErrors.TenantIdRequired);
-        }
-
-        Tenant? tenant = await tenantRepository.GetByCodeAsync(tenantCode, cancellationToken);
-        if (tenant is null)
-        {
-            return Result.Failure<LoginResponse>(AuthErrors.TenantNotFound);
-        }
-
-        bool isInTenant = await userRepository.IsInTenantAsync(user.Id, tenant.Id, cancellationToken);
-        if (!isInTenant)
-        {
-            return Result.Failure<LoginResponse>(AuthErrors.TenantNotFound);
         }
 
         if (user.IsTenantUser() && user.TenantId.HasValue && user.TenantId.Value != tenant.Id)
@@ -100,6 +84,11 @@ internal sealed class LoginCommandHandler(
 					Array.Empty<string>())
 			});
 	}
+
+    private static string NormalizeForLookup(string value)
+    {
+        return value.Trim().ToUpperInvariant();
+    }
 
     private static bool IsValidTenantCode(string tenantCode)
     {

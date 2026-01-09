@@ -111,7 +111,7 @@ public class RootUserSeeder : IDataSeeder
             .AsTracking()
             .FirstOrDefaultAsync(r => r.TenantId == null
                 && r.Name != null
-                && r.Name.Trim().Equals(normalizedRoleName, StringComparison.OrdinalIgnoreCase));
+                && r.Name.Trim().ToUpperInvariant() == normalizedRoleName);
 
         if (role is null)
         {

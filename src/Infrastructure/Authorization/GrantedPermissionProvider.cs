@@ -38,9 +38,9 @@ internal sealed class GrantedPermissionProvider : IGrantedPermissionProvider
         Guid tenantId,
         CancellationToken ct)
     {
-        bool isInTenant = await _dbContext.UserTenants
+        bool isInTenant = await _dbContext.Users
             .AsNoTracking()
-            .AnyAsync(userTenant => userTenant.UserId == callerUserId && userTenant.TenantId == tenantId, ct);
+            .AnyAsync(user => user.Id == callerUserId && user.TenantId == tenantId, ct);
 
         if (!isInTenant)
         {

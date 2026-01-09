@@ -72,6 +72,7 @@ public static class DependencyInjection
         services.AddScoped<IDataSeeder, DefaultTenantSeeder>();
         services.AddScoped<IDataSeeder, MemberResourceNodeSeeder>();
         services.AddScoped<SuperAdminSeeder>();
+        services.AddHttpClient();
 
         return services;
     }

@@ -51,7 +51,7 @@ public sealed class SuperAdminSeeder
             .FirstOrDefaultAsync(
                 r => r.TenantId == null
                     && r.Name != null
-                    && r.Name.Trim().Equals(normalizedRoleName, StringComparison.OrdinalIgnoreCase),
+                    && r.Name.Trim().ToUpperInvariant() == normalizedRoleName,
                 cancellationToken);
 
 
