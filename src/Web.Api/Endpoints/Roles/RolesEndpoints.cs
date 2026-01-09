@@ -3,6 +3,7 @@ using Application.Roles.Delete;
 using Application.Roles.Dtos;
 using Application.Roles.GetById;
 using Application.Roles.List;
+using Application.Abstractions.Authorization;
 using Application.Roles.Permissions;
 using Application.Roles.Update;
 using Asp.Versioning;
@@ -21,7 +22,7 @@ public sealed class RolesEndpoints : IEndpoint
         RouteGroupBuilder group = app.MapGroup("/roles")
             .WithGroupName("admin-v1")
             .WithMetadata(new ApiVersion(1, 0))
-            .RequireAuthorization()
+            .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
             .WithTags("Roles");
 
         // 改用顯式 handler 參數宣告，避免 Minimal API 自動推斷參數來源。

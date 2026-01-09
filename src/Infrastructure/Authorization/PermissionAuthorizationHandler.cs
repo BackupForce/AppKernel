@@ -1,9 +1,12 @@
-﻿using Application.Abstractions.Authorization;
-using Infrastructure.Authentication;
+﻿using Application.Abstractions.Authentication;
+using Application.Abstractions.Authorization;
 using Infrastructure.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Domain.Security;
+using Domain.Users;
+using AppPermissionRequirement = Application.Abstractions.Authorization.PermissionRequirement;
 
 namespace Infrastructure.Authorization;
 
@@ -11,15 +14,18 @@ namespace Infrastructure.Authorization;
 internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
 {
     private readonly IPermissionProvider _permissionProvider;
+    private readonly IPermissionEvaluator _permissionEvaluator;
     private readonly ApplicationDbContext _dbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public PermissionAuthorizationHandler(
         IPermissionProvider permissionProvider,
+        IPermissionEvaluator permissionEvaluator,
         ApplicationDbContext dbContext,
         IHttpContextAccessor httpContextAccessor)
     {
         _permissionProvider = permissionProvider;
+        _permissionEvaluator = permissionEvaluator;
         _dbContext = dbContext;
         _httpContextAccessor = httpContextAccessor;
     }
@@ -38,13 +44,84 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
             return;
         }
 
-        Guid userId = context.User.GetUserId();
-        string requiredPermission = requirement.PermissionCode;
-        (Guid? nodeId, Guid? tenantId) = await ResolveAuthorizationContextAsync(context);
-
-        if (await _permissionProvider.HasPermissionAsync(userId, requiredPermission, nodeId, tenantId))
+        if (!JwtUserContext.TryFromClaims(context.User, out JwtUserContext? jwtContext) || jwtContext is null)
         {
-            context.Succeed(requirement);
+            return;
+        }
+
+        // 中文註解：Member 使用者不走 PermissionProvider，避免誤授權。
+        if (jwtContext.UserType == UserType.Member)
+        {
+            return;
+        }
+
+        string requiredPermission = requirement.PermissionCode;
+        if (!PermissionCatalog.TryGetScope(requiredPermission, out PermissionScope scope))
+        {
+            // 中文註解：無法解析 scope 的權限碼一律拒絕（Fail Closed）。
+            return;
+        }
+
+        (Guid? nodeId, Guid? routeTenantId) = await ResolveAuthorizationContextAsync(context);
+
+        if (jwtContext.UserType == UserType.Tenant)
+        {
+            if (!jwtContext.TenantId.HasValue)
+            {
+                return;
+            }
+
+            if (routeTenantId.HasValue && routeTenantId.Value != jwtContext.TenantId.Value)
+            {
+                return;
+            }
+        }
+
+        switch (scope)
+        {
+            case PermissionScope.Platform:
+                if (jwtContext.UserType != UserType.Platform)
+                {
+                    return;
+                }
+
+                AppPermissionRequirement platformRequirement = new AppPermissionRequirement(
+                    requiredPermission,
+                    PermissionScope.Platform,
+                    null,
+                    null);
+                if (await _permissionEvaluator.AuthorizeAsync(
+                    platformRequirement,
+                    new CallerContext(jwtContext.UserId),
+                    CancellationToken.None))
+                {
+                    context.Succeed(requirement);
+                }
+
+                break;
+            case PermissionScope.Tenant:
+                if (jwtContext.UserType != UserType.Tenant)
+                {
+                    return;
+                }
+
+                Guid? tenantId = routeTenantId ?? jwtContext.TenantId;
+                if (!tenantId.HasValue)
+                {
+                    return;
+                }
+
+                if (await _permissionProvider.HasPermissionAsync(jwtContext.UserId, requiredPermission, nodeId, tenantId))
+                {
+                    context.Succeed(requirement);
+                }
+
+                break;
+            case PermissionScope.Self:
+                // 中文註解：Self scope 需要目標使用者資訊，缺失時拒絕。
+                return;
+            default:
+                return;
         }
     }
 

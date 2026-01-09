@@ -70,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<IRootUserService, RootUserService>();
         services.AddScoped<IDataSeeder, RootUserSeeder>();
         services.AddScoped<IDataSeeder, DefaultTenantSeeder>();
+        services.AddScoped<IDataSeeder, TenantRootUserSeeder>();
         services.AddScoped<IDataSeeder, MemberResourceNodeSeeder>();
         services.AddScoped<SuperAdminSeeder>();
 
@@ -197,9 +198,25 @@ public static class DependencyInjection
 
     private static IServiceCollection AddAuthorizationInternal(this IServiceCollection services)
     {
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            // 中文註解：依 UserType 分流，強制不同 API 走不同授權分支。
+            options.AddPolicy(AuthorizationPolicyNames.Platform, policy =>
+                policy.AddRequirements(new UserTypeRequirement(
+                    new[] { UserType.Platform },
+                    false)));
+            options.AddPolicy(AuthorizationPolicyNames.TenantUser, policy =>
+                policy.AddRequirements(new UserTypeRequirement(
+                    new[] { UserType.Tenant },
+                    true)));
+            options.AddPolicy(AuthorizationPolicyNames.Member, policy =>
+                policy.AddRequirements(new UserTypeRequirement(
+                    new[] { UserType.Member },
+                    true)));
+        });
 
         services.AddTransient<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddTransient<IAuthorizationHandler, UserTypeAuthorizationHandler>();
 
         services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
         services.AddScoped<IPermissionProvider, PermissionProvider>();

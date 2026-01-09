@@ -2,5 +2,11 @@
 
 namespace Application.Users.Create;
 
-public sealed record CreateUserCommand(string Email, string Name, string Password,  bool HasPublicProfile)
+public sealed record CreateUserCommand(
+    string Email,
+    string Name,
+    string Password,
+    bool HasPublicProfile,
+    string? UserType,
+    Guid? TenantId)
     : ICommand<Guid>;

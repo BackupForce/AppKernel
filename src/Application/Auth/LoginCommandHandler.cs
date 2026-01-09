@@ -57,6 +57,18 @@ internal sealed class LoginCommandHandler(
             return Result.Failure<LoginResponse>(UserErrors.InvalidCredentials);
         }
 
+        if (user.IsMember())
+        {
+            // 中文註解：會員帳號禁止使用管理者登入流程，避免權限錯置。
+            return Result.Failure<LoginResponse>(AuthErrors.MemberLoginNotAllowed);
+        }
+
+        if (user.IsTenantUser() && !user.TenantId.HasValue)
+        {
+            // 中文註解：租戶使用者缺少 TenantId 時直接拒絕，避免產生不完整 Token。
+            return Result.Failure<LoginResponse>(UserErrors.TenantIdRequired);
+        }
+
         Tenant? tenant = await tenantRepository.GetByCodeAsync(tenantCode, cancellationToken);
         if (tenant is null)
         {
@@ -69,13 +81,20 @@ internal sealed class LoginCommandHandler(
             return Result.Failure<LoginResponse>(AuthErrors.TenantNotFound);
         }
 
+        if (user.IsTenantUser() && user.TenantId.HasValue && user.TenantId.Value != tenant.Id)
+        {
+            // 中文註解：租戶主要 TenantId 與登入租戶不一致時直接拒絕。
+            return Result.Failure<LoginResponse>(AuthErrors.TenantNotFound);
+        }
+
 		// Generate token and directly use it in the response
 		return Result.Success(new LoginResponse
 		{
 				Token = _jwtService.GenerateToken(
 					user.Id,
 					user.Name.ToString(),
-	                tenant.Id,
+                    user.Type,
+                    user.IsPlatform() ? null : tenant.Id,
 					user.Roles.Select(r => r.Name).ToArray(),
 					Array.Empty<Guid>(),
 					Array.Empty<string>())

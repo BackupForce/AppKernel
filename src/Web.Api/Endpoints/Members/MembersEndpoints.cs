@@ -1,5 +1,5 @@
-﻿using Application.Abstractions.Data;
-using Application.Abstractions.Authorization;
+﻿using Application.Abstractions.Authorization;
+using Application.Abstractions.Data;
 using Application.Members.Activate;
 using Application.Members.Activity.GetActivity;
 using Application.Members.Assets.Adjust;
@@ -31,7 +31,7 @@ public sealed class MembersEndpoints : IEndpoint
         RouteGroupBuilder group = app.MapGroup("/members")
             .WithGroupName("admin-v1")
             .WithMetadata(new ApiVersion(1, 0))
-            .RequireAuthorization()
+            .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
             .WithTags("Members");
 
         var memberNodeMetadata = new ResourceNodeMetadata("id", "member:");

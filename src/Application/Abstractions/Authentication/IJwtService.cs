@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Users;
 
 namespace Application.Abstractions.Authentication;
 public interface IJwtService
@@ -10,7 +8,8 @@ public interface IJwtService
     string GenerateToken(
         Guid userId,
         string userName,
-        Guid tenantId,
+        UserType userType,
+        Guid? tenantId,
         IEnumerable<string> roles,
         IEnumerable<Guid> nodeIds,
         IEnumerable<string> permissions);
