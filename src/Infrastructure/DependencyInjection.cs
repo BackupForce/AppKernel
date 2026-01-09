@@ -72,6 +72,8 @@ public static class DependencyInjection
         services.AddScoped<IDataSeeder, DefaultTenantSeeder>();
         services.AddScoped<IDataSeeder, MemberResourceNodeSeeder>();
         services.AddScoped<SuperAdminSeeder>();
+        // 中文註解：外部身份驗證由 Infrastructure 實作。
+        services.AddScoped<IExternalIdentityVerifier, LineIdentityVerifier>();
         services.AddHttpClient();
 
         return services;

@@ -36,4 +36,16 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     {
         return (await Database.BeginTransactionAsync()).GetDbTransaction();
     }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new UniqueConstraintViolationException("Database update failed due to a conflict.", ex);
+        }
+    }
 }
