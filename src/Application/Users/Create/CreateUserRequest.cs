@@ -1,3 +1,9 @@
 ﻿namespace Application.Users.Create;
 
-public sealed record CreateUserRequest(string Email, string Name,string Password,  bool HasPublicProfile);
+public sealed record CreateUserRequest(
+    string Email,
+    string Name,
+    string Password,
+    bool HasPublicProfile,
+    string? UserType,
+    Guid? TenantId);

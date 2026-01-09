@@ -15,4 +15,8 @@ internal static class AuthErrors
     public static readonly Error TenantNotFound = Error.NotFound(
         "Auth.TenantNotFound",
         "Tenant not found.");
+
+    public static readonly Error MemberLoginNotAllowed = Error.Validation(
+        "Auth.MemberLoginNotAllowed",
+        "會員帳號不得使用管理者登入流程。");
 }

@@ -11,9 +11,10 @@ public class UserTests
         // Arrange
         Email email = Email.Create("test@test.com").Value;
         var name = new Name("Full Name");
+        Guid tenantId = Guid.NewGuid();
 
         // Act
-        var user = User.Create(email, name, "hashed", true);
+        var user = User.Create(email, name, "hashed", true, UserType.Tenant, tenantId);
 
         // Assert
         user.Should().NotBeNull();
@@ -25,9 +26,10 @@ public class UserTests
         // Arrange
         Email email = Email.Create("test@test.com").Value;
         var name = new Name("Full Name");
+        Guid tenantId = Guid.NewGuid();
 
         // Act
-        var user = User.Create(email, name, "hashed", true);
+        var user = User.Create(email, name, "hashed", true, UserType.Tenant, tenantId);
 
         // Assert
         user.DomainEvents

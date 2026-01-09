@@ -31,4 +31,12 @@ public static class UserErrors
     public static Error GroupNotAssigned(Guid groupId) => Error.NotFound(
         "Users.GroupNotAssigned",
         $"使用者未指派群組 (Id = {groupId})。");
+
+    public static readonly Error UserTypeInvalid = Error.Validation(
+        "Users.UserTypeInvalid",
+        "使用者類型無效，請確認輸入值。");
+
+    public static readonly Error TenantIdRequired = Error.Validation(
+        "Users.TenantIdRequired",
+        "租戶使用者必須指定 TenantId。");
 }
