@@ -195,6 +195,15 @@ public static class DependencyInjection
         services.AddSingleton<IJwtService>(provider =>
             new JwtService(jwtSettings.SecretKey, jwtSettings.ExpireMinutes));
 
+
+        services.AddOptions<LineIdentityOptions>()
+            .BindConfiguration("LineIdentity")
+            .Validate(o => o.VerifyAccessTokenEndpoint is not null, "LineIdentity:VerifyAccessTokenEndpoint is required.")
+            .Validate(o => o.ProfileEndpoint is not null, "LineIdentity:ProfileEndpoint is required.")
+            .Validate(o => o.VerifyIdTokenEndpoint is not null, "LineIdentity:VerifyIdTokenEndpoint is required.")
+            .Validate(o => !string.IsNullOrWhiteSpace(o.ChannelId), "LineIdentity:ChannelId is required.")
+            .ValidateOnStart();
+
         return services;
     }
 

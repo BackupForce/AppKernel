@@ -1,72 +1,86 @@
-﻿using System.Collections.Generic;
-using System.Globalization;
-using System.Net.Http;
+﻿using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application.Abstractions.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Authentication;
 
 public sealed class LineIdentityVerifier(
     IHttpClientFactory httpClientFactory,
+    IOptions<LineIdentityOptions> options,
     ILogger<LineIdentityVerifier> logger) : IExternalIdentityVerifier
 {
-    private const string LineVerifyUrl = "https://api.line.me/oauth2/v2.1/verify";
-
-    public async Task<ExternalIdentityResult> VerifyLineAccessTokenAsync(
-        string accessToken,
-        CancellationToken ct)
+    public async Task<ExternalIdentityResult> VerifyLineAccessTokenAsync(string accessToken, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             return new ExternalIdentityResult(false, null, "token_required", "Access token is required.");
         }
 
-        // 中文註解：外部系統驗證細節集中於 Infrastructure。
-        HttpClient httpClient = httpClientFactory.CreateClient();
-        using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, LineVerifyUrl)
+        LineIdentityOptions opt = options.Value;
+        if (opt.VerifyAccessTokenEndpoint is null || opt.ProfileEndpoint is null)
         {
-            Content = new FormUrlEncodedContent(new[]
-            {
-                new KeyValuePair<string, string>("token", accessToken)
-            })
-        };
-
-        HttpResponseMessage response;
-        try
-        {
-            response = await httpClient.SendAsync(request, ct);
-        }
-        catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
-        {
-            logger.LogWarning(ex, "中文註解：LINE verify 連線逾時。");
-            return new ExternalIdentityResult(false, null, "timeout", "LINE verify timeout.");
-        }
-        catch (HttpRequestException ex)
-        {
-            logger.LogWarning(ex, "中文註解：LINE verify 連線失敗。");
-            return new ExternalIdentityResult(false, null, "request_failed", ex.Message);
+            logger.LogError("中文註解：LINE Identity options 未設定完整（VerifyAccessTokenEndpoint / ProfileEndpoint）。");
+            return new ExternalIdentityResult(false, null, "config_missing", "LINE endpoints are not configured.");
         }
 
-        string responseBody = await response.Content.ReadAsStringAsync(ct);
-        if (!response.IsSuccessStatusCode)
-        {
-            LineVerifyErrorResponse? errorResponse = TryDeserialize<LineVerifyErrorResponse>(responseBody);
-            string errorCode = errorResponse?.Error ?? ((int)response.StatusCode).ToString(CultureInfo.InvariantCulture);
-            string errorMessage = errorResponse?.ErrorDescription ?? responseBody;
+        using HttpClient httpClient = httpClientFactory.CreateClient();
 
-            return new ExternalIdentityResult(false, null, errorCode, errorMessage);
+        // 1) Verify access token validity (LINE Login v2.1): GET /oauth2/v2.1/verify?access_token=...
+        Uri verifyUri = BuildVerifyAccessTokenUri(opt.VerifyAccessTokenEndpoint, accessToken);
+
+        using HttpRequestMessage verifyRequest = new HttpRequestMessage(HttpMethod.Get, verifyUri);
+        using HttpResponseMessage verifyResponse = await httpClient.SendAsync(verifyRequest, ct);
+
+        string verifyBody = await verifyResponse.Content.ReadAsStringAsync(ct);
+        if (!verifyResponse.IsSuccessStatusCode)
+        {
+            return new ExternalIdentityResult(false, null, ((int)verifyResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture), verifyBody);
         }
 
-        LineVerifySuccessResponse? verifyResponse = TryDeserialize<LineVerifySuccessResponse>(responseBody);
-        if (verifyResponse is null || string.IsNullOrWhiteSpace(verifyResponse.LineUserId))
+        // 2) Get user profile with access token: GET /v2/profile  (Authorization: Bearer)
+        using HttpRequestMessage profileRequest = new HttpRequestMessage(HttpMethod.Get, opt.ProfileEndpoint);
+        profileRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using HttpResponseMessage profileResponse = await httpClient.SendAsync(profileRequest, ct);
+        string profileBody = await profileResponse.Content.ReadAsStringAsync(ct);
+
+        if (!profileResponse.IsSuccessStatusCode)
         {
-            logger.LogWarning("中文註解：LINE verify 回應缺少使用者識別碼。");
-            return new ExternalIdentityResult(false, null, "invalid_response", "LINE verify response missing user id.");
+            return new ExternalIdentityResult(false, null, ((int)profileResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture), profileBody);
         }
 
-        return new ExternalIdentityResult(true, verifyResponse.LineUserId, null, null);
+        LineProfileResponse? profile = TryDeserialize<LineProfileResponse>(profileBody);
+        if (profile is null || string.IsNullOrWhiteSpace(profile.UserId))
+        {
+            return new ExternalIdentityResult(false, null, "invalid_profile", "LINE profile response missing userId.");
+        }
+
+        // LINE User ID = userId（Profile API）=> 作為 Member 唯一鍵
+        return new ExternalIdentityResult(true, profile.UserId, null, null);
+    }
+
+    private static Uri BuildVerifyAccessTokenUri(Uri baseEndpoint, string accessToken)
+    {
+        // baseEndpoint: https://api.line.me/oauth2/v2.1/verify
+        // final:        https://api.line.me/oauth2/v2.1/verify?access_token=...
+        UriBuilder builder = new UriBuilder(baseEndpoint);
+
+        string query = builder.Query;
+        if (!string.IsNullOrEmpty(query) && query.StartsWith('?'))
+        {
+            query = query.Substring(1);
+        }
+
+        string encodedToken = Uri.EscapeDataString(accessToken);
+        builder.Query = string.IsNullOrWhiteSpace(query)
+            ? $"access_token={encodedToken}"
+            : $"{query}&access_token={encodedToken}";
+
+        return builder.Uri;
     }
 
     private static T? TryDeserialize<T>(string payload)
@@ -81,18 +95,18 @@ public sealed class LineIdentityVerifier(
         }
     }
 
-    private sealed class LineVerifySuccessResponse
+    private sealed class LineProfileResponse
     {
-        [JsonPropertyName("sub")]
-        public string LineUserId { get; init; } = string.Empty;
-    }
+        [JsonPropertyName("userId")]
+        public string UserId { get; init; } = string.Empty;
 
-    private sealed class LineVerifyErrorResponse
-    {
-        [JsonPropertyName("error")]
-        public string? Error { get; init; }
+        [JsonPropertyName("displayName")]
+        public string? DisplayName { get; init; }
 
-        [JsonPropertyName("error_description")]
-        public string? ErrorDescription { get; init; }
+        [JsonPropertyName("pictureUrl")]
+        public string? PictureUrl { get; init; }
+
+        [JsonPropertyName("statusMessage")]
+        public string? StatusMessage { get; init; }
     }
 }
