@@ -39,7 +39,17 @@ internal sealed class UpdatePrizeRuleCommandHandler(
             return Result.Failure(GamingErrors.PrizeRuleConflict);
         }
 
-        rule.Update(request.MatchCount, request.PrizeId, request.EffectiveFrom, request.EffectiveTo, dateTimeProvider.UtcNow);
+        Result updateResult = rule.Update(
+            request.MatchCount,
+            request.PrizeId,
+            request.EffectiveFrom,
+            request.EffectiveTo,
+            request.RedeemValidDays,
+            dateTimeProvider.UtcNow);
+        if (updateResult.IsFailure)
+        {
+            return Result.Failure(updateResult.Error);
+        }
         prizeRuleRepository.Update(rule);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

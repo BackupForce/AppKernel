@@ -50,11 +50,16 @@ internal sealed class GetMyAwardsQueryHandler(
                     ELSE 'Awarded'
                 END AS Status,
                 a.awarded_at AS AwardedAt,
+                a.expires_at AS ExpiresAt,
                 r.redeemed_at AS RedeemedAt,
-                r.cost_snapshot AS CostSnapshot
+                r.cost_snapshot AS CostSnapshot,
+                o.prize_id AS OptionPrizeId,
+                o.prize_name_snapshot AS OptionPrizeName,
+                o.prize_cost_snapshot AS OptionPrizeCost
             FROM gaming_prize_awards a
             INNER JOIN gaming_prizes p ON p.id = a.prize_id
             LEFT JOIN gaming_redeem_records r ON r.prize_award_id = a.id
+            LEFT JOIN gaming_prize_award_options o ON o.prize_award_id = a.id
             WHERE a.tenant_id = @TenantId
               AND a.member_id = @MemberId
               AND (@Status IS NULL OR a.status = @Status)
@@ -63,10 +68,68 @@ internal sealed class GetMyAwardsQueryHandler(
 
         using System.Data.IDbConnection connection = dbConnectionFactory.GetOpenConnection();
 
-        IEnumerable<PrizeAwardDto> items = await connection.QueryAsync<PrizeAwardDto>(
+        IEnumerable<PrizeAwardRow> rows = await connection.QueryAsync<PrizeAwardRow>(
             sql,
             new { TenantId = tenantContext.TenantId, MemberId = member.Id, Status = statusValue });
 
-        return items.ToList();
+        Dictionary<Guid, PrizeAwardDto> awardMap = new Dictionary<Guid, PrizeAwardDto>();
+        Dictionary<Guid, List<PrizeAwardOptionDto>> optionMap = new Dictionary<Guid, List<PrizeAwardOptionDto>>();
+
+        foreach (PrizeAwardRow row in rows)
+        {
+            if (!awardMap.ContainsKey(row.AwardId))
+            {
+                awardMap[row.AwardId] = new PrizeAwardDto(
+                    row.AwardId,
+                    row.DrawId,
+                    row.TicketId,
+                    row.LineIndex,
+                    row.MatchedCount,
+                    row.PrizeId,
+                    row.PrizeName,
+                    row.Status,
+                    row.AwardedAt,
+                    row.ExpiresAt,
+                    row.RedeemedAt,
+                    row.CostSnapshot,
+                    Array.Empty<PrizeAwardOptionDto>());
+                optionMap[row.AwardId] = new List<PrizeAwardOptionDto>();
+            }
+
+            if (row.OptionPrizeId.HasValue && row.OptionPrizeName is not null && row.OptionPrizeCost.HasValue)
+            {
+                optionMap[row.AwardId].Add(new PrizeAwardOptionDto(
+                    row.OptionPrizeId.Value,
+                    row.OptionPrizeName,
+                    row.OptionPrizeCost.Value));
+            }
+        }
+
+        List<PrizeAwardDto> result = new List<PrizeAwardDto>();
+        foreach (KeyValuePair<Guid, PrizeAwardDto> entry in awardMap)
+        {
+            IReadOnlyCollection<PrizeAwardOptionDto> options = optionMap[entry.Key];
+            PrizeAwardDto award = entry.Value with { Options = options };
+            result.Add(award);
+        }
+
+        return result;
     }
+
+    private sealed record PrizeAwardRow(
+        Guid AwardId,
+        Guid DrawId,
+        Guid TicketId,
+        int LineIndex,
+        int MatchedCount,
+        Guid PrizeId,
+        string PrizeName,
+        string Status,
+        DateTime AwardedAt,
+        DateTime? ExpiresAt,
+        DateTime? RedeemedAt,
+        decimal? CostSnapshot,
+        Guid? OptionPrizeId,
+        string? OptionPrizeName,
+        decimal? OptionPrizeCost);
 }

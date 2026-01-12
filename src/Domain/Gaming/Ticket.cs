@@ -17,12 +17,16 @@ public sealed class Ticket : Entity
         Guid tenantId,
         Guid drawId,
         Guid memberId,
+        Guid ticketTemplateId,
+        decimal priceSnapshot,
         long totalCost,
         DateTime createdAt) : base(id)
     {
         TenantId = tenantId;
         DrawId = drawId;
         MemberId = memberId;
+        TicketTemplateId = ticketTemplateId;
+        PriceSnapshot = priceSnapshot;
         TotalCost = totalCost;
         CreatedAt = createdAt;
     }
@@ -47,6 +51,16 @@ public sealed class Ticket : Entity
     public Guid MemberId { get; private set; }
 
     /// <summary>
+    /// 票種模板識別，對應下單時選用的 TicketTemplate。
+    /// </summary>
+    public Guid TicketTemplateId { get; private set; }
+
+    /// <summary>
+    /// 票價快照，避免後續模板改價影響歷史稽核。
+    /// </summary>
+    public decimal PriceSnapshot { get; private set; }
+
+    /// <summary>
     /// 此票券總成本（所有 Line 加總），用於帳本扣點與報表。
     /// </summary>
     public long TotalCost { get; private set; }
@@ -68,10 +82,12 @@ public sealed class Ticket : Entity
         Guid tenantId,
         Guid drawId,
         Guid memberId,
+        Guid ticketTemplateId,
+        decimal priceSnapshot,
         long totalCost,
         DateTime createdAt)
     {
-        return new Ticket(Guid.NewGuid(), tenantId, drawId, memberId, totalCost, createdAt);
+        return new Ticket(Guid.NewGuid(), tenantId, drawId, memberId, ticketTemplateId, priceSnapshot, totalCost, createdAt);
     }
 
     /// <summary>

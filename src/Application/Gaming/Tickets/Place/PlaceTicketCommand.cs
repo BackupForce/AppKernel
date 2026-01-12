@@ -7,4 +7,5 @@ namespace Application.Gaming.Tickets.Place;
 /// </summary>
 public sealed record PlaceTicketCommand(
     Guid DrawId,
+    Guid TemplateId,
     IReadOnlyCollection<IReadOnlyCollection<int>> Lines) : ICommand<Guid>;

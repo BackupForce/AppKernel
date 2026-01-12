@@ -15,8 +15,8 @@ namespace Application.Gaming.Awards.Redeem;
 /// </remarks>
 internal sealed class RedeemPrizeAwardCommandHandler(
     IPrizeAwardRepository prizeAwardRepository,
+    IPrizeAwardOptionRepository prizeAwardOptionRepository,
     IRedeemRecordRepository redeemRecordRepository,
-    IPrizeRepository prizeRepository,
     IMemberRepository memberRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
@@ -50,31 +50,50 @@ internal sealed class RedeemPrizeAwardCommandHandler(
             return existing.Id;
         }
 
+        DateTime now = dateTimeProvider.UtcNow;
+
+        if (award.ExpiresAt.HasValue && now > award.ExpiresAt.Value)
+        {
+            if (award.Status != AwardStatus.Expired)
+            {
+                // 中文註解：兌獎過期時標記為 Expired，避免重送請求造成狀態混亂。
+                award.Expire(now);
+                prizeAwardRepository.Update(award);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+
+            return Result.Failure<Guid>(GamingErrors.PrizeAwardExpired);
+        }
+
+        if (award.Status == AwardStatus.Expired)
+        {
+            return Result.Failure<Guid>(GamingErrors.PrizeAwardExpired);
+        }
+
         if (award.Status != AwardStatus.Awarded)
         {
             return Result.Failure<Guid>(GamingErrors.PrizeAwardAlreadyRedeemed);
         }
 
-        Prize? prize = await prizeRepository.GetByIdAsync(tenantContext.TenantId, award.PrizeId, cancellationToken);
-        if (prize is null)
+        IReadOnlyCollection<PrizeAwardOption> options = await prizeAwardOptionRepository.GetByAwardIdAsync(
+            tenantContext.TenantId,
+            award.Id,
+            cancellationToken);
+
+        PrizeAwardOption? selectedOption = options.FirstOrDefault(option => option.PrizeId == request.PrizeId);
+        if (selectedOption is null)
         {
-            return Result.Failure<Guid>(GamingErrors.PrizeNotFound);
+            return Result.Failure<Guid>(GamingErrors.PrizeAwardOptionNotFound);
         }
 
-        if (!prize.IsActive)
-        {
-            return Result.Failure<Guid>(GamingErrors.PrizeInactive);
-        }
-
-        DateTime now = dateTimeProvider.UtcNow;
-
-        // 成本快照寫入，避免未來獎品成本變動影響歷史報表。
+        // 中文註解：兌獎使用快照資料，避免後台修改獎品資訊影響歷史紀錄。
         RedeemRecord record = RedeemRecord.Create(
             tenantContext.TenantId,
             member.Id,
             award.Id,
-            prize.Id,
-            prize.Cost,
+            selectedOption.PrizeId,
+            selectedOption.PrizeNameSnapshot,
+            selectedOption.PrizeCostSnapshot,
             now,
             request.Note);
 

@@ -5,7 +5,7 @@ namespace Application.Gaming.Dtos;
 /// </summary>
 public sealed record DrawSummaryDto(
     Guid Id,
-    DateTime SalesOpenAt,
+    DateTime SalesStartAt,
     DateTime SalesCloseAt,
     DateTime DrawAt,
     string Status);

@@ -21,11 +21,15 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<MemberAssetLedger> MemberAssetLedgers { get; set; }
     public DbSet<MemberActivityLog> MemberActivityLogs { get; set; }
     public DbSet<Draw> Draws { get; set; }
+    public DbSet<DrawAllowedTicketTemplate> DrawAllowedTicketTemplates { get; set; }
+    public DbSet<DrawPrizeMapping> DrawPrizeMappings { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<TicketLine> TicketLines { get; set; }
+    public DbSet<TicketTemplate> TicketTemplates { get; set; }
     public DbSet<Prize> Prizes { get; set; }
     public DbSet<PrizeRule> PrizeRules { get; set; }
     public DbSet<PrizeAward> PrizeAwards { get; set; }
+    public DbSet<PrizeAwardOption> PrizeAwardOptions { get; set; }
     public DbSet<RedeemRecord> RedeemRecords { get; set; }
     public DbSet<ResourceNode> ResourceNodes { get; set; }
     public DbSet<Tenant> Tenants { get; set; }

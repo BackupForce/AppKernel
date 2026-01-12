@@ -19,6 +19,7 @@ internal sealed class PrizeRuleConfiguration : IEntityTypeConfiguration<PrizeRul
         builder.Property(rule => rule.IsActive).IsRequired();
         builder.Property(rule => rule.EffectiveFrom);
         builder.Property(rule => rule.EffectiveTo);
+        builder.Property(rule => rule.RedeemValidDays);
         builder.Property(rule => rule.CreatedAt).IsRequired();
         builder.Property(rule => rule.UpdatedAt).IsRequired();
 

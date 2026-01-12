@@ -13,5 +13,7 @@ public sealed record PrizeAwardDto(
     string PrizeName,
     string Status,
     DateTime AwardedAt,
+    DateTime? ExpiresAt,
     DateTime? RedeemedAt,
-    decimal? CostSnapshot);
+    decimal? CostSnapshot,
+    IReadOnlyCollection<PrizeAwardOptionDto> Options);

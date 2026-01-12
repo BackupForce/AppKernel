@@ -16,6 +16,7 @@ public sealed class RedeemRecord : Entity
         Guid memberId,
         Guid prizeAwardId,
         Guid prizeId,
+        string prizeNameSnapshot,
         decimal costSnapshot,
         DateTime redeemedAt,
         string? note) : base(id)
@@ -24,6 +25,7 @@ public sealed class RedeemRecord : Entity
         MemberId = memberId;
         PrizeAwardId = prizeAwardId;
         PrizeId = prizeId;
+        PrizeNameSnapshot = prizeNameSnapshot;
         CostSnapshot = costSnapshot;
         RedeemedAt = redeemedAt;
         Note = note;
@@ -54,6 +56,11 @@ public sealed class RedeemRecord : Entity
     public Guid PrizeId { get; private set; }
 
     /// <summary>
+    /// 兌換時獎品名稱快照，避免後台改名影響歷史紀錄。
+    /// </summary>
+    public string PrizeNameSnapshot { get; private set; } = string.Empty;
+
+    /// <summary>
     /// 兌換時成本快照，用於報表與成本核算。
     /// </summary>
     public decimal CostSnapshot { get; private set; }
@@ -76,6 +83,7 @@ public sealed class RedeemRecord : Entity
         Guid memberId,
         Guid prizeAwardId,
         Guid prizeId,
+        string prizeNameSnapshot,
         decimal costSnapshot,
         DateTime redeemedAt,
         string? note)
@@ -86,6 +94,7 @@ public sealed class RedeemRecord : Entity
             memberId,
             prizeAwardId,
             prizeId,
+            prizeNameSnapshot,
             costSnapshot,
             redeemedAt,
             note);
