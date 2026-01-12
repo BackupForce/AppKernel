@@ -4,6 +4,7 @@ namespace Web.Api.Endpoints.Gaming.Requests;
 /// 建立期數的 API 請求資料。
 /// </summary>
 public sealed record CreateDrawRequest(
-    DateTime SalesOpenAt,
+    DateTime SalesStartAt,
     DateTime SalesCloseAt,
-    DateTime DrawAt);
+    DateTime DrawAt,
+    int? RedeemValidDays);

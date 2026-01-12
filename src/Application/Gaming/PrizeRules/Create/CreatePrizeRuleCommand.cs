@@ -9,4 +9,5 @@ public sealed record CreatePrizeRuleCommand(
     int MatchCount,
     Guid PrizeId,
     DateTime? EffectiveFrom,
-    DateTime? EffectiveTo) : ICommand<Guid>;
+    DateTime? EffectiveTo,
+    int? RedeemValidDays) : ICommand<Guid>;

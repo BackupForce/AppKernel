@@ -19,10 +19,11 @@ internal sealed class GetOpenDrawsQueryHandler(
         const string sql = """
             SELECT
                 d.id AS Id,
-                d.sales_open_at AS SalesOpenAt,
+                d.sales_open_at AS SalesStartAt,
                 d.sales_close_at AS SalesCloseAt,
                 d.draw_at AS DrawAt,
                 CASE
+                    WHEN d.is_manually_closed = TRUE THEN 'SalesClosed'
                     WHEN @Now BETWEEN d.sales_open_at AND d.sales_close_at THEN 'SalesOpen'
                     WHEN d.status = 0 THEN 'Scheduled'
                     WHEN d.status = 1 THEN 'SalesOpen'
@@ -33,17 +34,20 @@ internal sealed class GetOpenDrawsQueryHandler(
                 END AS Status
             FROM gaming_draws d
             WHERE d.tenant_id = @TenantId
-              AND @Now >= d.sales_open_at
-              AND @Now < d.sales_close_at
               AND d.status <> 4
+              AND (
+                @Status IS NULL
+                OR (@Status = 'SalesOpen' AND d.is_manually_closed = FALSE AND @Now >= d.sales_open_at AND @Now < d.sales_close_at)
+              )
             ORDER BY d.sales_open_at ASC
             """;
 
         using System.Data.IDbConnection connection = dbConnectionFactory.GetOpenConnection();
 
+        string? status = string.IsNullOrWhiteSpace(request.Status) ? "SalesOpen" : request.Status.Trim();
         IEnumerable<DrawSummaryDto> items = await connection.QueryAsync<DrawSummaryDto>(
             sql,
-            new { TenantId = tenantContext.TenantId, Now = dateTimeProvider.UtcNow });
+            new { TenantId = tenantContext.TenantId, Now = dateTimeProvider.UtcNow, Status = status });
 
         return items.ToList();
     }

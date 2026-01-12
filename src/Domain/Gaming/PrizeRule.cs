@@ -19,6 +19,7 @@ public sealed class PrizeRule : Entity
         bool isActive,
         DateTime? effectiveFrom,
         DateTime? effectiveTo,
+        int? redeemValidDays,
         DateTime createdAt,
         DateTime updatedAt) : base(id)
     {
@@ -29,6 +30,7 @@ public sealed class PrizeRule : Entity
         IsActive = isActive;
         EffectiveFrom = effectiveFrom;
         EffectiveTo = effectiveTo;
+        RedeemValidDays = redeemValidDays;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
     }
@@ -73,6 +75,11 @@ public sealed class PrizeRule : Entity
     public DateTime? EffectiveTo { get; private set; }
 
     /// <summary>
+    /// 兌獎有效天數（優先於 Draw 設定）。
+    /// </summary>
+    public int? RedeemValidDays { get; private set; }
+
+    /// <summary>
     /// 建立時間（UTC）。
     /// </summary>
     public DateTime CreatedAt { get; private set; }
@@ -92,11 +99,17 @@ public sealed class PrizeRule : Entity
         Guid prizeId,
         DateTime? effectiveFrom,
         DateTime? effectiveTo,
+        int? redeemValidDays,
         DateTime utcNow)
     {
         if (matchCount < 0 || matchCount > 5)
         {
             return Result.Failure<PrizeRule>(GamingErrors.LotteryNumbersCountInvalid);
+        }
+
+        if (redeemValidDays.HasValue && redeemValidDays.Value <= 0)
+        {
+            return Result.Failure<PrizeRule>(GamingErrors.PrizeRuleRedeemValidDaysInvalid);
         }
 
         PrizeRule rule = new PrizeRule(
@@ -108,6 +121,7 @@ public sealed class PrizeRule : Entity
             true,
             effectiveFrom,
             effectiveTo,
+            redeemValidDays,
             utcNow,
             utcNow);
 
@@ -117,18 +131,27 @@ public sealed class PrizeRule : Entity
     /// <summary>
     /// 更新規則內容與有效期間，需搭配規則衝突檢查由應用層負責。
     /// </summary>
-    public void Update(
+    public Result Update(
         int matchCount,
         Guid prizeId,
         DateTime? effectiveFrom,
         DateTime? effectiveTo,
+        int? redeemValidDays,
         DateTime utcNow)
     {
+        if (redeemValidDays.HasValue && redeemValidDays.Value <= 0)
+        {
+            return Result.Failure(GamingErrors.PrizeRuleRedeemValidDaysInvalid);
+        }
+
         MatchCount = matchCount;
         PrizeId = prizeId;
         EffectiveFrom = effectiveFrom;
         EffectiveTo = effectiveTo;
+        RedeemValidDays = redeemValidDays;
         UpdatedAt = utcNow;
+
+        return Result.Success();
     }
 
     /// <summary>

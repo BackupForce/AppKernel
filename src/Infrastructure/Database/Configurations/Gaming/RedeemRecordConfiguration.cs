@@ -16,6 +16,7 @@ internal sealed class RedeemRecordConfiguration : IEntityTypeConfiguration<Redee
         builder.Property(record => record.MemberId).IsRequired();
         builder.Property(record => record.PrizeAwardId).IsRequired();
         builder.Property(record => record.PrizeId).IsRequired();
+        builder.Property(record => record.PrizeNameSnapshot).HasMaxLength(128).IsRequired();
         builder.Property(record => record.CostSnapshot).HasPrecision(18, 2).IsRequired();
         builder.Property(record => record.RedeemedAt).IsRequired();
         builder.Property(record => record.Note).HasMaxLength(256);

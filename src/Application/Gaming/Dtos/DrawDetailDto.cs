@@ -5,10 +5,14 @@ namespace Application.Gaming.Dtos;
 /// </summary>
 public sealed record DrawDetailDto(
     Guid Id,
-    DateTime SalesOpenAt,
+    DateTime SalesStartAt,
     DateTime SalesCloseAt,
     DateTime DrawAt,
     string Status,
+    bool IsManuallyClosed,
+    DateTime? ManualCloseAt,
+    string? ManualCloseReason,
+    int? RedeemValidDays,
     string? WinningNumbers,
     string? ServerSeedHash,
     string? ServerSeed,

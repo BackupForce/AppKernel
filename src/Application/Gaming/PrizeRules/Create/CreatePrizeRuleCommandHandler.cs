@@ -40,6 +40,7 @@ internal sealed class CreatePrizeRuleCommandHandler(
             request.PrizeId,
             request.EffectiveFrom,
             request.EffectiveTo,
+            request.RedeemValidDays,
             dateTimeProvider.UtcNow);
 
         if (ruleResult.IsFailure)

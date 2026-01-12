@@ -15,6 +15,8 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.Property(ticket => ticket.TenantId).IsRequired();
         builder.Property(ticket => ticket.DrawId).IsRequired();
         builder.Property(ticket => ticket.MemberId).IsRequired();
+        builder.Property(ticket => ticket.TicketTemplateId).IsRequired();
+        builder.Property(ticket => ticket.PriceSnapshot).HasColumnType("decimal(18,2)").IsRequired();
         builder.Property(ticket => ticket.TotalCost).IsRequired();
         builder.Property(ticket => ticket.CreatedAt).IsRequired();
 
@@ -22,6 +24,7 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .WithOne()
             .HasForeignKey(line => line.TicketId);
 
-        builder.HasIndex(ticket => new { ticket.TenantId, ticket.MemberId, ticket.CreatedAt });
+        builder.HasIndex(ticket => new { ticket.TenantId, ticket.MemberId, ticket.DrawId, ticket.CreatedAt });
+        // 中文註解：索引用於加速會員查詢與期數彙總，不建立 migration。
     }
 }

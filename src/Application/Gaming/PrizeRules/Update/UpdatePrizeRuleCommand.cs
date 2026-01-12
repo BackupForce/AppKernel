@@ -10,4 +10,5 @@ public sealed record UpdatePrizeRuleCommand(
     int MatchCount,
     Guid PrizeId,
     DateTime? EffectiveFrom,
-    DateTime? EffectiveTo) : ICommand;
+    DateTime? EffectiveTo,
+    int? RedeemValidDays) : ICommand;
