@@ -4,10 +4,12 @@ using Application.Abstractions.Authorization;
 using Application.Abstractions.Caching;
 using Application.Abstractions.Data;
 using Application.Abstractions.Events;
+using Application.Abstractions.Gaming;
 using Application.Abstractions.Identity;
 using Application.Abstractions.Infrastructure;
 using Dapper;
 using Domain.Members;
+using Domain.Gaming;
 using Domain.Security;
 using Domain.Tenants;
 using Domain.Users;
@@ -21,6 +23,7 @@ using Infrastructure.Database;
 using Infrastructure.Database.Seeders;
 using Infrastructure.Events;
 using Infrastructure.Extensions;
+using Infrastructure.Gaming;
 using Infrastructure.Identity;
 using Infrastructure.OpenTelemetry;
 using Infrastructure.Outbox;
@@ -74,6 +77,9 @@ public static class DependencyInjection
         services.AddScoped<SuperAdminSeeder>();
         // 中文註解：外部身份驗證由 Infrastructure 實作。
         services.AddScoped<IExternalIdentityVerifier, LineIdentityVerifier>();
+        services.AddScoped<ILottery539RngService, Lottery539RngService>();
+        services.AddScoped<IServerSeedStore, ServerSeedStore>();
+        services.AddScoped<IWalletLedgerService, WalletLedgerService>();
         services.AddHttpClient();
 
         return services;
@@ -106,6 +112,12 @@ public static class DependencyInjection
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<IResourceNodeRepository, ResourceNodeRepository>();
+        services.AddScoped<IDrawRepository, DrawRepository>();
+        services.AddScoped<ITicketRepository, TicketRepository>();
+        services.AddScoped<IPrizeRepository, PrizeRepository>();
+        services.AddScoped<IPrizeRuleRepository, PrizeRuleRepository>();
+        services.AddScoped<IPrizeAwardRepository, PrizeAwardRepository>();
+        services.AddScoped<IRedeemRecordRepository, RedeemRecordRepository>();
 
         return services;
     }
