@@ -10,6 +10,12 @@ using SharedKernel;
 
 namespace Application.Gaming.Tickets.Place;
 
+/// <summary>
+/// 下注流程：驗證期數、建立票券、扣點並持久化。
+/// </summary>
+/// <remarks>
+/// Application 層透過 IWalletLedgerService 等介面與外部系統互動，確保依賴方向正確。
+/// </remarks>
 internal sealed class PlaceTicketCommandHandler(
     IDrawRepository drawRepository,
     ITicketRepository ticketRepository,
@@ -39,6 +45,7 @@ internal sealed class PlaceTicketCommandHandler(
 
         if (draw.Status == DrawStatus.Scheduled && now >= draw.SalesOpenAt && now < draw.SalesCloseAt)
         {
+            // 首次進入販售狀態時建立 commit hash，為後續開獎公平性做準備。
             string serverSeed = rngService.CreateServerSeed();
             string serverSeedHash = rngService.ComputeServerSeedHash(serverSeed);
             draw.OpenSales(serverSeedHash, now);
@@ -62,6 +69,7 @@ internal sealed class PlaceTicketCommandHandler(
             return Result.Failure<Guid>(GamingErrors.TicketLineInvalid);
         }
 
+        // 每注固定成本，總成本用於帳本扣點與後續報表。
         long totalCost = request.Lines.Count * Lottery539GameConfig.LineCost;
         Ticket ticket = Ticket.Create(tenantContext.TenantId, draw.Id, member.Id, totalCost, now);
 
@@ -85,8 +93,10 @@ internal sealed class PlaceTicketCommandHandler(
             lineIndex++;
         }
 
+        // 下注與扣點需在同一交易中完成，避免票券落地但扣點失敗。
         using IDbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
+        // reference 使用 ticket.Id，避免外部帳本重複扣點。
         Result<long> debitResult = await walletLedgerService.DebitAsync(
             tenantContext.TenantId,
             member.Id,

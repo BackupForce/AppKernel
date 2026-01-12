@@ -7,6 +7,12 @@ using SharedKernel;
 
 namespace Application.Gaming.Draws.Execute;
 
+/// <summary>
+/// 執行開獎流程：使用 Commit-Reveal 取得可驗證的中獎號碼。
+/// </summary>
+/// <remarks>
+/// Application 層只依賴介面，RNG 與 seed 儲存由 Infrastructure 實作。
+/// </remarks>
 internal sealed class ExecuteDrawCommandHandler(
     IDrawRepository drawRepository,
     IUnitOfWork unitOfWork,
@@ -36,6 +42,7 @@ internal sealed class ExecuteDrawCommandHandler(
 
         if (string.IsNullOrWhiteSpace(draw.ServerSeedHash))
         {
+            // 首次執行時建立 commit：先存 hash，避免事後更換 seed 影響公平性。
             string serverSeed = rngService.CreateServerSeed();
             string serverSeedHash = rngService.ComputeServerSeedHash(serverSeed);
             draw.OpenSales(serverSeedHash, now);
@@ -49,9 +56,10 @@ internal sealed class ExecuteDrawCommandHandler(
             return Result.Failure(GamingErrors.ServerSeedMissing);
         }
 
+        // 以 drawId 為 deterministic input，搭配 serverSeed 產生可重算的中獎號碼。
         Lottery539RngResult rngResult = rngService.GenerateWinningNumbers(draw.Id, serverSeedReveal);
 
-        // 中文註解：開獎揭露 serverSeed 並寫入 proof，讓外部可驗證 RNG 過程。
+        // 開獎揭露 serverSeed 並寫入 proof，讓外部可驗證 RNG 過程。
         draw.Execute(rngResult.Numbers, serverSeedReveal, rngResult.Algorithm, rngResult.DerivedInput, now);
 
         drawRepository.Update(draw);

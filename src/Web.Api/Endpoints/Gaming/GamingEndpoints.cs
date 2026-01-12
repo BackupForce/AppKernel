@@ -27,10 +27,17 @@ using Web.Api.Endpoints.Gaming.Requests;
 
 namespace Web.Api.Endpoints.Gaming;
 
+/// <summary>
+/// Gaming 模組 API 路由，負責授權與 request/response 轉換。
+/// </summary>
+/// <remarks>
+/// Web.Api 僅負責路由與授權，不承載業務邏輯。
+/// </remarks>
 public sealed class GamingEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
+        // 依租戶隔離路由，權限由 AuthorizationPolicy 控制。
         RouteGroupBuilder group = app.MapGroup("/tenants/{tenantId:guid}/gaming")
             .WithGroupName("tenant-v1")
             .WithMetadata(new ApiVersion(1, 0))

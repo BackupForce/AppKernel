@@ -1,8 +1,13 @@
-﻿namespace Domain.Gaming.Services;
+namespace Domain.Gaming.Services;
 
+/// <summary>
+/// 539 命中計算器，純邏輯無外部依賴。
+/// </summary>
 public static class Lottery539MatchCalculator
 {
-    // 中文註解：只計算命中顆數，純邏輯無外部依賴。
+    /// <summary>
+    /// 計算投注與中獎號碼的命中顆數。
+    /// </summary>
     public static int CalculateMatchedCount(IReadOnlyCollection<int> winningNumbers, IReadOnlyCollection<int> lineNumbers)
     {
         HashSet<int> winningSet = new HashSet<int>(winningNumbers);

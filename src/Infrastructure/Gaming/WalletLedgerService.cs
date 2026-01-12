@@ -4,11 +4,17 @@ using SharedKernel;
 
 namespace Infrastructure.Gaming;
 
+/// <summary>
+/// 點數帳本的基礎設施實作，將 Gaming 的扣點轉成會員帳本操作。
+/// </summary>
 internal sealed class WalletLedgerService(
     IMemberRepository memberRepository,
     IDateTimeProvider dateTimeProvider,
     Application.Abstractions.Authentication.IUserContext userContext) : IWalletLedgerService
 {
+    /// <summary>
+    /// 扣點並寫入帳本流水，referenceId 由上層傳入以避免重複扣點。
+    /// </summary>
     public async Task<Result<long>> DebitAsync(
         Guid tenantId,
         Guid memberId,
@@ -66,6 +72,9 @@ internal sealed class WalletLedgerService(
         return afterBalance;
     }
 
+    /// <summary>
+    /// 取得會員餘額。
+    /// </summary>
     public async Task<long?> GetBalanceAsync(Guid memberId, CancellationToken cancellationToken = default)
     {
         MemberPointBalance? balance = await memberRepository.GetPointBalanceAsync(memberId, cancellationToken);
