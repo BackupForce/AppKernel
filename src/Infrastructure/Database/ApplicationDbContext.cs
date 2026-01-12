@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using Application.Abstractions.Data;
 using Domain.Members;
+using Domain.Gaming;
 using Domain.Security;
 using Domain.Tenants;
 using Domain.Users;
@@ -19,6 +20,13 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<MemberAssetBalance> MemberAssetBalances { get; set; }
     public DbSet<MemberAssetLedger> MemberAssetLedgers { get; set; }
     public DbSet<MemberActivityLog> MemberActivityLogs { get; set; }
+    public DbSet<Draw> Draws { get; set; }
+    public DbSet<Ticket> Tickets { get; set; }
+    public DbSet<TicketLine> TicketLines { get; set; }
+    public DbSet<Prize> Prizes { get; set; }
+    public DbSet<PrizeRule> PrizeRules { get; set; }
+    public DbSet<PrizeAward> PrizeAwards { get; set; }
+    public DbSet<RedeemRecord> RedeemRecords { get; set; }
     public DbSet<ResourceNode> ResourceNodes { get; set; }
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<PermissionAssignment> PermissionAssignments { get; set; }
