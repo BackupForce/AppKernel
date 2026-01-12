@@ -7,6 +7,12 @@ using SharedKernel;
 
 namespace Application.Gaming.Draws.Settle;
 
+/// <summary>
+/// 結算開獎結果，依命中數產生得獎記錄。
+/// </summary>
+/// <remarks>
+/// Application 層負責協調規則與 Repository，避免 Domain 依賴外部資料來源。
+/// </remarks>
 internal sealed class SettleDrawCommandHandler(
     IDrawRepository drawRepository,
     ITicketRepository ticketRepository,
@@ -36,12 +42,14 @@ internal sealed class SettleDrawCommandHandler(
         }
 
         DateTime now = dateTimeProvider.UtcNow;
+        // 取得結算時點的有效規則，避免未來規則變動影響歷史期數。
         IReadOnlyCollection<PrizeRule> rules = await prizeRuleRepository.GetActiveRulesAsync(
             tenantContext.TenantId,
             GameType.Lottery539,
             now,
             cancellationToken);
 
+        // 結算時依期數批次取得所有票券。
         IReadOnlyCollection<Ticket> tickets = await ticketRepository.GetByDrawIdAsync(
             tenantContext.TenantId,
             draw.Id,
@@ -61,12 +69,14 @@ internal sealed class SettleDrawCommandHandler(
                     winningNumbers.Numbers,
                     lineNumbers.Numbers);
 
+                // 將命中數轉換為獎品規則，若無匹配則不產生 Award。
                 PrizeRule? rule = PrizeRuleResolver.Resolve(rules, matchedCount, now);
                 if (rule is null)
                 {
                     continue;
                 }
 
+                // 防重：以 TenantId + DrawId + TicketId + LineIndex 作為唯一鍵概念。
                 bool exists = await prizeAwardRepository.ExistsAsync(
                     tenantContext.TenantId,
                     draw.Id,
@@ -76,7 +86,7 @@ internal sealed class SettleDrawCommandHandler(
 
                 if (exists)
                 {
-                    // 中文註解：結算重跑時必須具備 idempotency，避免重複產生 Award。
+                    // 結算重跑時必須具備 idempotency，避免重複產生 Award。
                     continue;
                 }
 

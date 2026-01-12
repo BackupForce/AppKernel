@@ -2,6 +2,9 @@
 
 namespace Domain.Gaming;
 
+/// <summary>
+/// Gaming 模組錯誤碼定義，供應用層回傳一致錯誤資訊。
+/// </summary>
 public static class GamingErrors
 {
     public static readonly Error LotteryNumbersRequired = Error.Validation(

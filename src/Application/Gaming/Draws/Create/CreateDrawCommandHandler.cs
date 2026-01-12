@@ -7,6 +7,12 @@ using SharedKernel;
 
 namespace Application.Gaming.Draws.Create;
 
+/// <summary>
+/// 建立期數並在需要時預先寫入 commit hash。
+/// </summary>
+/// <remarks>
+/// 僅協調時間與持久化，RNG 由 Infrastructure 實作。
+/// </remarks>
 internal sealed class CreateDrawCommandHandler(
     IDrawRepository drawRepository,
     IUnitOfWork unitOfWork,
@@ -20,6 +26,7 @@ internal sealed class CreateDrawCommandHandler(
         DateTime now = dateTimeProvider.UtcNow;
         DrawStatus initialStatus = DrawStatus.Scheduled;
 
+        // 根據目前時間推導初始狀態，避免新建立即處於不一致狀態。
         if (now >= request.SalesOpenAt && now < request.SalesCloseAt)
         {
             initialStatus = DrawStatus.SalesOpen;
@@ -50,6 +57,7 @@ internal sealed class CreateDrawCommandHandler(
 
         if (initialStatus == DrawStatus.SalesOpen)
         {
+            // 若建立時已在銷售期，先寫入 commit hash 以支持後續驗證。
             string serverSeed = rngService.CreateServerSeed();
             string serverSeedHash = rngService.ComputeServerSeedHash(serverSeed);
             draw.OpenSales(serverSeedHash, now);
