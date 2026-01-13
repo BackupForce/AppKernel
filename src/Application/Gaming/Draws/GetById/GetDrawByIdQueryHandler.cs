@@ -31,7 +31,7 @@ internal sealed class GetDrawByIdQueryHandler(
                 d.manual_close_at AS ManualCloseAt,
                 d.manual_close_reason AS ManualCloseReason,
                 d.redeem_valid_days AS RedeemValidDays,
-                d.winning_numbers AS WinningNumbers,
+                d.winning_numbers_raw AS WinningNumbers,
                 d.server_seed_hash AS ServerSeedHash,
                 d.server_seed AS ServerSeed,
                 d.algorithm AS Algorithm,
