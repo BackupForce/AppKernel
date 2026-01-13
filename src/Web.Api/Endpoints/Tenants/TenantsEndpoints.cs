@@ -1,6 +1,10 @@
-﻿using Asp.Versioning;
+﻿using Application.Abstractions.Authorization;
+using Application.Tenants.UpdateTimeZone;
+using Asp.Versioning;
 using Domain.Tenants;
+using MediatR;
 using Web.Api.Common;
+using Web.Api.Endpoints.Tenants.Requests;
 
 namespace Web.Api.Endpoints.Tenants;
 
@@ -11,6 +15,12 @@ public sealed class TenantsEndpoints : IEndpoint
         RouteGroupBuilder group = app.MapGroup("/tenants")
             .WithGroupName("public-v1")
             .WithMetadata(new ApiVersion(1, 0))
+            .WithTags("Tenants");
+
+        RouteGroupBuilder settingsGroup = app.MapGroup("/tenants/{tenantId:guid}/settings")
+            .WithGroupName("admin-v1")
+            .WithMetadata(new ApiVersion(1, 0))
+            .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
             .WithTags("Tenants");
 
         // 中文註解：前端第一次進站或切租戶時，先用 tenantCode 換取 tenantId。
@@ -47,6 +57,17 @@ public sealed class TenantsEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithName("GetTenantByCode");
+
+        settingsGroup.MapPut(
+                "/timezone",
+                async (Guid tenantId, UpdateTenantTimeZoneRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    UpdateTenantTimeZoneCommand command = new UpdateTenantTimeZoneCommand(tenantId, request.TimeZoneId);
+                    return await UseCaseInvoker.Send(command, sender, ct);
+                })
+            .Produces(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("UpdateTenantTimeZone");
     }
 
     public sealed record TenantLookupResponse(Guid TenantId, string TenantCode, string Name);

@@ -19,6 +19,10 @@ internal sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.Property(tenant => tenant.Name)
             .IsRequired();
 
+        builder.Property(tenant => tenant.TimeZoneId)
+            .HasMaxLength(128)
+            .IsRequired();
+
         builder.HasIndex(tenant => tenant.Code)
             .IsUnique();
     }

@@ -7,6 +7,8 @@ using Application.Abstractions.Events;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Identity;
 using Application.Abstractions.Infrastructure;
+using Application.Abstractions.Tenants;
+using Application.Abstractions.Time;
 using Dapper;
 using Domain.Members;
 using Domain.Gaming;
@@ -29,6 +31,7 @@ using Infrastructure.OpenTelemetry;
 using Infrastructure.Outbox;
 using Infrastructure.Repositories;
 using Infrastructure.Settings;
+using Infrastructure.Tenants;
 using Infrastructure.Time;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -69,6 +72,8 @@ public static class DependencyInjection
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        services.AddSingleton<ITimeZoneResolver, TimeZoneResolver>();
+        services.AddScoped<ITenantTimeZoneProvider, TenantTimeZoneProvider>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IRootUserService, RootUserService>();
         services.AddScoped<IDataSeeder, RootUserSeeder>();

@@ -1,4 +1,6 @@
 ﻿using Application.Abstractions.Behaviors;
+using Application.Abstractions.Time;
+using Application.Time;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,6 +24,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         services.AddSingleton<Authorization.PermissionUiCatalogProvider>();
         services.AddSingleton<Authorization.PermissionSelectionNormalizer>();
+        services.AddSingleton<IUtcRangeCalculator, UtcRangeCalculator>();
 
         return services;
     }
