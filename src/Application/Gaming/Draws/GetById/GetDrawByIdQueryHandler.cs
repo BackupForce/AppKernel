@@ -40,7 +40,7 @@ internal sealed class GetDrawByIdQueryHandler(
 
         DrawDetailDto? draw = await connection.QueryFirstOrDefaultAsync<DrawDetailDto>(
             sql,
-            new { TenantId = tenantContext.TenantId, DrawId = request.DrawId });
+            new { tenantContext.TenantId, request.DrawId });
 
         if (draw is null)
         {

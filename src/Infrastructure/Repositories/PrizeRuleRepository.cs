@@ -6,10 +6,10 @@ namespace Infrastructure.Repositories;
 
 internal sealed class PrizeRuleRepository(ApplicationDbContext context) : IPrizeRuleRepository
 {
-    public async Task<PrizeRule?> GetByIdAsync(Guid tenantId, Guid ruleId, CancellationToken cancellationToken = default)
+    public async Task<PrizeRule?> GetByIdAsync(Guid tenantId, Guid id, CancellationToken cancellationToken = default)
     {
         return await context.PrizeRules
-            .FirstOrDefaultAsync(rule => rule.TenantId == tenantId && rule.Id == ruleId, cancellationToken);
+            .FirstOrDefaultAsync(rule => rule.TenantId == tenantId && rule.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<PrizeRule>> GetActiveRulesAsync(

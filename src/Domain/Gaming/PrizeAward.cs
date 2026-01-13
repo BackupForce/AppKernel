@@ -83,6 +83,11 @@ public sealed class PrizeAward : Entity
     public DateTime AwardedAt { get; private set; }
 
     /// <summary>
+    /// 兌換時間（UTC），僅在狀態為 Redeemed 時有值。
+    /// </summary>
+    public DateTime? RedeemedAt { get; private set; }
+
+    /// <summary>
     /// 建立得獎記錄，初始狀態為 Awarded。
     /// </summary>
     public static PrizeAward Create(
@@ -114,5 +119,6 @@ public sealed class PrizeAward : Entity
     public void Redeem(DateTime utcNow)
     {
         Status = AwardStatus.Redeemed;
+        RedeemedAt = utcNow;
     }
 }

@@ -14,7 +14,7 @@ internal sealed class TicketLineConfiguration : IEntityTypeConfiguration<TicketL
 
         builder.Property(line => line.TicketId).IsRequired();
         builder.Property(line => line.LineIndex).IsRequired();
-        builder.Property(line => line.Numbers).HasMaxLength(64).IsRequired();
+        builder.Property(line => line.NumbersRaw).HasMaxLength(64).IsRequired();
 
         builder.HasIndex(line => new { line.TicketId, line.LineIndex }).IsUnique();
     }

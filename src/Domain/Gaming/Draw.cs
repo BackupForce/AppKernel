@@ -59,9 +59,10 @@ public sealed class Draw : Entity
     public DrawStatus Status { get; private set; }
 
     /// <summary>
-    /// 已開獎的中獎號碼序列（持久化格式）。
+    /// 已開獎的中獎號碼（持久化格式）。
+    /// 僅供儲存與還原使用。
     /// </summary>
-    public string? WinningNumbers { get; private set; }
+    public string? WinningNumbersRaw { get; private set; }
 
     /// <summary>
     /// Commit-Reveal 的 commit：先存 ServerSeedHash，避免伺服器事後修改。
@@ -170,7 +171,7 @@ public sealed class Draw : Entity
         string derivedInput,
         DateTime utcNow)
     {
-        WinningNumbers = winningNumbers.ToStorageString();
+        WinningNumbersRaw = winningNumbers.ToStorageString();
         ServerSeed = serverSeed;
         Algorithm = algorithm;
         DerivedInput = derivedInput;
@@ -179,16 +180,16 @@ public sealed class Draw : Entity
     }
 
     /// <summary>
-    /// 解析已儲存的號碼，失敗時回傳 null 以避免污染其他流程。
+    /// 解析中獎號碼為領域值物件，解析失敗時回傳 null。
     /// </summary>
-    public LotteryNumbers? GetWinningNumbers()
+    public LotteryNumbers? ParseWinningNumbers()
     {
-        if (string.IsNullOrWhiteSpace(WinningNumbers))
+        if (string.IsNullOrWhiteSpace(WinningNumbersRaw))
         {
             return null;
         }
 
-        Result<LotteryNumbers> parsed = LotteryNumbers.Parse(WinningNumbers);
+        Result<LotteryNumbers> parsed = LotteryNumbers.Parse(WinningNumbersRaw);
         return parsed.IsSuccess ? parsed.Value : null;
     }
 }

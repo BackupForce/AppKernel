@@ -35,7 +35,7 @@ internal sealed class SettleDrawCommandHandler(
             return Result.Failure(GamingErrors.DrawNotSettled);
         }
 
-        LotteryNumbers? winningNumbers = draw.GetWinningNumbers();
+        LotteryNumbers? winningNumbers = draw.ParseWinningNumbers();
         if (winningNumbers is null)
         {
             return Result.Failure(GamingErrors.DrawNotSettled);
@@ -59,7 +59,7 @@ internal sealed class SettleDrawCommandHandler(
         {
             foreach (TicketLine line in ticket.Lines)
             {
-                LotteryNumbers? lineNumbers = line.GetNumbers();
+                LotteryNumbers? lineNumbers = line.ParseNumbers();
                 if (lineNumbers is null)
                 {
                     continue;

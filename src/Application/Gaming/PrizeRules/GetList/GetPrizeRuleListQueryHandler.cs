@@ -34,7 +34,7 @@ internal sealed class GetPrizeRuleListQueryHandler(
 
         IEnumerable<PrizeRuleDto> items = await connection.QueryAsync<PrizeRuleDto>(
             sql,
-            new { TenantId = tenantContext.TenantId });
+            new { tenantContext.TenantId });
 
         return items.ToList();
     }

@@ -60,10 +60,10 @@ internal sealed class GetMyTicketsQueryHandler(
             sql,
             new
             {
-                TenantId = tenantContext.TenantId,
+                tenantContext.TenantId,
                 MemberId = member.Id,
-                From = request.From,
-                To = request.To
+                request.From,
+                request.To
             });
 
         Dictionary<Guid, TicketSummaryDto> ticketMap = new Dictionary<Guid, TicketSummaryDto>();

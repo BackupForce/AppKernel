@@ -33,7 +33,7 @@ internal sealed class GetPrizeListQueryHandler(
 
         IEnumerable<PrizeDto> items = await connection.QueryAsync<PrizeDto>(
             sql,
-            new { TenantId = tenantContext.TenantId });
+            new { tenantContext.TenantId });
 
         return items.ToList();
     }

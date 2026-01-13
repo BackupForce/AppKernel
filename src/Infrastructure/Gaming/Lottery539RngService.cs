@@ -19,7 +19,7 @@ internal sealed class Lottery539RngService : ILottery539RngService
     public string CreateServerSeed()
     {
         byte[] seedBytes = RandomNumberGenerator.GetBytes(32);
-        return Convert.ToHexString(seedBytes).ToLowerInvariant();
+        return Convert.ToHexString(seedBytes).ToUpperInvariant();
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ internal sealed class Lottery539RngService : ILottery539RngService
     {
         byte[] seedBytes = Encoding.UTF8.GetBytes(serverSeed);
         byte[] hashBytes = SHA256.HashData(seedBytes);
-        return Convert.ToHexString(hashBytes).ToLowerInvariant();
+        return Convert.ToHexString(hashBytes).ToUpperInvariant();
     }
 
     /// <summary>

@@ -26,7 +26,7 @@ internal sealed class GetMyAwardsQueryHandler(
         }
 
         string? statusFilter = request.Status?.Trim();
-        int? statusValue = statusFilter?.ToLowerInvariant() switch
+        int? statusValue = statusFilter?.ToUpperInvariant() switch
         {
             "awarded" => (int)AwardStatus.Awarded,
             "redeemed" => (int)AwardStatus.Redeemed,
@@ -65,7 +65,7 @@ internal sealed class GetMyAwardsQueryHandler(
 
         IEnumerable<PrizeAwardDto> items = await connection.QueryAsync<PrizeAwardDto>(
             sql,
-            new { TenantId = tenantContext.TenantId, MemberId = member.Id, Status = statusValue });
+            new { tenantContext.TenantId, MemberId = member.Id, Status = statusValue });
 
         return items.ToList();
     }

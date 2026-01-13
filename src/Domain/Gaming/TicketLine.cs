@@ -18,7 +18,7 @@ public sealed class TicketLine : Entity
     {
         TicketId = ticketId;
         LineIndex = lineIndex;
-        Numbers = numbers;
+        NumbersRaw = numbers;
     }
 
     private TicketLine()
@@ -37,8 +37,9 @@ public sealed class TicketLine : Entity
 
     /// <summary>
     /// 投注號碼的儲存格式（逗號分隔）。
+    /// 僅供 persistence 使用。
     /// </summary>
-    public string Numbers { get; private set; } = string.Empty;
+    public string NumbersRaw { get; private set; } = string.Empty;
 
     /// <summary>
     /// 建立投注注數，驗證 TicketId 與 LineIndex 合法性。
@@ -60,11 +61,11 @@ public sealed class TicketLine : Entity
     }
 
     /// <summary>
-    /// 解析號碼並回傳結構化結果，解析失敗時回傳 null。
+    /// 解析儲存的投注號碼為領域物件。
     /// </summary>
-    public LotteryNumbers? GetNumbers()
+    public LotteryNumbers? ParseNumbers()
     {
-        Result<LotteryNumbers> parsed = LotteryNumbers.Parse(Numbers);
+        Result<LotteryNumbers> parsed = LotteryNumbers.Parse(NumbersRaw);
         return parsed.IsSuccess ? parsed.Value : null;
     }
 }

@@ -6,10 +6,10 @@ namespace Infrastructure.Repositories;
 
 internal sealed class PrizeAwardRepository(ApplicationDbContext context) : IPrizeAwardRepository
 {
-    public async Task<PrizeAward?> GetByIdAsync(Guid tenantId, Guid awardId, CancellationToken cancellationToken = default)
+    public async Task<PrizeAward?> GetByIdAsync(Guid tenantId, Guid id, CancellationToken cancellationToken = default)
     {
         return await context.PrizeAwards
-            .FirstOrDefaultAsync(award => award.TenantId == tenantId && award.Id == awardId, cancellationToken);
+            .FirstOrDefaultAsync(award => award.TenantId == tenantId && award.Id == id, cancellationToken);
     }
 
     public async Task<bool> ExistsAsync(
@@ -27,13 +27,13 @@ internal sealed class PrizeAwardRepository(ApplicationDbContext context) : IPriz
             cancellationToken);
     }
 
-    public void Insert(PrizeAward award)
+    public void Insert(PrizeAward prizeAward)
     {
-        context.PrizeAwards.Add(award);
+        context.PrizeAwards.Add(prizeAward);
     }
 
-    public void Update(PrizeAward award)
+    public void Update(PrizeAward prizeAward)
     {
-        context.PrizeAwards.Update(award);
+        context.PrizeAwards.Update(prizeAward);
     }
 }

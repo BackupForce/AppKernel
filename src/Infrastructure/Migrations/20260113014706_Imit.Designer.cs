@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260109061924_mdfyRoleAddType")]
-    partial class mdfyRoleAddType
+    [Migration("20260113014706_Imit")]
+    partial class Imit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,6 +26,346 @@ namespace Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Domain.Gaming.Draw", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Algorithm")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("algorithm");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DerivedInput")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("derived_input");
+
+                    b.Property<DateTime>("DrawAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("draw_at");
+
+                    b.Property<DateTime>("SalesCloseAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sales_close_at");
+
+                    b.Property<DateTime>("SalesOpenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sales_open_at");
+
+                    b.Property<string>("ServerSeed")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("server_seed");
+
+                    b.Property<string>("ServerSeedHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("server_seed_hash");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("WinningNumbersRaw")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("winning_numbers_raw");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gaming_draws");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("ix_gaming_draws_tenant_id_status");
+
+                    b.ToTable("Gaming_Draws", "public");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.Prize", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Cost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("cost");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gaming_prizes");
+
+                    b.HasIndex("TenantId", "Name")
+                        .HasDatabaseName("ix_gaming_prizes_tenant_id_name");
+
+                    b.ToTable("Gaming_Prizes", "public");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.PrizeAward", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("AwardedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("awarded_at");
+
+                    b.Property<Guid>("DrawId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draw_id");
+
+                    b.Property<int>("LineIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("line_index");
+
+                    b.Property<int>("MatchedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("matched_count");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<Guid>("PrizeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("prize_id");
+
+                    b.Property<DateTime?>("RedeemedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("redeemed_at");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ticket_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gaming_prize_awards");
+
+                    b.HasIndex("TenantId", "DrawId", "TicketId", "LineIndex")
+                        .IsUnique()
+                        .HasDatabaseName("ix_gaming_prize_awards_tenant_id_draw_id_ticket_id_line_index");
+
+                    b.ToTable("Gaming_PrizeAwards", "public");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.PrizeRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_from");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_to");
+
+                    b.Property<int>("GameType")
+                        .HasColumnType("integer")
+                        .HasColumnName("game_type");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<int>("MatchCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("match_count");
+
+                    b.Property<Guid>("PrizeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("prize_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gaming_prize_rules");
+
+                    b.HasIndex("TenantId", "GameType", "MatchCount", "IsActive")
+                        .HasDatabaseName("ix_gaming_prize_rules_tenant_id_game_type_match_count_is_active");
+
+                    b.ToTable("Gaming_PrizeRules", "public");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.RedeemRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("CostSnapshot")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("cost_snapshot");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("PrizeAwardId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("prize_award_id");
+
+                    b.Property<Guid>("PrizeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("prize_id");
+
+                    b.Property<DateTime>("RedeemedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("redeemed_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gaming_redeem_records");
+
+                    b.HasIndex("PrizeAwardId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_gaming_redeem_records_prize_award_id");
+
+                    b.ToTable("Gaming_RedeemRecords", "public");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.Ticket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("DrawId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draw_id");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<long>("TotalCost")
+                        .HasColumnType("bigint")
+                        .HasColumnName("total_cost");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gaming_tickets");
+
+                    b.HasIndex("TenantId", "MemberId", "CreatedAt")
+                        .HasDatabaseName("ix_gaming_tickets_tenant_id_member_id_created_at");
+
+                    b.ToTable("Gaming_Tickets", "public");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.TicketLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("LineIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("line_index");
+
+                    b.Property<string>("NumbersRaw")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("numbers_raw");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ticket_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gaming_ticket_lines");
+
+                    b.HasIndex("TicketId", "LineIndex")
+                        .IsUnique()
+                        .HasDatabaseName("ix_gaming_ticket_lines_ticket_id_line_index");
+
+                    b.ToTable("Gaming_TicketLines", "public");
+                });
 
             modelBuilder.Entity("Domain.Members.Member", b =>
                 {
@@ -584,6 +924,19 @@ namespace Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("has_public_profile");
 
+                    b.Property<string>("LineUserId")
+                        .HasColumnType("text")
+                        .HasColumnName("line_user_id");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("normalized_email");
+
+                    b.Property<string>("NormalizedLineUserId")
+                        .HasColumnType("text")
+                        .HasColumnName("normalized_line_user_id");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text")
@@ -627,34 +980,6 @@ namespace Infrastructure.Migrations
                         {
                             t.HasCheckConstraint("CK_user_type", "\"type\" IN (0, 1, 2)");
                         });
-                });
-
-            modelBuilder.Entity("Domain.Users.UserTenant", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tenant_id");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_user_tenants");
-
-                    b.HasIndex("TenantId")
-                        .HasDatabaseName("ix_user_tenants_tenant_id");
-
-                    b.HasIndex("UserId", "TenantId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_user_tenants_user_id_tenant_id");
-
-                    b.ToTable("user_tenants", "public");
                 });
 
             modelBuilder.Entity("Infrastructure.Outbox.OutboxMessage", b =>
@@ -709,6 +1034,16 @@ namespace Infrastructure.Migrations
                         .HasDatabaseName("ix_role_user_users_id");
 
                     b.ToTable("role_user", "public");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.TicketLine", b =>
+                {
+                    b.HasOne("Domain.Gaming.Ticket", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_gaming_ticket_lines_gaming_tickets_ticket_id");
                 });
 
             modelBuilder.Entity("Domain.Members.Member", b =>
@@ -839,27 +1174,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Users.UserTenant", b =>
-                {
-                    b.HasOne("Domain.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_user_tenants_tenants_tenant_id");
-
-                    b.HasOne("Domain.Users.User", "User")
-                        .WithMany("UserTenants")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_user_tenants_users_user_id");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("RoleUser", b =>
                 {
                     b.HasOne("Domain.Security.Role", null)
@@ -875,6 +1189,11 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_role_user_users_users_id");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.Ticket", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Domain.Nodes.Node", b =>
@@ -902,8 +1221,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Users.User", b =>
                 {
                     b.Navigation("UserGroups");
-
-                    b.Navigation("UserTenants");
                 });
 #pragma warning restore 612, 618
         }

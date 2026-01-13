@@ -43,7 +43,7 @@ internal sealed class GetOpenDrawsQueryHandler(
 
         IEnumerable<DrawSummaryDto> items = await connection.QueryAsync<DrawSummaryDto>(
             sql,
-            new { TenantId = tenantContext.TenantId, Now = dateTimeProvider.UtcNow });
+            new { tenantContext.TenantId, dateTimeProvider.UtcNow });
 
         return items.ToList();
     }
