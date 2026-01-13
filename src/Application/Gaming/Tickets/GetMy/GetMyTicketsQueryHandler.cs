@@ -44,9 +44,9 @@ internal sealed class GetMyTicketsQueryHandler(
                 l.line_index AS LineIndex,
                 l.numbers AS Numbers,
                 d.winning_numbers AS WinningNumbers
-            FROM gaming_tickets t
-            INNER JOIN gaming_ticket_lines l ON l.ticket_id = t.id
-            INNER JOIN gaming_draws d ON d.id = t.draw_id
+            FROM gaming.tickets t
+            INNER JOIN gaming.ticket_lines l ON l.ticket_id = t.id
+            INNER JOIN gaming.draws d ON d.id = t.draw_id
             WHERE t.tenant_id = @TenantId
               AND t.member_id = @MemberId
               AND (@From IS NULL OR t.created_at >= @From)

@@ -1,5 +1,6 @@
 ﻿using Domain.Gaming;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configurations.Gaming;
@@ -8,7 +9,7 @@ internal sealed class TicketLineConfiguration : IEntityTypeConfiguration<TicketL
 {
     public void Configure(EntityTypeBuilder<TicketLine> builder)
     {
-        builder.ToTable("Gaming_TicketLines");
+        builder.ToTable("ticket_lines", Schemas.Gaming);
 
         builder.HasKey(line => line.Id);
 

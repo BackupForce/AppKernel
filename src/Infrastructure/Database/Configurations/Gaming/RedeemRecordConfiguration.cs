@@ -1,5 +1,6 @@
 ﻿using Domain.Gaming;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configurations.Gaming;
@@ -8,7 +9,7 @@ internal sealed class RedeemRecordConfiguration : IEntityTypeConfiguration<Redee
 {
     public void Configure(EntityTypeBuilder<RedeemRecord> builder)
     {
-        builder.ToTable("Gaming_RedeemRecords");
+        builder.ToTable("redeem_records", Schemas.Gaming);
 
         builder.HasKey(record => record.Id);
 

@@ -1,5 +1,6 @@
 using Domain.Gaming;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configurations.Gaming;
@@ -8,7 +9,7 @@ internal sealed class DrawPrizeMappingConfiguration : IEntityTypeConfiguration<D
 {
     public void Configure(EntityTypeBuilder<DrawPrizeMapping> builder)
     {
-        builder.ToTable("Gaming_DrawPrizeMappings");
+        builder.ToTable("draw_prize_mappings", Schemas.Gaming);
 
         builder.HasKey(mapping => mapping.Id);
 

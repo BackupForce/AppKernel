@@ -22,8 +22,8 @@ internal sealed class GetDrawPrizeMappingsQueryHandler(
                 p.name AS PrizeName,
                 p.cost AS PrizeCost,
                 p.is_active AS IsActive
-            FROM gaming_draw_prize_mappings m
-            INNER JOIN gaming_prizes p ON p.id = m.prize_id
+            FROM gaming.draw_prize_mappings m
+            INNER JOIN gaming.prizes p ON p.id = m.prize_id
             WHERE m.tenant_id = @TenantId
               AND m.draw_id = @DrawId
             ORDER BY m.match_count ASC, p.name ASC

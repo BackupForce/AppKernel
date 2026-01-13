@@ -30,8 +30,8 @@ internal sealed class GetDrawAllowedTicketTemplatesQueryHandler(
                 END AS Type,
                 t.price AS Price,
                 t.is_active AS IsActive
-            FROM gaming_draw_allowed_ticket_templates a
-            INNER JOIN gaming_ticket_templates t ON t.id = a.ticket_template_id
+            FROM gaming.draw_allowed_ticket_templates a
+            INNER JOIN gaming.ticket_templates t ON t.id = a.ticket_template_id
             WHERE a.tenant_id = @TenantId
               AND a.draw_id = @DrawId
             ORDER BY t.code ASC
