@@ -1,4 +1,7 @@
 ﻿using Domain.Tenants;
+using Microsoft.Extensions.Options;
+using Web.Api.Common;
+using Web.Api.Settings;
 
 namespace Web.Api.Middleware;
 
@@ -7,34 +10,98 @@ public class TenantResolutionMiddleware(RequestDelegate next)
     private const string TenantIdHeaderName = "X-Tenant-Id";
     private const string TenantCodeHeaderName = "X-Tenant-Code";
 
-    public async Task Invoke(HttpContext context, ITenantRepository tenantRepository)
+    public async Task Invoke(
+        HttpContext context,
+        ITenantRepository tenantRepository,
+        IOptions<TenantResolutionOptions> tenantResolutionOptions)
     {
-        Guid? tenantId = TryResolveTenantIdFromRoute(context) ?? TryResolveTenantIdFromHeader(context);
+        context.Items.Remove("TenantId");
 
-        if (!tenantId.HasValue)
+        Guid? tenantIdFromRoute = TryResolveTenantIdFromRoute(context);
+        Guid? tenantIdFromHeader = TryResolveTenantIdFromHeader(context);
+        string? tenantCodeFromHeader = TryResolveTenantCode(context);
+
+        if (tenantIdFromRoute.HasValue)
         {
-            string? tenantCode = TryResolveTenantCode(context);
-            if (!string.IsNullOrWhiteSpace(tenantCode) && IsValidTenantCode(tenantCode))
+            if (tenantIdFromHeader.HasValue && tenantIdFromHeader.Value != tenantIdFromRoute.Value)
             {
-                Tenant? tenant = await tenantRepository.GetByCodeAsync(tenantCode, context.RequestAborted);
-                if (tenant is not null)
+                await WriteProblemDetailsAsync(
+                    context,
+                    StatusCodes.Status400BadRequest,
+                    "TenantId 不一致",
+                    "路由 tenantId 與 X-Tenant-Id 不一致。",
+                    "https://tools.ietf.org/html/rfc7231#section-6.5.1");
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(tenantCodeFromHeader))
+            {
+                string normalizedCode = TenantCodeHelper.Normalize(tenantCodeFromHeader);
+                if (!TenantCodeHelper.IsValid(normalizedCode))
                 {
-                    tenantId = tenant.Id;
+                    await WriteProblemDetailsAsync(
+                        context,
+                        StatusCodes.Status400BadRequest,
+                        "TenantCode 格式錯誤",
+                        "X-Tenant-Code 格式錯誤。",
+                        "https://tools.ietf.org/html/rfc7231#section-6.5.1");
+                    return;
+                }
+
+                Tenant? tenantByCode = await tenantRepository.GetByCodeAsync(normalizedCode, context.RequestAborted);
+                if (tenantByCode is null || tenantByCode.Id != tenantIdFromRoute.Value)
+                {
+                    await WriteProblemDetailsAsync(
+                        context,
+                        StatusCodes.Status400BadRequest,
+                        "Tenant 資訊不一致",
+                        "路由 tenantId 與 X-Tenant-Code 不一致。",
+                        "https://tools.ietf.org/html/rfc7231#section-6.5.1");
+                    return;
+                }
+            }
+
+            Tenant? routeTenant = await tenantRepository.GetByIdAsync(tenantIdFromRoute.Value, context.RequestAborted);
+            if (routeTenant is null)
+            {
+                await WriteProblemDetailsAsync(
+                    context,
+                    StatusCodes.Status404NotFound,
+                    "Tenant 找不到",
+                    "指定的 tenantId 不存在。",
+                    "https://tools.ietf.org/html/rfc7231#section-6.5.4");
+                return;
+            }
+
+            context.Items["TenantId"] = routeTenant.Id;
+            await next(context);
+            return;
+        }
+
+        TenantResolutionOptions options = tenantResolutionOptions.Value;
+        Guid? resolvedTenantId = null;
+
+        if (options.AllowTenantIdHeader && tenantIdFromHeader.HasValue)
+        {
+            resolvedTenantId = tenantIdFromHeader.Value;
+        }
+
+        if (!resolvedTenantId.HasValue && !string.IsNullOrWhiteSpace(tenantCodeFromHeader))
+        {
+            string normalizedCode = TenantCodeHelper.Normalize(tenantCodeFromHeader);
+            if (TenantCodeHelper.IsValid(normalizedCode))
+            {
+                Tenant? tenantByCode = await tenantRepository.GetByCodeAsync(normalizedCode, context.RequestAborted);
+                if (tenantByCode is not null)
+                {
+                    resolvedTenantId = tenantByCode.Id;
                 }
             }
         }
-        else
-        {
-            Tenant? tenant = await tenantRepository.GetByIdAsync(tenantId.Value, context.RequestAborted);
-            if (tenant is null)
-            {
-                tenantId = null;
-            }
-        }
 
-        if (tenantId.HasValue)
+        if (resolvedTenantId.HasValue)
         {
-            context.Items["TenantId"] = tenantId.Value;
+            context.Items["TenantId"] = resolvedTenantId.Value;
         }
 
         await next(context);
@@ -88,21 +155,18 @@ public class TenantResolutionMiddleware(RequestDelegate next)
         return false;
     }
 
-    private static bool IsValidTenantCode(string tenantCode)
+    private static Task WriteProblemDetailsAsync(
+        HttpContext context,
+        int statusCode,
+        string title,
+        string detail,
+        string type)
     {
-        if (tenantCode.Length != 3)
-        {
-            return false;
-        }
-
-        for (int index = 0; index < tenantCode.Length; index++)
-        {
-            if (!char.IsLetterOrDigit(tenantCode[index]))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        IResult result = Results.Problem(
+            title: title,
+            detail: detail,
+            type: type,
+            statusCode: statusCode);
+        return result.ExecuteAsync(context);
     }
 }
