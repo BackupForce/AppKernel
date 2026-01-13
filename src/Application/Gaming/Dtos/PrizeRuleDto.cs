@@ -10,4 +10,5 @@ public sealed record PrizeRuleDto(
     string PrizeName,
     bool IsActive,
     DateTime? EffectiveFrom,
-    DateTime? EffectiveTo);
+    DateTime? EffectiveTo,
+    int? RedeemValidDays);

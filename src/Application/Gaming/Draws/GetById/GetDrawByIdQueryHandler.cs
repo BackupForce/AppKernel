@@ -16,7 +16,7 @@ internal sealed class GetDrawByIdQueryHandler(
         const string sql = """
             SELECT
                 d.id AS Id,
-                d.sales_open_at AS SalesOpenAt,
+                d.sales_open_at AS SalesStartAt,
                 d.sales_close_at AS SalesCloseAt,
                 d.draw_at AS DrawAt,
                 CASE
@@ -27,6 +27,10 @@ internal sealed class GetDrawByIdQueryHandler(
                     WHEN d.status = 4 THEN 'Cancelled'
                     ELSE 'Scheduled'
                 END AS Status,
+                d.is_manually_closed AS IsManuallyClosed,
+                d.manual_close_at AS ManualCloseAt,
+                d.manual_close_reason AS ManualCloseReason,
+                d.redeem_valid_days AS RedeemValidDays,
                 d.winning_numbers AS WinningNumbers,
                 d.server_seed_hash AS ServerSeedHash,
                 d.server_seed AS ServerSeed,

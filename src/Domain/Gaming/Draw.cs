@@ -13,18 +13,20 @@ public sealed class Draw : Entity
     private Draw(
         Guid id,
         Guid tenantId,
-        DateTime salesOpenAt,
+        DateTime salesStartAt,
         DateTime salesCloseAt,
         DateTime drawAt,
         DrawStatus status,
+        int? redeemValidDays,
         DateTime createdAt,
         DateTime updatedAt) : base(id)
     {
         TenantId = tenantId;
-        SalesOpenAt = salesOpenAt;
+        SalesOpenAt = salesStartAt;
         SalesCloseAt = salesCloseAt;
         DrawAt = drawAt;
         Status = status;
+        RedeemValidDays = redeemValidDays;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
     }
@@ -42,6 +44,11 @@ public sealed class Draw : Entity
     /// 售票開始時間（UTC），低於此時間不得購買。
     /// </summary>
     public DateTime SalesOpenAt { get; private set; }
+
+    /// <summary>
+    /// 售票起始時間別名（對應 SalesOpenAt），用於對外語意一致。
+    /// </summary>
+    public DateTime SalesStartAt => SalesOpenAt;
 
     /// <summary>
     /// 售票截止時間（UTC），到點後必須停止收單。
@@ -85,6 +92,26 @@ public sealed class Draw : Entity
     public string? DerivedInput { get; private set; }
 
     /// <summary>
+    /// 手動封盤旗標，避免人工提前停止下注。
+    /// </summary>
+    public bool IsManuallyClosed { get; private set; }
+
+    /// <summary>
+    /// 手動封盤時間（UTC）。
+    /// </summary>
+    public DateTime? ManualCloseAt { get; private set; }
+
+    /// <summary>
+    /// 手動封盤原因，由後台輸入以利稽核。
+    /// </summary>
+    public string? ManualCloseReason { get; private set; }
+
+    /// <summary>
+    /// 兌獎有效天數（若 PrizeRule 未指定，則以此為準）。
+    /// </summary>
+    public int? RedeemValidDays { get; private set; }
+
+    /// <summary>
     /// 建立時間（UTC）。
     /// </summary>
     public DateTime CreatedAt { get; private set; }
@@ -99,10 +126,11 @@ public sealed class Draw : Entity
     /// </summary>
     public static Result<Draw> Create(
         Guid tenantId,
-        DateTime salesOpenAt,
+        DateTime salesStartAt,
         DateTime salesCloseAt,
         DateTime drawAt,
         DrawStatus initialStatus,
+        int? redeemValidDays,
         DateTime utcNow)
     {
         if (tenantId == Guid.Empty)
@@ -110,7 +138,12 @@ public sealed class Draw : Entity
             return Result.Failure<Draw>(GamingErrors.DrawNotFound);
         }
 
-        if (salesOpenAt >= salesCloseAt || salesCloseAt > drawAt)
+        if (redeemValidDays.HasValue && redeemValidDays.Value <= 0)
+        {
+            return Result.Failure<Draw>(GamingErrors.DrawRedeemValidDaysInvalid);
+        }
+
+        if (salesStartAt >= salesCloseAt || salesCloseAt > drawAt)
         {
             return Result.Failure<Draw>(GamingErrors.DrawTimeInvalid);
         }
@@ -118,10 +151,11 @@ public sealed class Draw : Entity
         Draw draw = new Draw(
             Guid.NewGuid(),
             tenantId,
-            salesOpenAt,
+            salesStartAt,
             salesCloseAt,
             drawAt,
             initialStatus,
+            redeemValidDays,
             utcNow,
             utcNow);
 
@@ -176,11 +210,62 @@ public sealed class Draw : Entity
         Algorithm = algorithm;
         DerivedInput = derivedInput;
         Status = DrawStatus.Settled;
+        IsManuallyClosed = false;
+        ManualCloseAt = null;
+        ManualCloseReason = null;
         UpdatedAt = utcNow;
     }
 
     /// <summary>
-    /// 解析中獎號碼為領域值物件，解析失敗時回傳 null。
+    /// 手動封盤，僅記錄狀態與時間，驗證邏輯由應用層控制。
+    /// </summary>
+    public void CloseManually(string? reason, DateTime utcNow)
+    {
+        IsManuallyClosed = true;
+        ManualCloseAt = utcNow;
+        ManualCloseReason = reason;
+        UpdatedAt = utcNow;
+    }
+
+    /// <summary>
+    /// 手動解封，恢復自動販售判斷。
+    /// </summary>
+    public void Reopen(DateTime utcNow)
+    {
+        IsManuallyClosed = false;
+        ManualCloseAt = null;
+        ManualCloseReason = null;
+        UpdatedAt = utcNow;
+    }
+
+    /// <summary>
+    /// 判斷是否在有效售票視窗內（含手動封盤判斷）。
+    /// </summary>
+    public bool IsWithinSalesWindow(DateTime utcNow)
+    {
+        if (utcNow < SalesOpenAt || utcNow >= SalesCloseAt)
+        {
+            return false;
+        }
+
+        if (IsManuallyClosed)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// 判斷是否已封盤（包含手動封盤或售票時間已結束）。
+    /// </summary>
+    public bool IsEffectivelyClosed(DateTime utcNow)
+    {
+        return IsManuallyClosed || utcNow >= SalesCloseAt;
+    }
+
+    /// <summary>
+    /// 解析已儲存的號碼，失敗時回傳 null 以避免污染其他流程。
     /// </summary>
     public LotteryNumbers? ParseWinningNumbers()
     {

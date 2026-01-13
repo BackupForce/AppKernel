@@ -21,6 +21,7 @@ internal sealed class PrizeAwardConfiguration : IEntityTypeConfiguration<PrizeAw
         builder.Property(award => award.PrizeId).IsRequired();
         builder.Property(award => award.Status).IsRequired();
         builder.Property(award => award.AwardedAt).IsRequired();
+        builder.Property(award => award.ExpiresAt);
 
         builder.HasIndex(award => new { award.TenantId, award.DrawId, award.TicketId, award.LineIndex }).IsUnique();
     }

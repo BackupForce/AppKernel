@@ -6,6 +6,7 @@ namespace Application.Gaming.Draws.Create;
 /// 建立 539 期數的命令。
 /// </summary>
 public sealed record CreateDrawCommand(
-    DateTime SalesOpenAt,
+    DateTime SalesStartAt,
     DateTime SalesCloseAt,
-    DateTime DrawAt) : ICommand<Guid>;
+    DateTime DrawAt,
+    int? RedeemValidDays) : ICommand<Guid>;

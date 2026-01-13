@@ -18,6 +18,9 @@ internal sealed class SettleDrawCommandHandler(
     ITicketRepository ticketRepository,
     IPrizeRuleRepository prizeRuleRepository,
     IPrizeAwardRepository prizeAwardRepository,
+    IPrizeAwardOptionRepository prizeAwardOptionRepository,
+    IDrawPrizeMappingRepository drawPrizeMappingRepository,
+    IPrizeRepository prizeRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext) : ICommandHandler<SettleDrawCommand>
@@ -48,6 +51,15 @@ internal sealed class SettleDrawCommandHandler(
             GameType.Lottery539,
             now,
             cancellationToken);
+
+        IReadOnlyCollection<DrawPrizeMapping> mappings = await drawPrizeMappingRepository.GetByDrawIdAsync(
+            tenantContext.TenantId,
+            draw.Id,
+            cancellationToken);
+
+        Dictionary<int, List<Guid>> mappingByMatch = mappings
+            .GroupBy(mapping => mapping.MatchCount)
+            .ToDictionary(group => group.Key, group => group.Select(item => item.PrizeId).ToList());
 
         // 結算時依期數批次取得所有票券。
         IReadOnlyCollection<Ticket> tickets = await ticketRepository.GetByDrawIdAsync(
@@ -98,14 +110,63 @@ internal sealed class SettleDrawCommandHandler(
                     line.LineIndex,
                     matchedCount,
                     rule.PrizeId,
+                    ResolveAwardExpiry(rule, draw, now),
                     now);
 
                 prizeAwardRepository.Insert(award);
+
+                // 中文註解：AwardOptions 使用期數設定快照，避免後台改動影響已結算紀錄。
+                IReadOnlyCollection<Guid> optionPrizeIds = ResolveOptionPrizeIds(mappingByMatch, matchedCount, rule.PrizeId);
+                List<PrizeAwardOption> options = new List<PrizeAwardOption>();
+                foreach (Guid prizeId in optionPrizeIds)
+                {
+                    Prize? prize = await prizeRepository.GetByIdAsync(tenantContext.TenantId, prizeId, cancellationToken);
+                    if (prize is null)
+                    {
+                        continue;
+                    }
+
+                    PrizeAwardOption option = PrizeAwardOption.Create(
+                        tenantContext.TenantId,
+                        award.Id,
+                        prize.Id,
+                        prize.Name,
+                        prize.Cost,
+                        now);
+                    options.Add(option);
+                }
+
+                prizeAwardOptionRepository.InsertRange(options);
             }
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
+    }
+
+    private static DateTime? ResolveAwardExpiry(PrizeRule rule, Draw draw, DateTime now)
+    {
+        int? validDays = rule.RedeemValidDays ?? draw.RedeemValidDays;
+        if (!validDays.HasValue || validDays.Value <= 0)
+        {
+            return null;
+        }
+
+        return now.AddDays(validDays.Value);
+    }
+
+    private static IReadOnlyCollection<Guid> ResolveOptionPrizeIds(
+        IReadOnlyDictionary<int, List<Guid>> mappingByMatch,
+        int matchedCount,
+        Guid fallbackPrizeId)
+    {
+        if (mappingByMatch.TryGetValue(matchedCount, out List<Guid>? prizes) && prizes.Count > 0)
+        {
+            return prizes;
+        }
+
+        // 中文註解：若期數未配置該命中數的兌獎清單，退回規則指定的獎品避免無法兌獎。
+        return new List<Guid> { fallbackPrizeId };
     }
 }

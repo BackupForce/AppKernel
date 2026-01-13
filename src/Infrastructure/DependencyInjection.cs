@@ -113,10 +113,14 @@ public static class DependencyInjection
         services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<IResourceNodeRepository, ResourceNodeRepository>();
         services.AddScoped<IDrawRepository, DrawRepository>();
+        services.AddScoped<IDrawAllowedTicketTemplateRepository, DrawAllowedTicketTemplateRepository>();
+        services.AddScoped<IDrawPrizeMappingRepository, DrawPrizeMappingRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
+        services.AddScoped<ITicketTemplateRepository, TicketTemplateRepository>();
         services.AddScoped<IPrizeRepository, PrizeRepository>();
         services.AddScoped<IPrizeRuleRepository, PrizeRuleRepository>();
         services.AddScoped<IPrizeAwardRepository, PrizeAwardRepository>();
+        services.AddScoped<IPrizeAwardOptionRepository, PrizeAwardOptionRepository>();
         services.AddScoped<IRedeemRecordRepository, RedeemRecordRepository>();
 
         return services;

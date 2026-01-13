@@ -27,7 +27,7 @@ internal sealed class CreateDrawCommandHandler(
         DrawStatus initialStatus = DrawStatus.Scheduled;
 
         // 根據目前時間推導初始狀態，避免新建立即處於不一致狀態。
-        if (now >= request.SalesOpenAt && now < request.SalesCloseAt)
+        if (now >= request.SalesStartAt && now < request.SalesCloseAt)
         {
             initialStatus = DrawStatus.SalesOpen;
         }
@@ -42,10 +42,11 @@ internal sealed class CreateDrawCommandHandler(
 
         Result<Draw> drawResult = Draw.Create(
             tenantContext.TenantId,
-            request.SalesOpenAt,
+            request.SalesStartAt,
             request.SalesCloseAt,
             request.DrawAt,
             initialStatus,
+            request.RedeemValidDays,
             now);
 
         if (drawResult.IsFailure)

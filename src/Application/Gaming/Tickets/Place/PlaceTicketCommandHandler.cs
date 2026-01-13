@@ -4,7 +4,6 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Domain.Gaming;
-using Domain.Gaming.Services;
 using Domain.Members;
 using SharedKernel;
 
@@ -19,6 +18,8 @@ namespace Application.Gaming.Tickets.Place;
 internal sealed class PlaceTicketCommandHandler(
     IDrawRepository drawRepository,
     ITicketRepository ticketRepository,
+    ITicketTemplateRepository ticketTemplateRepository,
+    IDrawAllowedTicketTemplateRepository drawAllowedTicketTemplateRepository,
     IMemberRepository memberRepository,
     IWalletLedgerService walletLedgerService,
     IServerSeedStore serverSeedStore,
@@ -53,7 +54,12 @@ internal sealed class PlaceTicketCommandHandler(
             await serverSeedStore.StoreAsync(draw.Id, serverSeed, ttl, cancellationToken);
         }
 
-        if (draw.Status != DrawStatus.SalesOpen || now >= draw.SalesCloseAt)
+        if (draw.IsManuallyClosed)
+        {
+            return Result.Failure<Guid>(GamingErrors.DrawManuallyClosed);
+        }
+
+        if (!draw.IsWithinSalesWindow(now) || draw.Status != DrawStatus.SalesOpen)
         {
             return Result.Failure<Guid>(GamingErrors.DrawNotOpen);
         }
@@ -64,14 +70,71 @@ internal sealed class PlaceTicketCommandHandler(
             return Result.Failure<Guid>(GamingErrors.MemberNotFound);
         }
 
+        TicketTemplate? template = await ticketTemplateRepository.GetByIdAsync(
+            tenantContext.TenantId,
+            request.TemplateId,
+            cancellationToken);
+        if (template is null)
+        {
+            return Result.Failure<Guid>(GamingErrors.TicketTemplateNotFound);
+        }
+
+        if (!template.IsActive)
+        {
+            return Result.Failure<Guid>(GamingErrors.TicketTemplateInactive);
+        }
+
+        if (!template.IsAvailable(now))
+        {
+            return Result.Failure<Guid>(GamingErrors.TicketTemplateNotAvailable);
+        }
+
+        IReadOnlyCollection<DrawAllowedTicketTemplate> allowedTemplates =
+            await drawAllowedTicketTemplateRepository.GetByDrawIdAsync(
+                tenantContext.TenantId,
+                draw.Id,
+                cancellationToken);
+
+        if (allowedTemplates.Count == 0)
+        {
+            // 中文註解：未設定允許票種時採預設拒絕，避免未經核准的票種被使用。
+            return Result.Failure<Guid>(GamingErrors.TicketTemplateNotAllowed);
+        }
+
+        bool isAllowed = allowedTemplates.Any(item => item.TicketTemplateId == template.Id);
+        if (!isAllowed)
+        {
+            return Result.Failure<Guid>(GamingErrors.TicketTemplateNotAllowed);
+        }
+
         if (request.Lines.Count == 0)
         {
             return Result.Failure<Guid>(GamingErrors.TicketLineInvalid);
         }
 
-        // 每注固定成本，總成本用於帳本扣點與後續報表。
-        long totalCost = request.Lines.Count * Lottery539GameConfig.LineCost;
-        Ticket ticket = Ticket.Create(tenantContext.TenantId, draw.Id, member.Id, totalCost, now);
+        if (request.Lines.Count > template.MaxLinesPerTicket)
+        {
+            return Result.Failure<Guid>(GamingErrors.TicketLinesExceedLimit);
+        }
+
+        // 中文註解：每注價格以模板單價計算，總成本 = 單價 * 注數。
+        decimal totalCostDecimal = template.Price * request.Lines.Count;
+        if (decimal.Truncate(totalCostDecimal) != totalCostDecimal)
+        {
+            // 中文註解：帳本點數以整數為單位，若出現小數價格直接拒絕。
+            return Result.Failure<Guid>(GamingErrors.TicketTemplatePriceInvalid);
+        }
+
+        long totalCost = (long)totalCostDecimal;
+        // 中文註解：PriceSnapshot 記錄下單當下的模板單價，避免日後調價影響稽核。
+        Ticket ticket = Ticket.Create(
+            tenantContext.TenantId,
+            draw.Id,
+            member.Id,
+            template.Id,
+            template.Price,
+            totalCost,
+            now);
 
         int lineIndex = 0;
         foreach (IReadOnlyCollection<int> lineNumbers in request.Lines)

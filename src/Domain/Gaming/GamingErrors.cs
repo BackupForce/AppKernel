@@ -51,6 +51,10 @@ public static class GamingErrors
         "Gaming.DrawNotSettled",
         "期數尚未開獎。");
 
+    public static readonly Error DrawRedeemValidDaysInvalid = Error.Validation(
+        "Gaming.DrawRedeemValidDaysInvalid",
+        "期數兌獎有效天數不正確。");
+
     public static readonly Error MemberNotFound = Error.NotFound(
         "Gaming.MemberNotFound",
         "找不到會員。");
@@ -75,6 +79,10 @@ public static class GamingErrors
         "Gaming.PrizeRuleNotFound",
         "找不到獎項規則。");
 
+    public static readonly Error PrizeRuleRedeemValidDaysInvalid = Error.Validation(
+        "Gaming.PrizeRuleRedeemValidDaysInvalid",
+        "獎項兌獎有效天數不正確。");
+
     public static readonly Error PrizeAwardNotFound = Error.NotFound(
         "Gaming.PrizeAwardNotFound",
         "找不到獎品兌獎資格。");
@@ -87,9 +95,73 @@ public static class GamingErrors
         "Gaming.PrizeAwardAlreadyRedeemed",
         "此獎品已兌換。");
 
+    public static readonly Error PrizeAwardExpired = Error.Validation(
+        "Gaming.PrizeAwardExpired",
+        "此獎品已過期。");
+
     public static readonly Error TicketLineInvalid = Error.Validation(
         "Gaming.TicketLineInvalid",
         "下注明細不正確。");
+
+    public static readonly Error TicketTemplateNotFound = Error.NotFound(
+        "Gaming.TicketTemplateNotFound",
+        "找不到票種模板。");
+
+    public static readonly Error TicketTemplateInactive = Error.Validation(
+        "Gaming.TicketTemplateInactive",
+        "票種已停用。");
+
+    public static readonly Error TicketTemplateNotAvailable = Error.Validation(
+        "Gaming.TicketTemplateNotAvailable",
+        "票種不在可用期間。");
+
+    public static readonly Error TicketTemplateCodeRequired = Error.Validation(
+        "Gaming.TicketTemplateCodeRequired",
+        "票種代碼不可為空白。");
+
+    public static readonly Error TicketTemplateNameRequired = Error.Validation(
+        "Gaming.TicketTemplateNameRequired",
+        "票種名稱不可為空白。");
+
+    public static readonly Error TicketTemplatePriceInvalid = Error.Validation(
+        "Gaming.TicketTemplatePriceInvalid",
+        "票種價格不正確。");
+
+    public static readonly Error TicketTemplateMaxLinesInvalid = Error.Validation(
+        "Gaming.TicketTemplateMaxLinesInvalid",
+        "每張票的注數限制不正確。");
+
+    public static readonly Error TicketTemplateValidityInvalid = Error.Validation(
+        "Gaming.TicketTemplateValidityInvalid",
+        "票種有效期間設定不正確。");
+
+    public static readonly Error TicketTemplateCodeDuplicated = Error.Validation(
+        "Gaming.TicketTemplateCodeDuplicated",
+        "票種代碼已存在。");
+
+    public static readonly Error TicketTemplateNotAllowed = Error.Validation(
+        "Gaming.TicketTemplateNotAllowed",
+        "該期不允許使用此票種。");
+
+    public static readonly Error TicketLinesExceedLimit = Error.Validation(
+        "Gaming.TicketLinesExceedLimit",
+        "下注注數超過票種限制。");
+
+    public static readonly Error DrawManuallyClosed = Error.Validation(
+        "Gaming.DrawManuallyClosed",
+        "期數已手動封盤。");
+
+    public static readonly Error DrawAlreadyExecuted = Error.Validation(
+        "Gaming.DrawAlreadyExecuted",
+        "期數已開獎，無法操作。");
+
+    public static readonly Error DrawReopenWindowInvalid = Error.Validation(
+        "Gaming.DrawReopenWindowInvalid",
+        "解封時已不在可下注時間窗內。");
+
+    public static readonly Error PrizeAwardOptionNotFound = Error.Validation(
+        "Gaming.PrizeAwardOptionNotFound",
+        "兌獎選項不存在。");
 
     public static readonly Error ServerSeedMissing = Error.Validation(
         "Gaming.ServerSeedMissing",

@@ -33,6 +33,8 @@ public static class DependencyInjection
         });
 
         services.ConfigureOptions<ConfigureSwaggerGenOptions>();
+        services.Configure<TenantResolutionOptions>(
+            configuration.GetSection(TenantResolutionOptions.SectionName));
 
         CorsSettings corsSettings =
     configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>()

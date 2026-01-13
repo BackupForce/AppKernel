@@ -7,4 +7,5 @@ public sealed record CreatePrizeRuleRequest(
     int MatchCount,
     Guid PrizeId,
     DateTime? EffectiveFrom,
-    DateTime? EffectiveTo);
+    DateTime? EffectiveTo,
+    int? RedeemValidDays);

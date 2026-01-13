@@ -19,6 +19,7 @@ public sealed class PrizeAward : Entity
         int lineIndex,
         int matchedCount,
         Guid prizeId,
+        DateTime? expiresAt,
         AwardStatus status,
         DateTime awardedAt) : base(id)
     {
@@ -29,6 +30,7 @@ public sealed class PrizeAward : Entity
         LineIndex = lineIndex;
         MatchedCount = matchedCount;
         PrizeId = prizeId;
+        ExpiresAt = expiresAt;
         Status = status;
         AwardedAt = awardedAt;
     }
@@ -73,6 +75,11 @@ public sealed class PrizeAward : Entity
     public Guid PrizeId { get; private set; }
 
     /// <summary>
+    /// 兌獎到期時間（UTC），過期後不得兌換。
+    /// </summary>
+    public DateTime? ExpiresAt { get; private set; }
+
+    /// <summary>
     /// 得獎狀態，從 Awarded 轉到 Redeemed/Expired/Cancelled。
     /// </summary>
     public AwardStatus Status { get; private set; }
@@ -98,6 +105,7 @@ public sealed class PrizeAward : Entity
         int lineIndex,
         int matchedCount,
         Guid prizeId,
+        DateTime? expiresAt,
         DateTime awardedAt)
     {
         return new PrizeAward(
@@ -109,6 +117,7 @@ public sealed class PrizeAward : Entity
             lineIndex,
             matchedCount,
             prizeId,
+            expiresAt,
             AwardStatus.Awarded,
             awardedAt);
     }
@@ -120,5 +129,13 @@ public sealed class PrizeAward : Entity
     {
         Status = AwardStatus.Redeemed;
         RedeemedAt = utcNow;
+    }
+
+    /// <summary>
+    /// 將獎項標記為過期。
+    /// </summary>
+    public void Expire(DateTime utcNow)
+    {
+        Status = AwardStatus.Expired;
     }
 }
