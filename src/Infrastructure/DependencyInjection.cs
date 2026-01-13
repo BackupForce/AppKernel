@@ -72,7 +72,7 @@ public static class DependencyInjection
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddSingleton<ITimeZoneResolver, TimeZoneResolver>();
+        services.AddSingleton<Application.Abstractions.Time.ITimeZoneResolver, TimeZoneResolver>();
         services.AddScoped<ITenantTimeZoneProvider, TenantTimeZoneProvider>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IRootUserService, RootUserService>();
