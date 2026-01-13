@@ -1,5 +1,6 @@
 using Domain.Gaming;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configurations.Gaming;
@@ -8,7 +9,7 @@ internal sealed class DrawAllowedTicketTemplateConfiguration : IEntityTypeConfig
 {
     public void Configure(EntityTypeBuilder<DrawAllowedTicketTemplate> builder)
     {
-        builder.ToTable("Gaming_DrawAllowedTicketTemplates");
+        builder.ToTable("draw_allowed_ticket_templates", Schemas.Gaming);
 
         builder.HasKey(item => item.Id);
 

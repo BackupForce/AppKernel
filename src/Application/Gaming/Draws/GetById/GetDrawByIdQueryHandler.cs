@@ -36,7 +36,7 @@ internal sealed class GetDrawByIdQueryHandler(
                 d.server_seed AS ServerSeed,
                 d.algorithm AS Algorithm,
                 d.derived_input AS DerivedInput
-            FROM gaming_draws d
+            FROM gaming.draws d
             WHERE d.tenant_id = @TenantId AND d.id = @DrawId
             """;
 

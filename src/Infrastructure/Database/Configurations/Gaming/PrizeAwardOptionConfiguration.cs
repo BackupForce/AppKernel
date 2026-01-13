@@ -1,5 +1,6 @@
 using Domain.Gaming;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configurations.Gaming;
@@ -8,7 +9,7 @@ internal sealed class PrizeAwardOptionConfiguration : IEntityTypeConfiguration<P
 {
     public void Configure(EntityTypeBuilder<PrizeAwardOption> builder)
     {
-        builder.ToTable("Gaming_PrizeAwardOptions");
+        builder.ToTable("prize_award_options", Schemas.Gaming);
 
         builder.HasKey(option => option.Id);
 

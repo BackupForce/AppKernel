@@ -56,10 +56,10 @@ internal sealed class GetMyAwardsQueryHandler(
                 o.prize_id AS OptionPrizeId,
                 o.prize_name_snapshot AS OptionPrizeName,
                 o.prize_cost_snapshot AS OptionPrizeCost
-            FROM gaming_prize_awards a
-            INNER JOIN gaming_prizes p ON p.id = a.prize_id
-            LEFT JOIN gaming_redeem_records r ON r.prize_award_id = a.id
-            LEFT JOIN gaming_prize_award_options o ON o.prize_award_id = a.id
+            FROM gaming.prize_awards a
+            INNER JOIN gaming.prizes p ON p.id = a.prize_id
+            LEFT JOIN gaming.redeem_records r ON r.prize_award_id = a.id
+            LEFT JOIN gaming.prize_award_options o ON o.prize_award_id = a.id
             WHERE a.tenant_id = @TenantId
               AND a.member_id = @MemberId
               AND (@Status IS NULL OR a.status = @Status)
