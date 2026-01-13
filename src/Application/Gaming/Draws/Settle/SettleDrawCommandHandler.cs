@@ -156,8 +156,8 @@ internal sealed class SettleDrawCommandHandler(
         return now.AddDays(validDays.Value);
     }
 
-    private static IReadOnlyCollection<Guid> ResolveOptionPrizeIds(
-        IReadOnlyDictionary<int, List<Guid>> mappingByMatch,
+    private static List<Guid> ResolveOptionPrizeIds(
+        Dictionary<int, List<Guid>> mappingByMatch,
         int matchedCount,
         Guid fallbackPrizeId)
     {

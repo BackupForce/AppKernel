@@ -21,7 +21,7 @@ internal sealed class DrawConfiguration : IEntityTypeConfiguration<Draw>
         builder.Property(draw => draw.ManualCloseAt);
         builder.Property(draw => draw.ManualCloseReason).HasMaxLength(256);
         builder.Property(draw => draw.RedeemValidDays);
-        builder.Property(draw => draw.WinningNumbers).HasMaxLength(64);
+        builder.Property(draw => draw.WinningNumbersRaw).HasMaxLength(64);
         builder.Property(draw => draw.ServerSeedHash).HasMaxLength(128);
         builder.Property(draw => draw.ServerSeed).HasMaxLength(256);
         builder.Property(draw => draw.Algorithm).HasMaxLength(64);

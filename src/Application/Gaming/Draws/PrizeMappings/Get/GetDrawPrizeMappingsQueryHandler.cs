@@ -33,17 +33,18 @@ internal sealed class GetDrawPrizeMappingsQueryHandler(
 
         IEnumerable<DrawPrizeMappingRow> rows = await connection.QueryAsync<DrawPrizeMappingRow>(
             sql,
-            new { TenantId = tenantContext.TenantId, DrawId = request.DrawId });
+            new { tenantContext.TenantId, request.DrawId });
 
         Dictionary<int, List<DrawPrizeMappingPrizeDto>> mapping = new Dictionary<int, List<DrawPrizeMappingPrizeDto>>();
         foreach (DrawPrizeMappingRow row in rows)
         {
-            if (!mapping.ContainsKey(row.MatchCount))
+            if (!mapping.TryGetValue(row.MatchCount, out List<DrawPrizeMappingPrizeDto>? prizeList))
             {
-                mapping[row.MatchCount] = new List<DrawPrizeMappingPrizeDto>();
+                prizeList = new List<DrawPrizeMappingPrizeDto>();
+                mapping[row.MatchCount] = prizeList;
             }
 
-            mapping[row.MatchCount].Add(new DrawPrizeMappingPrizeDto(
+            prizeList.Add(new DrawPrizeMappingPrizeDto(
                 row.PrizeId,
                 row.PrizeName,
                 row.PrizeCost,

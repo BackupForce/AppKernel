@@ -47,7 +47,7 @@ internal sealed class GetOpenDrawsQueryHandler(
         string? status = string.IsNullOrWhiteSpace(request.Status) ? "SalesOpen" : request.Status.Trim();
         IEnumerable<DrawSummaryDto> items = await connection.QueryAsync<DrawSummaryDto>(
             sql,
-            new { TenantId = tenantContext.TenantId, Now = dateTimeProvider.UtcNow, Status = status });
+            new { tenantContext.TenantId, Now = dateTimeProvider.UtcNow, Status = status });
 
         return items.ToList();
     }

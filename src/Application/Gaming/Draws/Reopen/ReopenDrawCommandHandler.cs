@@ -23,7 +23,7 @@ internal sealed class ReopenDrawCommandHandler(
             return Result.Failure(GamingErrors.DrawNotFound);
         }
 
-        if (draw.Status == DrawStatus.Settled || !string.IsNullOrWhiteSpace(draw.WinningNumbers))
+        if (draw.Status == DrawStatus.Settled || !string.IsNullOrWhiteSpace(draw.WinningNumbersRaw))
         {
             return Result.Failure(GamingErrors.DrawAlreadyExecuted);
         }

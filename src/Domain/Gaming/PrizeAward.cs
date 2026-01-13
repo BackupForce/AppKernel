@@ -137,5 +137,6 @@ public sealed class PrizeAward : Entity
     public void Expire(DateTime utcNow)
     {
         Status = AwardStatus.Expired;
+        ExpiresAt = utcNow; 
     }
 }

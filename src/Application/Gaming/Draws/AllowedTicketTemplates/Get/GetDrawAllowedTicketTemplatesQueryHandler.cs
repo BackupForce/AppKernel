@@ -41,7 +41,7 @@ internal sealed class GetDrawAllowedTicketTemplatesQueryHandler(
 
         IEnumerable<DrawAllowedTicketTemplateDto> items = await connection.QueryAsync<DrawAllowedTicketTemplateDto>(
             sql,
-            new { TenantId = tenantContext.TenantId, DrawId = request.DrawId });
+            new { tenantContext.TenantId, request.DrawId });
 
         return items.ToList();
     }
