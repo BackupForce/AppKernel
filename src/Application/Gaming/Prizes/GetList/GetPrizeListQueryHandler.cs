@@ -24,7 +24,7 @@ internal sealed class GetPrizeListQueryHandler(
                 p.is_active AS IsActive,
                 p.created_at AS CreatedAt,
                 p.updated_at AS UpdatedAt
-            FROM gaming_prizes p
+            FROM gaming.prizes p
             WHERE p.tenant_id = @TenantId
             ORDER BY p.created_at DESC
             """;

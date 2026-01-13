@@ -1,5 +1,6 @@
 ﻿using Domain.Gaming;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configurations.Gaming;
@@ -8,7 +9,7 @@ internal sealed class DrawConfiguration : IEntityTypeConfiguration<Draw>
 {
     public void Configure(EntityTypeBuilder<Draw> builder)
     {
-        builder.ToTable("Gaming_Draws");
+        builder.ToTable("draws", Schemas.Gaming);
 
         builder.HasKey(draw => draw.Id);
 

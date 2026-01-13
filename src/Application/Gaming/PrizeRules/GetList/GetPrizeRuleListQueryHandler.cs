@@ -25,8 +25,8 @@ internal sealed class GetPrizeRuleListQueryHandler(
                 r.effective_from AS EffectiveFrom,
                 r.effective_to AS EffectiveTo,
                 r.redeem_valid_days AS RedeemValidDays
-            FROM gaming_prize_rules r
-            INNER JOIN gaming_prizes p ON p.id = r.prize_id
+            FROM gaming.prize_rules r
+            INNER JOIN gaming.prizes p ON p.id = r.prize_id
             WHERE r.tenant_id = @TenantId
             ORDER BY r.match_count ASC
             """;

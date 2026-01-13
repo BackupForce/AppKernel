@@ -1,5 +1,6 @@
 ﻿using Domain.Gaming;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configurations.Gaming;
@@ -8,7 +9,7 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
 {
     public void Configure(EntityTypeBuilder<Ticket> builder)
     {
-        builder.ToTable("Gaming_Tickets");
+        builder.ToTable("tickets", Schemas.Gaming);
 
         builder.HasKey(ticket => ticket.Id);
 

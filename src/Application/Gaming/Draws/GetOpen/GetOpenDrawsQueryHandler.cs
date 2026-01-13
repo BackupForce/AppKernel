@@ -32,7 +32,7 @@ internal sealed class GetOpenDrawsQueryHandler(
                     WHEN d.status = 4 THEN 'Cancelled'
                     ELSE 'Scheduled'
                 END AS Status
-            FROM gaming_draws d
+            FROM gaming.draws d
             WHERE d.tenant_id = @TenantId
               AND d.status <> 4
               AND (
