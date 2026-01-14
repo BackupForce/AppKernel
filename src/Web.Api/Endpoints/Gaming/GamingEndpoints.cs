@@ -10,13 +10,6 @@ using Application.Gaming.Draws.Reopen;
 using Application.Gaming.Draws.Settle;
 using Application.Gaming.Draws.AllowedTicketTemplates.Get;
 using Application.Gaming.Draws.AllowedTicketTemplates.Update;
-using Application.Gaming.Draws.PrizeMappings.Get;
-using Application.Gaming.Draws.PrizeMappings.Update;
-using Application.Gaming.PrizeRules.Activate;
-using Application.Gaming.PrizeRules.Create;
-using Application.Gaming.PrizeRules.Deactivate;
-using Application.Gaming.PrizeRules.GetList;
-using Application.Gaming.PrizeRules.Update;
 using Application.Gaming.Prizes.Activate;
 using Application.Gaming.Prizes.Create;
 using Application.Gaming.Prizes.Deactivate;
@@ -57,7 +50,6 @@ public sealed class GamingEndpoints : IEndpoint
 
         MapDrawEndpoints(group);
         MapPrizeEndpoints(group);
-        MapPrizeRuleEndpoints(group);
         MapTicketTemplateEndpoints(group);
         MapMemberEndpoints(group);
         MapRedeemEndpoints(group);
@@ -216,36 +208,6 @@ public sealed class GamingEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("UpdateGameDrawAllowedTicketTemplates");
 
-        group.MapGet(
-                "/games/{gameCode}/draws/{drawId:guid}/prize-mappings",
-                async (string gameCode, Guid drawId, ISender sender, CancellationToken ct) =>
-                {
-                    GetDrawPrizeMappingsQuery query = new GetDrawPrizeMappingsQuery(drawId);
-                    return await UseCaseInvoker.Send<GetDrawPrizeMappingsQuery, IReadOnlyCollection<DrawPrizeMappingDto>>(
-                        query,
-                        sender,
-                        value => Results.Ok(value),
-                        ct);
-                })
-            .Produces<IReadOnlyCollection<DrawPrizeMappingDto>>(StatusCodes.Status200OK)
-            .WithName("GetGameDrawPrizeMappings");
-
-        group.MapPut(
-                "/games/{gameCode}/draws/{drawId:guid}/prize-mappings",
-                async (string gameCode, Guid drawId, UpdateDrawPrizeMappingsRequest request, ISender sender, CancellationToken ct) =>
-                {
-                    List<DrawPrizeMappingInput> mappings = new List<DrawPrizeMappingInput>();
-                    foreach (DrawPrizeMappingItemRequest item in request.Mappings)
-                    {
-                        mappings.Add(new DrawPrizeMappingInput(item.MatchCount, item.PrizeIds));
-                    }
-
-                    UpdateDrawPrizeMappingsCommand command = new UpdateDrawPrizeMappingsCommand(drawId, mappings);
-                    return await UseCaseInvoker.Send(command, sender, ct);
-                })
-            .Produces(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithName("UpdateGameDrawPrizeMappings");
     }
 
     private static void MapMemberEndpoints(RouteGroupBuilder group)
@@ -439,79 +401,5 @@ public sealed class GamingEndpoints : IEndpoint
                 })
             .Produces(StatusCodes.Status200OK)
             .WithName("DeactivateTicketTemplate");
-    }
-
-    private static void MapPrizeRuleEndpoints(RouteGroupBuilder group)
-    {
-        group.MapGet(
-                "/games/{gameCode}/prize-rules",
-                async (string gameCode, ISender sender, CancellationToken ct) =>
-                {
-                    GetPrizeRuleListQuery query = new GetPrizeRuleListQuery();
-                    return await UseCaseInvoker.Send<GetPrizeRuleListQuery, IReadOnlyCollection<PrizeRuleDto>>(
-                        query,
-                        sender,
-                        value => Results.Ok(value),
-                        ct);
-                })
-            .Produces<IReadOnlyCollection<PrizeRuleDto>>(StatusCodes.Status200OK)
-            .WithName("GetGamePrizeRuleList");
-
-        group.MapPost(
-                "/games/{gameCode}/prize-rules",
-                async (string gameCode, CreatePrizeRuleRequest request, ISender sender, CancellationToken ct) =>
-                {
-                    CreatePrizeRuleCommand command = new CreatePrizeRuleCommand(
-                        request.MatchCount,
-                        request.PrizeId,
-                        request.EffectiveFrom,
-                        request.EffectiveTo,
-                        request.RedeemValidDays);
-                    return await UseCaseInvoker.Send<CreatePrizeRuleCommand, Guid>(
-                        command,
-                        sender,
-                        value => Results.Ok(value),
-                        ct);
-                })
-            .Produces<Guid>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithName("CreateGamePrizeRule");
-
-        group.MapPut(
-                "/games/{gameCode}/prize-rules/{ruleId:guid}",
-                async (string gameCode, Guid ruleId, UpdatePrizeRuleRequest request, ISender sender, CancellationToken ct) =>
-                {
-                    UpdatePrizeRuleCommand command = new UpdatePrizeRuleCommand(
-                        ruleId,
-                        request.MatchCount,
-                        request.PrizeId,
-                        request.EffectiveFrom,
-                        request.EffectiveTo,
-                        request.RedeemValidDays);
-                    return await UseCaseInvoker.Send(command, sender, ct);
-                })
-            .Produces(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithName("UpdateGamePrizeRule");
-
-        group.MapPatch(
-                "/games/{gameCode}/prize-rules/{ruleId:guid}/activate",
-                async (string gameCode, Guid ruleId, ISender sender, CancellationToken ct) =>
-                {
-                    ActivatePrizeRuleCommand command = new ActivatePrizeRuleCommand(ruleId);
-                    return await UseCaseInvoker.Send(command, sender, ct);
-                })
-            .Produces(StatusCodes.Status200OK)
-            .WithName("ActivateGamePrizeRule");
-
-        group.MapPatch(
-                "/games/{gameCode}/prize-rules/{ruleId:guid}/deactivate",
-                async (string gameCode, Guid ruleId, ISender sender, CancellationToken ct) =>
-                {
-                    DeactivatePrizeRuleCommand command = new DeactivatePrizeRuleCommand(ruleId);
-                    return await UseCaseInvoker.Send(command, sender, ct);
-                })
-            .Produces(StatusCodes.Status200OK)
-            .WithName("DeactivateGamePrizeRule");
     }
 }
