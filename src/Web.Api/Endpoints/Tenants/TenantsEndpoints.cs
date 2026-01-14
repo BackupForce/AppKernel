@@ -49,7 +49,7 @@ public sealed class TenantsEndpoints : IEndpoint
                             statusCode: StatusCodes.Status404NotFound);
                     }
 
-                    TenantLookupResponse response = new TenantLookupResponse(tenant.Id, tenant.Code, tenant.Name);
+                    TenantLookupResponse response = new TenantLookupResponse(tenant.Id, tenant.Code, tenant.Name, tenant.TimeZoneId);
                     return Results.Ok(response);
                 })
             .AllowAnonymous()
@@ -70,5 +70,5 @@ public sealed class TenantsEndpoints : IEndpoint
             .WithName("UpdateTenantTimeZone");
     }
 
-    public sealed record TenantLookupResponse(Guid TenantId, string TenantCode, string Name);
+    public sealed record TenantLookupResponse(Guid TenantId, string TenantCode, string Name, string TimeZoneId);
 }
