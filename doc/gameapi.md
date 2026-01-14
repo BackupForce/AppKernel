@@ -22,14 +22,19 @@
 ### TicketTemplateType
 `Standard` / `Promo` / `Free` / `Vip` / `Event`
 
-## Lottery 539 期數 (Draws)
+## 期數 (Draws)
 
 ### 建立期數
-`POST /lottery539/draws`
+`POST /games/{gameCode}/draws`
+
+- `gameCode` 代表遊戲代碼（例如 `LOTTERY539`）。
+- 若 Request Body 內有 `gameCode`，需與路徑一致。
 
 **Request Body**
 ```json
 {
+  "gameCode": "LOTTERY539",
+  "enabledPlayTypes": ["BASIC"],
   "salesStartAt": "2024-01-01T00:00:00Z",
   "salesCloseAt": "2024-01-02T00:00:00Z",
   "drawAt": "2024-01-02T01:00:00Z",
@@ -45,7 +50,7 @@
 ---
 
 ### 取得期數清單 (開放中/指定狀態)
-`GET /lottery539/draws?status=SalesOpen`
+`GET /games/{gameCode}/draws?status=SalesOpen`
 
 - `status` 可省略，預設為 `SalesOpen`。
 
@@ -65,7 +70,7 @@
 ---
 
 ### 取得期數詳情
-`GET /lottery539/draws/{drawId}`
+`GET /games/{gameCode}/draws/{drawId}`
 
 **Response**
 ```json
@@ -90,11 +95,12 @@
 ---
 
 ### 下注
-`POST /lottery539/draws/{drawId}/tickets`
+`POST /games/{gameCode}/draws/{drawId}/tickets`
 
 **Request Body**
 ```json
 {
+  "playTypeCode": "BASIC",
   "templateId": "guid",
   "lines": [
     [1, 5, 9, 17, 39],
@@ -116,7 +122,7 @@
 ---
 
 ### 開獎 (execute)
-`POST /lottery539/draws/{drawId}/execute`
+`POST /games/{gameCode}/draws/{drawId}/execute`
 
 **Response**
 - `200 OK`
@@ -124,7 +130,7 @@
 ---
 
 ### 結算 (settle)
-`POST /lottery539/draws/{drawId}/settle`
+`POST /games/{gameCode}/draws/{drawId}/settle`
 
 **Response**
 - `200 OK`
@@ -132,7 +138,7 @@
 ---
 
 ### 手動封盤
-`POST /lottery539/draws/{drawId}/manual-close`
+`POST /games/{gameCode}/draws/{drawId}/manual-close`
 
 **Request Body**
 ```json
@@ -147,7 +153,7 @@
 ---
 
 ### 重新開盤
-`POST /lottery539/draws/{drawId}/reopen`
+`POST /games/{gameCode}/draws/{drawId}/reopen`
 
 **Response**
 - `200 OK`
@@ -155,7 +161,7 @@
 ---
 
 ### 取得期數允許票種清單
-`GET /lottery539/draws/{drawId}/allowed-ticket-templates`
+`GET /games/{gameCode}/draws/{drawId}/allowed-ticket-templates`
 
 **Response**
 ```json
@@ -174,7 +180,7 @@
 ---
 
 ### 更新期數允許票種清單
-`PUT /lottery539/draws/{drawId}/allowed-ticket-templates`
+`PUT /games/{gameCode}/draws/{drawId}/allowed-ticket-templates`
 
 **Request Body**
 ```json
@@ -189,7 +195,7 @@
 ---
 
 ### 取得期數獎項對應
-`GET /lottery539/draws/{drawId}/prize-mappings`
+`GET /games/{gameCode}/draws/{drawId}/prize-mappings`
 
 **Response**
 ```json
@@ -211,7 +217,7 @@
 ---
 
 ### 更新期數獎項對應
-`PUT /lottery539/draws/{drawId}/prize-mappings`
+`PUT /games/{gameCode}/draws/{drawId}/prize-mappings`
 
 **Request Body**
 ```json
@@ -231,7 +237,7 @@
 ## 會員功能
 
 ### 取得我的票券
-`GET /lottery539/members/me/tickets?from=2024-01-01T00:00:00Z&to=2024-12-31T23:59:59Z`
+`GET /games/{gameCode}/members/me/tickets?from=2024-01-01T00:00:00Z&to=2024-12-31T23:59:59Z`
 
 **Response**
 ```json
@@ -255,7 +261,7 @@
 ---
 
 ### 取得我的得獎
-`GET /lottery539/members/me/awards?status=redeemed`
+`GET /games/{gameCode}/members/me/awards?status=redeemed`
 
 - `status` 可省略；可用值：`awarded` / `redeemed`。
 
@@ -379,7 +385,7 @@
 ## 中獎規則 (Prize Rules)
 
 ### 取得中獎規則清單
-`GET /lottery539/prize-rules`
+`GET /games/{gameCode}/prize-rules`
 
 **Response**
 ```json
@@ -400,7 +406,7 @@
 ---
 
 ### 建立中獎規則
-`POST /lottery539/prize-rules`
+`POST /games/{gameCode}/prize-rules`
 
 **Request Body**
 ```json
@@ -421,7 +427,7 @@
 ---
 
 ### 更新中獎規則
-`PUT /lottery539/prize-rules/{ruleId}`
+`PUT /games/{gameCode}/prize-rules/{ruleId}`
 
 **Request Body**
 ```json
@@ -440,7 +446,7 @@
 ---
 
 ### 啟用中獎規則
-`PATCH /lottery539/prize-rules/{ruleId}/activate`
+`PATCH /games/{gameCode}/prize-rules/{ruleId}/activate`
 
 **Response**
 - `200 OK`
@@ -448,7 +454,7 @@
 ---
 
 ### 停用中獎規則
-`PATCH /lottery539/prize-rules/{ruleId}/deactivate`
+`PATCH /games/{gameCode}/prize-rules/{ruleId}/deactivate`
 
 **Response**
 - `200 OK`
