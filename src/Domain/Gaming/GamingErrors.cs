@@ -31,6 +31,18 @@ public static class GamingErrors
         "Gaming.DrawNotFound",
         "找不到期數。");
 
+    public static readonly Error GameCodeRequired = Error.Validation(
+        "Gaming.GameCodeRequired",
+        "遊戲代碼不可為空白。");
+
+    public static readonly Error PlayTypeCodeRequired = Error.Validation(
+        "Gaming.PlayTypeCodeRequired",
+        "玩法代碼不可為空白。");
+
+    public static readonly Error PrizeTierRequired = Error.Validation(
+        "Gaming.PrizeTierRequired",
+        "獎級代碼不可為空白。");
+
     public static readonly Error DrawNotOpen = Error.Validation(
         "Gaming.DrawNotOpen",
         "目前不在可販售期間。");
@@ -66,6 +78,14 @@ public static class GamingErrors
     public static readonly Error PrizeNameRequired = Error.Validation(
         "Gaming.PrizeNameRequired",
         "獎品名稱不可為空白。");
+
+    public static readonly Error PrizeCostInvalid = Error.Validation(
+        "Gaming.PrizeCostInvalid",
+        "獎品成本不正確。");
+
+    public static readonly Error PrizeRedeemValidDaysInvalid = Error.Validation(
+        "Gaming.PrizeRedeemValidDaysInvalid",
+        "獎品兌獎有效天數不正確。");
 
     public static readonly Error PrizeInactive = Error.Validation(
         "Gaming.PrizeInactive",
@@ -146,6 +166,26 @@ public static class GamingErrors
     public static readonly Error TicketLinesExceedLimit = Error.Validation(
         "Gaming.TicketLinesExceedLimit",
         "下注注數超過票種限制。");
+
+    public static readonly Error TicketPlayTypeNotEnabled = Error.Validation(
+        "Gaming.TicketPlayTypeNotEnabled",
+        "該期未啟用此玩法。");
+
+    public static readonly Error PlayTypeNotAllowed = Error.Validation(
+        "Gaming.PlayTypeNotAllowed",
+        "玩法不屬於該遊戲。");
+
+    public static readonly Error PlayTypeAlreadyEnabled = Error.Validation(
+        "Gaming.PlayTypeAlreadyEnabled",
+        "玩法已啟用。");
+
+    public static readonly Error PrizeTierNotAllowed = Error.Validation(
+        "Gaming.PrizeTierNotAllowed",
+        "獎級不屬於該玩法規則。");
+
+    public static readonly Error PrizePoolIncomplete = Error.Validation(
+        "Gaming.PrizePoolIncomplete",
+        "期數獎項配置不完整。");
 
     public static readonly Error DrawManuallyClosed = Error.Validation(
         "Gaming.DrawManuallyClosed",
