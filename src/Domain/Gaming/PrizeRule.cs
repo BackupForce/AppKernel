@@ -8,6 +8,7 @@ namespace Domain.Gaming;
 /// <remarks>
 /// 規則是否生效由 IsActive 與有效期間共同決定，避免結算引用不該生效的設定。
 /// </remarks>
+[Obsolete("PrizeRule 已由玩法規則取代，僅保留歷史資料用途。")]
 public sealed class PrizeRule : Entity
 {
     private PrizeRule(

@@ -15,6 +15,14 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
 
         builder.Property(ticket => ticket.TenantId).IsRequired();
         builder.Property(ticket => ticket.DrawId).IsRequired();
+        builder.Property(ticket => ticket.GameCode)
+            .HasConversion(code => code.Value, value => new GameCode(value))
+            .HasMaxLength(32)
+            .IsRequired();
+        builder.Property(ticket => ticket.PlayTypeCode)
+            .HasConversion(code => code.Value, value => new PlayTypeCode(value))
+            .HasMaxLength(32)
+            .IsRequired();
         builder.Property(ticket => ticket.MemberId).IsRequired();
         builder.Property(ticket => ticket.TicketTemplateId).IsRequired();
         builder.Property(ticket => ticket.PriceSnapshot).HasColumnType("decimal(18,2)").IsRequired();

@@ -16,6 +16,8 @@ public sealed class Ticket : Entity
         Guid id,
         Guid tenantId,
         Guid drawId,
+        GameCode gameCode,
+        PlayTypeCode playTypeCode,
         Guid memberId,
         Guid ticketTemplateId,
         decimal priceSnapshot,
@@ -24,6 +26,8 @@ public sealed class Ticket : Entity
     {
         TenantId = tenantId;
         DrawId = drawId;
+        GameCode = gameCode;
+        PlayTypeCode = playTypeCode;
         MemberId = memberId;
         TicketTemplateId = ticketTemplateId;
         PriceSnapshot = priceSnapshot;
@@ -44,6 +48,16 @@ public sealed class Ticket : Entity
     /// 對應期數。
     /// </summary>
     public Guid DrawId { get; private set; }
+
+    /// <summary>
+    /// 遊戲代碼（與期數一致）。
+    /// </summary>
+    public GameCode GameCode { get; private set; }
+
+    /// <summary>
+    /// 玩法代碼（本票券所屬玩法）。
+    /// </summary>
+    public PlayTypeCode PlayTypeCode { get; private set; }
 
     /// <summary>
     /// 購買者（會員）識別。
@@ -81,13 +95,15 @@ public sealed class Ticket : Entity
     public static Ticket Create(
         Guid tenantId,
         Guid drawId,
+        GameCode gameCode,
+        PlayTypeCode playTypeCode,
         Guid memberId,
         Guid ticketTemplateId,
         decimal priceSnapshot,
         long totalCost,
         DateTime createdAt)
     {
-        return new Ticket(Guid.NewGuid(), tenantId, drawId, memberId, ticketTemplateId, priceSnapshot, totalCost, createdAt);
+        return new Ticket(Guid.NewGuid(), tenantId, drawId, gameCode, playTypeCode, memberId, ticketTemplateId, priceSnapshot, totalCost, createdAt);
     }
 
     /// <summary>

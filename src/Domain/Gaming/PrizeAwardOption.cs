@@ -5,6 +5,7 @@ namespace Domain.Gaming;
 /// <summary>
 /// 兌獎選項快照，避免後台改動影響歷史兌獎。
 /// </summary>
+[Obsolete("PrizeAwardOption 已改為 PrizeAward 內建快照。")]
 public sealed class PrizeAwardOption : Entity
 {
     private PrizeAwardOption(

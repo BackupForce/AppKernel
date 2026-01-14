@@ -9,11 +9,15 @@ public sealed record PrizeAwardDto(
     Guid TicketId,
     int LineIndex,
     int MatchedCount,
+    string GameCode,
+    string PlayTypeCode,
+    string PrizeTier,
     Guid PrizeId,
     string PrizeName,
+    decimal PrizeCost,
+    int? PrizeRedeemValidDays,
+    string? PrizeDescription,
     string Status,
     DateTime AwardedAt,
     DateTime? ExpiresAt,
-    DateTime? RedeemedAt,
-    decimal? CostSnapshot,
-    IReadOnlyCollection<PrizeAwardOptionDto> Options);
+    DateTime? RedeemedAt);

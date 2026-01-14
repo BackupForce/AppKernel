@@ -9,6 +9,8 @@ internal sealed class DrawRepository(ApplicationDbContext context) : IDrawReposi
     public async Task<Draw?> GetByIdAsync(Guid tenantId, Guid drawId, CancellationToken cancellationToken = default)
     {
         return await context.Draws
+            .Include(draw => draw.EnabledPlayTypeItems)
+            .Include(draw => draw.PrizePoolItems)
             .FirstOrDefaultAsync(draw => draw.TenantId == tenantId && draw.Id == drawId, cancellationToken);
     }
 

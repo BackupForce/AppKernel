@@ -15,7 +15,6 @@ namespace Application.Gaming.Awards.Redeem;
 /// </remarks>
 internal sealed class RedeemPrizeAwardCommandHandler(
     IPrizeAwardRepository prizeAwardRepository,
-    IPrizeAwardOptionRepository prizeAwardOptionRepository,
     IRedeemRecordRepository redeemRecordRepository,
     IMemberRepository memberRepository,
     IUnitOfWork unitOfWork,
@@ -75,25 +74,14 @@ internal sealed class RedeemPrizeAwardCommandHandler(
             return Result.Failure<Guid>(GamingErrors.PrizeAwardAlreadyRedeemed);
         }
 
-        IReadOnlyCollection<PrizeAwardOption> options = await prizeAwardOptionRepository.GetByAwardIdAsync(
-            tenantContext.TenantId,
-            award.Id,
-            cancellationToken);
-
-        PrizeAwardOption? selectedOption = options.FirstOrDefault(option => option.PrizeId == request.PrizeId);
-        if (selectedOption is null)
-        {
-            return Result.Failure<Guid>(GamingErrors.PrizeAwardOptionNotFound);
-        }
-
         // 中文註解：兌獎使用快照資料，避免後台修改獎品資訊影響歷史紀錄。
         RedeemRecord record = RedeemRecord.Create(
             tenantContext.TenantId,
             member.Id,
             award.Id,
-            selectedOption.PrizeId,
-            selectedOption.PrizeNameSnapshot,
-            selectedOption.PrizeCostSnapshot,
+            award.PrizeId,
+            award.PrizeNameSnapshot,
+            award.PrizeCostSnapshot,
             now,
             request.Note);
 

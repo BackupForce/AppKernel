@@ -6,6 +6,8 @@ namespace Application.Gaming.Dtos;
 public sealed record TicketSummaryDto(
     Guid TicketId,
     Guid DrawId,
+    string GameCode,
+    string PlayTypeCode,
     long TotalCost,
     DateTime CreatedAt,
     IReadOnlyCollection<TicketLineSummaryDto> Lines);
