@@ -21,8 +21,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<MemberAssetLedger> MemberAssetLedgers { get; set; }
     public DbSet<MemberActivityLog> MemberActivityLogs { get; set; }
     public DbSet<Draw> Draws { get; set; }
+    public DbSet<DrawEnabledPlayType> DrawEnabledPlayTypes { get; set; }
     public DbSet<DrawAllowedTicketTemplate> DrawAllowedTicketTemplates { get; set; }
     public DbSet<DrawPrizeMapping> DrawPrizeMappings { get; set; }
+    public DbSet<DrawPrizePoolItem> DrawPrizePoolItems { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<TicketLine> TicketLines { get; set; }
     public DbSet<TicketTemplate> TicketTemplates { get; set; }

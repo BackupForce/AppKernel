@@ -19,6 +19,8 @@ internal sealed class GetMyTicketsQueryHandler(
     private sealed record TicketLineRow(
         Guid TicketId,
         Guid DrawId,
+        string GameCode,
+        string PlayTypeCode,
         long TotalCost,
         DateTime CreatedAt,
         int LineIndex,
@@ -39,6 +41,8 @@ internal sealed class GetMyTicketsQueryHandler(
             SELECT
                 t.id AS TicketId,
                 t.draw_id AS DrawId,
+                t.game_code AS GameCode,
+                t.play_type_code AS PlayTypeCode,
                 t.total_cost AS TotalCost,
                 t.created_at AS CreatedAt,
                 l.line_index AS LineIndex,
@@ -76,6 +80,8 @@ internal sealed class GetMyTicketsQueryHandler(
                 ticketMap[row.TicketId] = new TicketSummaryDto(
                     row.TicketId,
                     row.DrawId,
+                    row.GameCode,
+                    row.PlayTypeCode,
                     row.TotalCost,
                     row.CreatedAt,
                     Array.Empty<TicketLineSummaryDto>());

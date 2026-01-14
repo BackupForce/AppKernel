@@ -14,6 +14,10 @@ internal sealed class DrawConfiguration : IEntityTypeConfiguration<Draw>
         builder.HasKey(draw => draw.Id);
 
         builder.Property(draw => draw.TenantId).IsRequired();
+        builder.Property(draw => draw.GameCode)
+            .HasConversion(code => code.Value, value => new GameCode(value))
+            .HasMaxLength(32)
+            .IsRequired();
         builder.Property(draw => draw.SalesOpenAt).IsRequired();
         builder.Property(draw => draw.SalesCloseAt).IsRequired();
         builder.Property(draw => draw.DrawAt).IsRequired();
@@ -29,6 +33,14 @@ internal sealed class DrawConfiguration : IEntityTypeConfiguration<Draw>
         builder.Property(draw => draw.DerivedInput).HasMaxLength(128);
         builder.Property(draw => draw.CreatedAt).IsRequired();
         builder.Property(draw => draw.UpdatedAt).IsRequired();
+
+        builder.HasMany(draw => draw.EnabledPlayTypeItems)
+            .WithOne()
+            .HasForeignKey(item => item.DrawId);
+
+        builder.HasMany(draw => draw.PrizePoolItems)
+            .WithOne()
+            .HasForeignKey(item => item.DrawId);
 
         builder.HasIndex(draw => new { draw.TenantId, draw.Status });
     }

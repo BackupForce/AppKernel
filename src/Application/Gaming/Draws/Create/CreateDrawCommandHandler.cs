@@ -3,6 +3,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Domain.Gaming;
+using Domain.Gaming.Services;
 using SharedKernel;
 
 namespace Application.Gaming.Draws.Create;
@@ -40,8 +41,15 @@ internal sealed class CreateDrawCommandHandler(
             initialStatus = DrawStatus.Settled;
         }
 
+        Result<GameCode> gameCodeResult = GameCode.Create(request.GameCode);
+        if (gameCodeResult.IsFailure)
+        {
+            return Result.Failure<Guid>(gameCodeResult.Error);
+        }
+
         Result<Draw> drawResult = Draw.Create(
             tenantContext.TenantId,
+            gameCodeResult.Value,
             request.SalesStartAt,
             request.SalesCloseAt,
             request.DrawAt,
@@ -55,6 +63,28 @@ internal sealed class CreateDrawCommandHandler(
         }
 
         Draw draw = drawResult.Value;
+
+        PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
+        if (request.EnabledPlayTypes.Count > 0)
+        {
+            List<PlayTypeCode> playTypes = new List<PlayTypeCode>();
+            foreach (string playType in request.EnabledPlayTypes)
+            {
+                Result<PlayTypeCode> playTypeResult = PlayTypeCode.Create(playType);
+                if (playTypeResult.IsFailure)
+                {
+                    return Result.Failure<Guid>(playTypeResult.Error);
+                }
+
+                playTypes.Add(playTypeResult.Value);
+            }
+
+            Result enableResult = draw.EnablePlayTypes(playTypes, registry);
+            if (enableResult.IsFailure)
+            {
+                return Result.Failure<Guid>(enableResult.Error);
+            }
+        }
 
         if (initialStatus == DrawStatus.SalesOpen)
         {

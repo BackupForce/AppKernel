@@ -4,6 +4,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Domain.Gaming;
+using Domain.Gaming.Services;
 using Domain.Members;
 using SharedKernel;
 
@@ -36,6 +37,26 @@ internal sealed class PlaceTicketCommandHandler(
         {
             return Result.Failure<Guid>(GamingErrors.DrawNotFound);
         }
+
+        Result<PlayTypeCode> playTypeResult = PlayTypeCode.Create(request.PlayTypeCode);
+        if (playTypeResult.IsFailure)
+        {
+            return Result.Failure<Guid>(playTypeResult.Error);
+        }
+
+        PlayTypeCode playTypeCode = playTypeResult.Value;
+        PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
+        if (!registry.GetAllowedPlayTypes(draw.GameCode).Contains(playTypeCode))
+        {
+            return Result.Failure<Guid>(GamingErrors.PlayTypeNotAllowed);
+        }
+
+        if (!draw.EnabledPlayTypes.Contains(playTypeCode))
+        {
+            return Result.Failure<Guid>(GamingErrors.TicketPlayTypeNotEnabled);
+        }
+
+        IPlayRule rule = registry.GetRule(draw.GameCode, playTypeCode);
 
         DateTime now = dateTimeProvider.UtcNow;
 
@@ -130,6 +151,8 @@ internal sealed class PlaceTicketCommandHandler(
         Ticket ticket = Ticket.Create(
             tenantContext.TenantId,
             draw.Id,
+            draw.GameCode,
+            playTypeCode,
             member.Id,
             template.Id,
             template.Price,
@@ -143,6 +166,12 @@ internal sealed class PlaceTicketCommandHandler(
             if (numbersResult.IsFailure)
             {
                 return Result.Failure<Guid>(numbersResult.Error);
+            }
+
+            Result validateResult = rule.ValidateBet(numbersResult.Value);
+            if (validateResult.IsFailure)
+            {
+                return Result.Failure<Guid>(validateResult.Error);
             }
 
             Result<TicketLine> lineResult = TicketLine.Create(ticket.Id, lineIndex, numbersResult.Value);

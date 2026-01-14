@@ -5,6 +5,7 @@ namespace Application.Gaming.Dtos;
 /// </summary>
 public sealed record DrawDetailDto(
     Guid Id,
+    string GameCode,
     DateTime SalesStartAt,
     DateTime SalesCloseAt,
     DateTime DrawAt,

@@ -4,6 +4,8 @@ namespace Web.Api.Endpoints.Gaming.Requests;
 /// 建立期數的 API 請求資料。
 /// </summary>
 public sealed record CreateDrawRequest(
+    string GameCode,
+    IReadOnlyCollection<string> EnabledPlayTypes,
     DateTime SalesStartAt,
     DateTime SalesCloseAt,
     DateTime DrawAt,

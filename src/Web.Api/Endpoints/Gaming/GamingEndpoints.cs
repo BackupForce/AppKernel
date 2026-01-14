@@ -70,6 +70,8 @@ public sealed class GamingEndpoints : IEndpoint
                 async (CreateDrawRequest request, ISender sender, CancellationToken ct) =>
                 {
                     CreateDrawCommand command = new CreateDrawCommand(
+                        request.GameCode,
+                        request.EnabledPlayTypes,
                         request.SalesStartAt,
                         request.SalesCloseAt,
                         request.DrawAt,
@@ -119,7 +121,11 @@ public sealed class GamingEndpoints : IEndpoint
                 "/lottery539/draws/{drawId:guid}/tickets",
                 async (Guid drawId, PlaceTicketRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    PlaceTicketCommand command = new PlaceTicketCommand(drawId, request.TemplateId, request.Lines);
+                    PlaceTicketCommand command = new PlaceTicketCommand(
+                        drawId,
+                        request.PlayTypeCode,
+                        request.TemplateId,
+                        request.Lines);
                     return await UseCaseInvoker.Send<PlaceTicketCommand, Guid>(
                         command,
                         sender,
@@ -273,7 +279,7 @@ public sealed class GamingEndpoints : IEndpoint
                 "/prizes/awards/{awardId:guid}/redeem",
                 async (Guid awardId, RedeemPrizeAwardRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    RedeemPrizeAwardCommand command = new RedeemPrizeAwardCommand(awardId, request.PrizeId, request.Note);
+                    RedeemPrizeAwardCommand command = new RedeemPrizeAwardCommand(awardId, request.Note);
                     return await UseCaseInvoker.Send<RedeemPrizeAwardCommand, Guid>(
                         command,
                         sender,

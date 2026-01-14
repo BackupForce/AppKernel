@@ -5,6 +5,7 @@ namespace Domain.Gaming;
 /// <summary>
 /// 期數獎項對應設定，描述 matchCount 對應可兌換的獎品。
 /// </summary>
+[Obsolete("DrawPrizeMapping 已由 Draw.PrizePool 取代，僅保留過渡用途。")]
 public sealed class DrawPrizeMapping : Entity
 {
     private DrawPrizeMapping(

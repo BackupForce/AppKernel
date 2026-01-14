@@ -10,9 +10,13 @@ namespace Domain.Gaming;
 /// </remarks>
 public sealed class Draw : Entity
 {
+    private readonly List<DrawEnabledPlayType> _enabledPlayTypes = new();
+    private readonly List<DrawPrizePoolItem> _prizePool = new();
+
     private Draw(
         Guid id,
         Guid tenantId,
+        GameCode gameCode,
         DateTime salesStartAt,
         DateTime salesCloseAt,
         DateTime drawAt,
@@ -22,6 +26,7 @@ public sealed class Draw : Entity
         DateTime updatedAt) : base(id)
     {
         TenantId = tenantId;
+        GameCode = gameCode;
         SalesOpenAt = salesStartAt;
         SalesCloseAt = salesCloseAt;
         DrawAt = drawAt;
@@ -39,6 +44,11 @@ public sealed class Draw : Entity
     /// 租戶識別，隔離不同租戶的期數資料。
     /// </summary>
     public Guid TenantId { get; private set; }
+
+    /// <summary>
+    /// 遊戲代碼，代表期數對應的遊戲類型。
+    /// </summary>
+    public GameCode GameCode { get; private set; }
 
     /// <summary>
     /// 售票開始時間（UTC），低於此時間不得購買。
@@ -122,10 +132,32 @@ public sealed class Draw : Entity
     public DateTime UpdatedAt { get; private set; }
 
     /// <summary>
+    /// 本期啟用的玩法列表（只讀）。
+    /// </summary>
+    public IReadOnlyCollection<PlayTypeCode> EnabledPlayTypes =>
+        _enabledPlayTypes.Select(item => item.PlayTypeCode).ToList();
+
+    /// <summary>
+    /// 供 EF 追蹤的玩法清單。
+    /// </summary>
+    public IReadOnlyCollection<DrawEnabledPlayType> EnabledPlayTypeItems => _enabledPlayTypes.AsReadOnly();
+
+    /// <summary>
+    /// 本期獎項配置（玩法 + 獎級）。
+    /// </summary>
+    public IReadOnlyCollection<DrawPrizePoolItem> PrizePool => _prizePool.AsReadOnly();
+
+    /// <summary>
+    /// 供 EF 追蹤的獎項配置清單。
+    /// </summary>
+    public IReadOnlyCollection<DrawPrizePoolItem> PrizePoolItems => _prizePool.AsReadOnly();
+
+    /// <summary>
     /// 建立新期數並檢查時間邏輯，避免售票區間顛倒。
     /// </summary>
     public static Result<Draw> Create(
         Guid tenantId,
+        GameCode gameCode,
         DateTime salesStartAt,
         DateTime salesCloseAt,
         DateTime drawAt,
@@ -136,6 +168,11 @@ public sealed class Draw : Entity
         if (tenantId == Guid.Empty)
         {
             return Result.Failure<Draw>(GamingErrors.DrawNotFound);
+        }
+
+        if (string.IsNullOrWhiteSpace(gameCode.Value))
+        {
+            return Result.Failure<Draw>(GamingErrors.GameCodeRequired);
         }
 
         if (redeemValidDays.HasValue && redeemValidDays.Value <= 0)
@@ -151,6 +188,7 @@ public sealed class Draw : Entity
         Draw draw = new Draw(
             Guid.NewGuid(),
             tenantId,
+            gameCode,
             salesStartAt,
             salesCloseAt,
             drawAt,
@@ -160,6 +198,96 @@ public sealed class Draw : Entity
             utcNow);
 
         return draw;
+    }
+
+    /// <summary>
+    /// 啟用本期可販售的玩法。
+    /// </summary>
+    public Result EnablePlayTypes(IEnumerable<PlayTypeCode> playTypes, Services.PlayRuleRegistry registry)
+    {
+        IReadOnlyCollection<PlayTypeCode> allowed = registry.GetAllowedPlayTypes(GameCode);
+
+        foreach (PlayTypeCode playType in playTypes)
+        {
+            if (!allowed.Contains(playType))
+            {
+                return Result.Failure(GamingErrors.PlayTypeNotAllowed);
+            }
+
+            bool exists = _enabledPlayTypes.Any(item => item.PlayTypeCode == playType);
+            if (exists)
+            {
+                return Result.Failure(GamingErrors.PlayTypeAlreadyEnabled);
+            }
+
+            DrawEnabledPlayType item = DrawEnabledPlayType.Create(TenantId, Id, playType);
+            _enabledPlayTypes.Add(item);
+        }
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// 設定本期獎項配置（玩法 + 獎級）。
+    /// </summary>
+    public Result ConfigurePrizeOption(
+        PlayTypeCode playType,
+        PrizeTier tier,
+        PrizeOption option,
+        Services.PlayRuleRegistry registry)
+    {
+        bool enabled = _enabledPlayTypes.Any(item => item.PlayTypeCode == playType);
+        if (!enabled)
+        {
+            return Result.Failure(GamingErrors.TicketPlayTypeNotEnabled);
+        }
+
+        Services.IPlayRule rule = registry.GetRule(GameCode, playType);
+        if (!rule.GetTiers().Contains(tier))
+        {
+            return Result.Failure(GamingErrors.PrizeTierNotAllowed);
+        }
+
+        DrawPrizePoolItem? existing = _prizePool.FirstOrDefault(item => item.PlayTypeCode == playType && item.Tier == tier);
+        if (existing is null)
+        {
+            _prizePool.Add(DrawPrizePoolItem.Create(TenantId, Id, playType, tier, option));
+        }
+        else
+        {
+            existing.Update(option);
+        }
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// 結算前檢查獎項配置是否完整。
+    /// </summary>
+    public Result EnsurePrizePoolCompleteForSettlement(Services.PlayRuleRegistry registry)
+    {
+        foreach (DrawEnabledPlayType enabled in _enabledPlayTypes)
+        {
+            Services.IPlayRule rule = registry.GetRule(GameCode, enabled.PlayTypeCode);
+            foreach (PrizeTier tier in rule.GetTiers())
+            {
+                bool exists = _prizePool.Any(item => item.PlayTypeCode == enabled.PlayTypeCode && item.Tier == tier);
+                if (!exists)
+                {
+                    return Result.Failure(GamingErrors.PrizePoolIncomplete);
+                }
+            }
+        }
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// 取得指定玩法與獎級的獎項設定。
+    /// </summary>
+    public PrizeOption? FindPrizeOption(PlayTypeCode playType, PrizeTier tier)
+    {
+        return _prizePool.FirstOrDefault(item => item.PlayTypeCode == playType && item.Tier == tier)?.Option;
     }
 
     /// <summary>

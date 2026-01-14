@@ -19,6 +19,7 @@ internal sealed class GetOpenDrawsQueryHandler(
         const string sql = """
             SELECT
                 d.id AS Id,
+                d.game_code AS GameCode,
                 d.sales_open_at AS SalesStartAt,
                 d.sales_close_at AS SalesCloseAt,
                 d.draw_at AS DrawAt,
