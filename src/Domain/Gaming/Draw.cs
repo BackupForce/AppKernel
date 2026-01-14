@@ -248,7 +248,7 @@ public sealed class Draw : Entity
             return Result.Failure(GamingErrors.PrizeTierNotAllowed);
         }
 
-        DrawPrizePoolItem? existing = _prizePool.FirstOrDefault(item => item.PlayTypeCode == playType && item.Tier == tier);
+        DrawPrizePoolItem? existing = _prizePool.Find(item => item.PlayTypeCode == playType && item.Tier == tier);
         if (existing is null)
         {
             _prizePool.Add(DrawPrizePoolItem.Create(TenantId, Id, playType, tier, option));
@@ -287,7 +287,7 @@ public sealed class Draw : Entity
     /// </summary>
     public PrizeOption? FindPrizeOption(PlayTypeCode playType, PrizeTier tier)
     {
-        return _prizePool.FirstOrDefault(item => item.PlayTypeCode == playType && item.Tier == tier)?.Option;
+        return _prizePool.Find(item => item.PlayTypeCode == playType && item.Tier == tier)?.Option;
     }
 
     /// <summary>
