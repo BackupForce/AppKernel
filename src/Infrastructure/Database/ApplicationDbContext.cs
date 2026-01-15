@@ -30,6 +30,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<Prize> Prizes { get; set; }
     public DbSet<PrizeAward> PrizeAwards { get; set; }
     public DbSet<RedeemRecord> RedeemRecords { get; set; }
+    public DbSet<TenantGameEntitlement> TenantGameEntitlements { get; set; }
+    public DbSet<TenantPlayEntitlement> TenantPlayEntitlements { get; set; }
     public DbSet<ResourceNode> ResourceNodes { get; set; }
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<PermissionAssignment> PermissionAssignments { get; set; }

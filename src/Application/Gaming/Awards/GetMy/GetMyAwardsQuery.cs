@@ -6,4 +6,4 @@ namespace Application.Gaming.Awards.GetMy;
 /// <summary>
 /// 取得會員得獎列表查詢。
 /// </summary>
-public sealed record GetMyAwardsQuery(string? Status) : IQuery<IReadOnlyCollection<PrizeAwardDto>>;
+public sealed record GetMyAwardsQuery(string GameCode, string? Status) : IQuery<IReadOnlyCollection<PrizeAwardDto>>;

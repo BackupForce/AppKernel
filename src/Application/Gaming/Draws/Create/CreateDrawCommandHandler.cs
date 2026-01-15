@@ -20,7 +20,8 @@ internal sealed class CreateDrawCommandHandler(
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
     ILottery539RngService rngService,
-    IServerSeedStore serverSeedStore) : ICommandHandler<CreateDrawCommand, Guid>
+    IServerSeedStore serverSeedStore,
+    IEntitlementChecker entitlementChecker) : ICommandHandler<CreateDrawCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateDrawCommand request, CancellationToken cancellationToken)
     {
@@ -45,6 +46,15 @@ internal sealed class CreateDrawCommandHandler(
         if (gameCodeResult.IsFailure)
         {
             return Result.Failure<Guid>(gameCodeResult.Error);
+        }
+
+        Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
+            tenantContext.TenantId,
+            gameCodeResult.Value,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure<Guid>(entitlementResult.Error);
         }
 
         Result<Draw> drawResult = Draw.Create(
@@ -74,6 +84,16 @@ internal sealed class CreateDrawCommandHandler(
                 if (playTypeResult.IsFailure)
                 {
                     return Result.Failure<Guid>(playTypeResult.Error);
+                }
+
+                Result playEntitlementResult = await entitlementChecker.EnsurePlayEnabledAsync(
+                    tenantContext.TenantId,
+                    draw.GameCode,
+                    playTypeResult.Value,
+                    cancellationToken);
+                if (playEntitlementResult.IsFailure)
+                {
+                    return Result.Failure<Guid>(playEntitlementResult.Error);
                 }
 
                 playTypes.Add(playTypeResult.Value);

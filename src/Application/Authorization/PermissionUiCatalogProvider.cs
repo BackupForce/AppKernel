@@ -248,6 +248,70 @@ public sealed class PermissionUiCatalogProvider
                     false)
             });
 
+        ModuleGroupDto gamingModule = new ModuleGroupDto(
+            "GAMING",
+            "遊戲管理",
+            "GAMING:*",
+            new List<PermissionItemDto>
+            {
+                new PermissionItemDto(
+                    "GAMING:CATALOG:VIEW",
+                    "檢視遊戲目錄",
+                    "檢視平台遊戲與玩法清單",
+                    10,
+                    false,
+                    false),
+                new PermissionItemDto(
+                    "GAMING:ENTITLEMENT:MANAGE",
+                    "管理租戶啟用",
+                    "啟用或停用租戶遊戲/玩法",
+                    20,
+                    false,
+                    false),
+                new PermissionItemDto(
+                    "GAMING:DRAW:CREATE",
+                    "建立期數",
+                    "建立遊戲期數",
+                    30,
+                    false,
+                    false),
+                new PermissionItemDto(
+                    "GAMING:DRAW:EXECUTE",
+                    "執行開獎",
+                    "執行期數開獎",
+                    40,
+                    true,
+                    false),
+                new PermissionItemDto(
+                    "GAMING:DRAW:SETTLE",
+                    "結算開獎",
+                    "結算期數",
+                    50,
+                    true,
+                    false),
+                new PermissionItemDto(
+                    "GAMING:DRAW:MANUAL-CLOSE",
+                    "手動封盤",
+                    "手動封盤期數",
+                    60,
+                    true,
+                    false),
+                new PermissionItemDto(
+                    "GAMING:DRAW:REOPEN",
+                    "重新開盤",
+                    "重新開盤期數",
+                    70,
+                    true,
+                    false),
+                new PermissionItemDto(
+                    "GAMING:DRAW:UPDATE-ALLOWED-TEMPLATES",
+                    "更新期數允許票種",
+                    "更新期數允許票種",
+                    80,
+                    true,
+                    false)
+            });
+
         return new ScopeGroupDto(
             PermissionScope.Tenant,
             "租戶",
@@ -259,7 +323,8 @@ public sealed class PermissionUiCatalogProvider
                 memberAssetsModule,
                 memberAuditModule,
                 pointsModule,
-                rolesModule
+                rolesModule,
+                gamingModule
             });
     }
 

@@ -28,7 +28,8 @@ internal sealed class PlaceTicketCommandHandler(
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
     IUserContext userContext,
-    ILottery539RngService rngService) : ICommandHandler<PlaceTicketCommand, Guid>
+    ILottery539RngService rngService,
+    IEntitlementChecker entitlementChecker) : ICommandHandler<PlaceTicketCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(PlaceTicketCommand request, CancellationToken cancellationToken)
     {
@@ -45,6 +46,16 @@ internal sealed class PlaceTicketCommandHandler(
         }
 
         PlayTypeCode playTypeCode = playTypeResult.Value;
+        Result entitlementResult = await entitlementChecker.EnsurePlayEnabledAsync(
+            tenantContext.TenantId,
+            draw.GameCode,
+            playTypeCode,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure<Guid>(entitlementResult.Error);
+        }
+
         PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
         if (!registry.GetAllowedPlayTypes(draw.GameCode).Contains(playTypeCode))
         {

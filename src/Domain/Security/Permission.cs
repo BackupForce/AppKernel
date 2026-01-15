@@ -150,6 +150,35 @@ public sealed class Permission
         };
     }
 
+    /// <summary>
+    /// 遊戲模組權限定義
+    /// </summary>
+    public static class Gaming
+    {
+        public static readonly Permission All = new(200, "GAMING:*", "遊戲模組所有權限", PermissionScope.Tenant);
+        public static readonly Permission CatalogView = new(201, "GAMING:CATALOG:VIEW", "檢視遊戲目錄", PermissionScope.Tenant);
+        public static readonly Permission EntitlementManage = new(202, "GAMING:ENTITLEMENT:MANAGE", "管理租戶遊戲啟用", PermissionScope.Tenant);
+        public static readonly Permission DrawCreate = new(210, "GAMING:DRAW:CREATE", "建立期數", PermissionScope.Tenant);
+        public static readonly Permission DrawExecute = new(211, "GAMING:DRAW:EXECUTE", "執行開獎", PermissionScope.Tenant);
+        public static readonly Permission DrawSettle = new(212, "GAMING:DRAW:SETTLE", "結算開獎", PermissionScope.Tenant);
+        public static readonly Permission DrawManualClose = new(213, "GAMING:DRAW:MANUAL-CLOSE", "手動封盤", PermissionScope.Tenant);
+        public static readonly Permission DrawReopen = new(214, "GAMING:DRAW:REOPEN", "重新開盤", PermissionScope.Tenant);
+        public static readonly Permission DrawUpdateAllowedTemplates = new(215, "GAMING:DRAW:UPDATE-ALLOWED-TEMPLATES", "更新期數允許票種", PermissionScope.Tenant);
+
+        public static IEnumerable<Permission> AllPermissions => new[]
+        {
+            All,
+            CatalogView,
+            EntitlementManage,
+            DrawCreate,
+            DrawExecute,
+            DrawSettle,
+            DrawManualClose,
+            DrawReopen,
+            DrawUpdateAllowedTemplates
+        };
+    }
+
     public static Permission CreateForRole(string name, string description, int roleId)
     {
         // 中文註解：建立屬於角色的權限，描述預設為空字串以符合資料表不允許 null 的限制。

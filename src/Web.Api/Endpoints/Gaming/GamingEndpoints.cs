@@ -1,6 +1,7 @@
 ﻿using Application.Abstractions.Authorization;
 using Application.Gaming.Awards.GetMy;
 using Application.Gaming.Awards.Redeem;
+using Application.Gaming.Catalog;
 using Application.Gaming.Draws.Create;
 using Application.Gaming.Draws.Execute;
 using Application.Gaming.Draws.GetById;
@@ -10,6 +11,7 @@ using Application.Gaming.Draws.Reopen;
 using Application.Gaming.Draws.Settle;
 using Application.Gaming.Draws.AllowedTicketTemplates.Get;
 using Application.Gaming.Draws.AllowedTicketTemplates.Update;
+using Application.Gaming.Entitlements;
 using Application.Gaming.Prizes.Activate;
 using Application.Gaming.Prizes.Create;
 using Application.Gaming.Prizes.Deactivate;
@@ -24,6 +26,8 @@ using Application.Gaming.TicketTemplates.GetList;
 using Application.Gaming.TicketTemplates.Update;
 using Application.Gaming.Dtos;
 using Asp.Versioning;
+using Application.Abstractions.Gaming;
+using Domain.Security;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Web.Api.Common;
@@ -49,6 +53,8 @@ public sealed class GamingEndpoints : IEndpoint
             .WithTags("Gaming");
 
         MapDrawEndpoints(group);
+        MapCatalogEndpoints(group);
+        MapEntitlementEndpoints(group);
         MapPrizeEndpoints(group);
         MapTicketTemplateEndpoints(group);
         MapMemberEndpoints(group);
@@ -82,6 +88,8 @@ public sealed class GamingEndpoints : IEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
+            .RequireAuthorization(Permission.Gaming.DrawCreate.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces<Guid>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("CreateGameDraw");
@@ -90,7 +98,7 @@ public sealed class GamingEndpoints : IEndpoint
                 "/games/{gameCode}/draws",
                 async (string gameCode, [AsParameters] GetDrawsRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    GetOpenDrawsQuery query = new GetOpenDrawsQuery(request.Status);
+                    GetOpenDrawsQuery query = new GetOpenDrawsQuery(gameCode, request.Status);
                     return await UseCaseInvoker.Send<GetOpenDrawsQuery, IReadOnlyCollection<DrawSummaryDto>>(
                         query,
                         sender,
@@ -144,6 +152,8 @@ public sealed class GamingEndpoints : IEndpoint
                     ExecuteDrawCommand command = new ExecuteDrawCommand(drawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
+            .RequireAuthorization(Permission.Gaming.DrawExecute.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ExecuteGameDraw");
@@ -155,6 +165,8 @@ public sealed class GamingEndpoints : IEndpoint
                     SettleDrawCommand command = new SettleDrawCommand(drawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
+            .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("SettleGameDraw");
@@ -166,6 +178,8 @@ public sealed class GamingEndpoints : IEndpoint
                     CloseDrawManuallyCommand command = new CloseDrawManuallyCommand(drawId, request.Reason);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
+            .RequireAuthorization(Permission.Gaming.DrawManualClose.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("CloseGameDrawManually");
@@ -177,6 +191,8 @@ public sealed class GamingEndpoints : IEndpoint
                     ReopenDrawCommand command = new ReopenDrawCommand(drawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
+            .RequireAuthorization(Permission.Gaming.DrawReopen.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ReopenGameDraw");
@@ -204,10 +220,102 @@ public sealed class GamingEndpoints : IEndpoint
                         request.TemplateIds);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
+            .RequireAuthorization(Permission.Gaming.DrawUpdateAllowedTemplates.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("UpdateGameDrawAllowedTicketTemplates");
 
+    }
+
+    private static void MapCatalogEndpoints(RouteGroupBuilder group)
+    {
+        group.MapGet(
+                "/catalog/games",
+                async (ISender sender, CancellationToken ct) =>
+                {
+                    GetGameCatalogQuery query = new GetGameCatalogQuery();
+                    return await UseCaseInvoker.Send<GetGameCatalogQuery, IReadOnlyCollection<GameCatalogDto>>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Gaming.CatalogView.Name)
+            .Produces<IReadOnlyCollection<GameCatalogDto>>(StatusCodes.Status200OK)
+            .WithName("GetGameCatalog");
+    }
+
+    private static void MapEntitlementEndpoints(RouteGroupBuilder group)
+    {
+        group.MapGet(
+                "/entitlements",
+                async (Guid tenantId, ISender sender, CancellationToken ct) =>
+                {
+                    GetTenantEntitlementsQuery query = new GetTenantEntitlementsQuery(tenantId);
+                    return await UseCaseInvoker.Send<GetTenantEntitlementsQuery, TenantEntitlementsDto>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Gaming.EntitlementManage.Name)
+            .Produces<TenantEntitlementsDto>(StatusCodes.Status200OK)
+            .WithName("GetTenantEntitlements");
+
+        group.MapPatch(
+                "/entitlements/games/{gameCode}/enable",
+                async (Guid tenantId, string gameCode, ISender sender, CancellationToken ct) =>
+                {
+                    EnableTenantGameEntitlementCommand command = new EnableTenantGameEntitlementCommand(tenantId, gameCode);
+                    return await UseCaseInvoker.Send(command, sender, ct);
+                })
+            .RequireAuthorization(Permission.Gaming.EntitlementManage.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
+            .Produces(StatusCodes.Status200OK)
+            .WithName("EnableTenantGameEntitlement");
+
+        group.MapPatch(
+                "/entitlements/games/{gameCode}/disable",
+                async (Guid tenantId, string gameCode, ISender sender, CancellationToken ct) =>
+                {
+                    DisableTenantGameEntitlementCommand command = new DisableTenantGameEntitlementCommand(tenantId, gameCode);
+                    return await UseCaseInvoker.Send(command, sender, ct);
+                })
+            .RequireAuthorization(Permission.Gaming.EntitlementManage.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
+            .Produces(StatusCodes.Status200OK)
+            .WithName("DisableTenantGameEntitlement");
+
+        group.MapPatch(
+                "/entitlements/games/{gameCode}/plays/{playTypeCode}/enable",
+                async (Guid tenantId, string gameCode, string playTypeCode, ISender sender, CancellationToken ct) =>
+                {
+                    EnableTenantPlayEntitlementCommand command = new EnableTenantPlayEntitlementCommand(
+                        tenantId,
+                        gameCode,
+                        playTypeCode);
+                    return await UseCaseInvoker.Send(command, sender, ct);
+                })
+            .RequireAuthorization(Permission.Gaming.EntitlementManage.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
+            .Produces(StatusCodes.Status200OK)
+            .WithName("EnableTenantPlayEntitlement");
+
+        group.MapPatch(
+                "/entitlements/games/{gameCode}/plays/{playTypeCode}/disable",
+                async (Guid tenantId, string gameCode, string playTypeCode, ISender sender, CancellationToken ct) =>
+                {
+                    DisableTenantPlayEntitlementCommand command = new DisableTenantPlayEntitlementCommand(
+                        tenantId,
+                        gameCode,
+                        playTypeCode);
+                    return await UseCaseInvoker.Send(command, sender, ct);
+                })
+            .RequireAuthorization(Permission.Gaming.EntitlementManage.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
+            .Produces(StatusCodes.Status200OK)
+            .WithName("DisableTenantPlayEntitlement");
     }
 
     private static void MapMemberEndpoints(RouteGroupBuilder group)
@@ -216,7 +324,7 @@ public sealed class GamingEndpoints : IEndpoint
                 "/games/{gameCode}/members/me/tickets",
                 async (string gameCode, [AsParameters] GetMyTicketsRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    GetMyTicketsQuery query = new GetMyTicketsQuery(request.From, request.To);
+                    GetMyTicketsQuery query = new GetMyTicketsQuery(gameCode, request.From, request.To);
                     return await UseCaseInvoker.Send<GetMyTicketsQuery, IReadOnlyCollection<TicketSummaryDto>>(
                         query,
                         sender,
@@ -231,7 +339,7 @@ public sealed class GamingEndpoints : IEndpoint
                 "/games/{gameCode}/members/me/awards",
                 async (string gameCode, [AsParameters] GetMyAwardsRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    GetMyAwardsQuery query = new GetMyAwardsQuery(request.Status);
+                    GetMyAwardsQuery query = new GetMyAwardsQuery(gameCode, request.Status);
                     return await UseCaseInvoker.Send<GetMyAwardsQuery, IReadOnlyCollection<PrizeAwardDto>>(
                         query,
                         sender,

@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Domain.Gaming;
 using Domain.Gaming.Services;
@@ -19,7 +20,8 @@ internal sealed class SettleDrawCommandHandler(
     IPrizeAwardRepository prizeAwardRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
-    ITenantContext tenantContext) : ICommandHandler<SettleDrawCommand>
+    ITenantContext tenantContext,
+    IEntitlementChecker entitlementChecker) : ICommandHandler<SettleDrawCommand>
 {
     public async Task<Result> Handle(SettleDrawCommand request, CancellationToken cancellationToken)
     {
@@ -27,6 +29,15 @@ internal sealed class SettleDrawCommandHandler(
         if (draw is null)
         {
             return Result.Failure(GamingErrors.DrawNotFound);
+        }
+
+        Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
+            tenantContext.TenantId,
+            draw.GameCode,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure(entitlementResult.Error);
         }
 
         if (draw.Status != DrawStatus.Settled)

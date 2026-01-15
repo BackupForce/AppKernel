@@ -1,7 +1,9 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Gaming.Dtos;
+using Domain.Gaming;
 using Dapper;
 using SharedKernel;
 
@@ -10,12 +12,28 @@ namespace Application.Gaming.Draws.GetOpen;
 internal sealed class GetOpenDrawsQueryHandler(
     IDbConnectionFactory dbConnectionFactory,
     ITenantContext tenantContext,
-    IDateTimeProvider dateTimeProvider) : IQueryHandler<GetOpenDrawsQuery, IReadOnlyCollection<DrawSummaryDto>>
+    IDateTimeProvider dateTimeProvider,
+    IEntitlementChecker entitlementChecker) : IQueryHandler<GetOpenDrawsQuery, IReadOnlyCollection<DrawSummaryDto>>
 {
     public async Task<Result<IReadOnlyCollection<DrawSummaryDto>>> Handle(
         GetOpenDrawsQuery request,
         CancellationToken cancellationToken)
     {
+        Result<GameCode> gameCodeResult = GameCode.Create(request.GameCode);
+        if (gameCodeResult.IsFailure)
+        {
+            return Result.Failure<IReadOnlyCollection<DrawSummaryDto>>(gameCodeResult.Error);
+        }
+
+        Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
+            tenantContext.TenantId,
+            gameCodeResult.Value,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure<IReadOnlyCollection<DrawSummaryDto>>(entitlementResult.Error);
+        }
+
         const string sql = """
             SELECT
                 d.id AS Id,
@@ -35,6 +53,7 @@ internal sealed class GetOpenDrawsQueryHandler(
                 END AS Status
             FROM gaming.draws d
             WHERE d.tenant_id = @TenantId
+              AND d.game_code = @GameCode
               AND d.status <> 4
               AND (
                 @Status IS NULL
@@ -48,7 +67,13 @@ internal sealed class GetOpenDrawsQueryHandler(
         string? status = string.IsNullOrWhiteSpace(request.Status) ? "SalesOpen" : request.Status.Trim();
         IEnumerable<DrawSummaryDto> items = await connection.QueryAsync<DrawSummaryDto>(
             sql,
-            new { tenantContext.TenantId, Now = dateTimeProvider.UtcNow, Status = status });
+            new
+            {
+                tenantContext.TenantId,
+                GameCode = gameCodeResult.Value.Value,
+                Now = dateTimeProvider.UtcNow,
+                Status = status
+            });
 
         return items.ToList();
     }

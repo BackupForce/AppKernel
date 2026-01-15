@@ -1,5 +1,6 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Domain.Gaming;
 using SharedKernel;
@@ -18,7 +19,8 @@ internal sealed class UpdateDrawAllowedTicketTemplatesCommandHandler(
     IDrawAllowedTicketTemplateRepository drawAllowedTicketTemplateRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
-    ITenantContext tenantContext) : ICommandHandler<UpdateDrawAllowedTicketTemplatesCommand>
+    ITenantContext tenantContext,
+    IEntitlementChecker entitlementChecker) : ICommandHandler<UpdateDrawAllowedTicketTemplatesCommand>
 {
     public async Task<Result> Handle(UpdateDrawAllowedTicketTemplatesCommand request, CancellationToken cancellationToken)
     {
@@ -26,6 +28,15 @@ internal sealed class UpdateDrawAllowedTicketTemplatesCommandHandler(
         if (draw is null)
         {
             return Result.Failure(GamingErrors.DrawNotFound);
+        }
+
+        Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
+            tenantContext.TenantId,
+            draw.GameCode,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure(entitlementResult.Error);
         }
 
         HashSet<Guid> distinctIds = new HashSet<Guid>(request.TemplateIds);

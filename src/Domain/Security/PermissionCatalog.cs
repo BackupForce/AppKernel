@@ -75,6 +75,7 @@ public static class PermissionCatalog
         Add(nameof(Permission.Roles), Permission.Roles.AllPermissions);
         Add(nameof(Permission.Tenants), Permission.Tenants.AllPermissions);
         Add(nameof(Permission.Points), Permission.Points.AllPermissions);
+        Add(nameof(Permission.Gaming), Permission.Gaming.AllPermissions);
 
         return permissions;
     }

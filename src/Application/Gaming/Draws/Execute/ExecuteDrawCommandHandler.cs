@@ -19,7 +19,8 @@ internal sealed class ExecuteDrawCommandHandler(
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
     ILottery539RngService rngService,
-    IServerSeedStore serverSeedStore) : ICommandHandler<ExecuteDrawCommand>
+    IServerSeedStore serverSeedStore,
+    IEntitlementChecker entitlementChecker) : ICommandHandler<ExecuteDrawCommand>
 {
     public async Task<Result> Handle(ExecuteDrawCommand request, CancellationToken cancellationToken)
     {
@@ -27,6 +28,15 @@ internal sealed class ExecuteDrawCommandHandler(
         if (draw is null)
         {
             return Result.Failure(GamingErrors.DrawNotFound);
+        }
+
+        Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
+            tenantContext.TenantId,
+            draw.GameCode,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure(entitlementResult.Error);
         }
 
         if (draw.Status == DrawStatus.Settled)

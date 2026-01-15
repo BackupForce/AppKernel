@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Gaming.Dtos;
 using Domain.Gaming;
@@ -14,7 +15,8 @@ internal sealed class GetMyTicketsQueryHandler(
     IDbConnectionFactory dbConnectionFactory,
     IMemberRepository memberRepository,
     ITenantContext tenantContext,
-    IUserContext userContext) : IQueryHandler<GetMyTicketsQuery, IReadOnlyCollection<TicketSummaryDto>>
+    IUserContext userContext,
+    IEntitlementChecker entitlementChecker) : IQueryHandler<GetMyTicketsQuery, IReadOnlyCollection<TicketSummaryDto>>
 {
     private sealed record TicketLineRow(
         Guid TicketId,
@@ -31,6 +33,21 @@ internal sealed class GetMyTicketsQueryHandler(
         GetMyTicketsQuery request,
         CancellationToken cancellationToken)
     {
+        Result<GameCode> gameCodeResult = GameCode.Create(request.GameCode);
+        if (gameCodeResult.IsFailure)
+        {
+            return Result.Failure<IReadOnlyCollection<TicketSummaryDto>>(gameCodeResult.Error);
+        }
+
+        Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
+            tenantContext.TenantId,
+            gameCodeResult.Value,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure<IReadOnlyCollection<TicketSummaryDto>>(entitlementResult.Error);
+        }
+
         Member? member = await memberRepository.GetByUserIdAsync(tenantContext.TenantId, userContext.UserId, cancellationToken);
         if (member is null)
         {
@@ -53,6 +70,7 @@ internal sealed class GetMyTicketsQueryHandler(
             INNER JOIN gaming.draws d ON d.id = t.draw_id
             WHERE t.tenant_id = @TenantId
               AND t.member_id = @MemberId
+              AND t.game_code = @GameCode
               AND (@From IS NULL OR t.created_at >= @From)
               AND (@To IS NULL OR t.created_at <= @To)
             ORDER BY t.created_at DESC, l.line_index ASC
@@ -66,6 +84,7 @@ internal sealed class GetMyTicketsQueryHandler(
             {
                 tenantContext.TenantId,
                 MemberId = member.Id,
+                GameCode = gameCodeResult.Value.Value,
                 request.From,
                 request.To
             });

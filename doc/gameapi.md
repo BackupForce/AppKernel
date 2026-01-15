@@ -9,7 +9,41 @@
   - 預設需要 `TenantUser` Policy。
   - 標示 `AllowAnonymous` 的端點可匿名呼叫。
   - 會員操作端點需 `Member` Policy（如「我的票券／得獎／兌獎／下注」）。
+- **時間格式**：所有時間欄位皆為 **UTC**，格式為 ISO 8601（`2024-01-01T00:00:00Z`）。
 - **錯誤格式**：`application/problem+json`（RFC 7807）。
+
+## 權限與範圍 (Permission + Scope + Entitlement)
+
+所有涉及 Game/Play 的操作需同時滿足：
+
+1. **Entitlement**：租戶已啟用遊戲 / 玩法。
+2. **Permission**：使用者具有對應動作權限。
+3. **Scope**：權限範圍涵蓋到指定遊戲 / 玩法（資源節點樹支援父節點涵蓋子節點）。
+
+### Scope 範例（資源節點）
+
+- TenantRoot
+  - `game:{gameCode}`
+    - `play:{gameCode}:{playTypeCode}`
+
+> 權限若綁定到 `game:{gameCode}` 節點，將涵蓋該遊戲下所有玩法。
+
+### 主要權限代碼
+
+- `GAMING:CATALOG:VIEW`：檢視遊戲目錄
+- `GAMING:ENTITLEMENT:MANAGE`：管理租戶啟用
+- `GAMING:DRAW:CREATE`：建立期數
+- `GAMING:DRAW:EXECUTE`：執行開獎
+- `GAMING:DRAW:SETTLE`：結算開獎
+- `GAMING:DRAW:MANUAL-CLOSE`：手動封盤
+- `GAMING:DRAW:REOPEN`：重新開盤
+- `GAMING:DRAW:UPDATE-ALLOWED-TEMPLATES`：更新期數允許票種
+
+### Entitlement 拒絕行為
+
+- 若租戶未啟用指定遊戲 / 玩法，將回傳 **403 Forbidden**，錯誤碼：
+  - `Gaming.GameNotEntitled`
+  - `Gaming.PlayNotEntitled`
 
 ## 共用枚舉/狀態
 
@@ -22,6 +56,80 @@
 ### TicketTemplateType
 `Standard` / `Promo` / `Free` / `Vip` / `Event`
 
+## Catalog
+
+### 取得平台遊戲/玩法清單
+`GET /catalog/games`
+
+**Permission**：`GAMING:CATALOG:VIEW`
+
+**Response**
+```json
+[
+  {
+    "gameCode": "LOTTERY539",
+    "playTypeCodes": ["BASIC"]
+  }
+]
+```
+
+## Tenant Entitlement
+
+### 查詢租戶已啟用遊戲/玩法
+`GET /entitlements`
+
+**Permission**：`GAMING:ENTITLEMENT:MANAGE`
+
+**Response**
+```json
+{
+  "enabledGameCodes": ["LOTTERY539"],
+  "enabledPlayTypesByGame": {
+    "LOTTERY539": ["BASIC"]
+  }
+}
+```
+
+---
+
+### 啟用租戶遊戲
+`PATCH /entitlements/games/{gameCode}/enable`
+
+**Permission**：`GAMING:ENTITLEMENT:MANAGE`
+
+**Response**
+- `200 OK`
+
+---
+
+### 停用租戶遊戲
+`PATCH /entitlements/games/{gameCode}/disable`
+
+**Permission**：`GAMING:ENTITLEMENT:MANAGE`
+
+**Response**
+- `200 OK`
+
+---
+
+### 啟用租戶玩法
+`PATCH /entitlements/games/{gameCode}/plays/{playTypeCode}/enable`
+
+**Permission**：`GAMING:ENTITLEMENT:MANAGE`
+
+**Response**
+- `200 OK`
+
+---
+
+### 停用租戶玩法
+`PATCH /entitlements/games/{gameCode}/plays/{playTypeCode}/disable`
+
+**Permission**：`GAMING:ENTITLEMENT:MANAGE`
+
+**Response**
+- `200 OK`
+
 ## 期數 (Draws)
 
 ### 建立期數
@@ -29,6 +137,12 @@
 
 - `gameCode` 代表遊戲代碼（例如 `LOTTERY539`）。
 - 若 Request Body 內有 `gameCode`，需與路徑一致。
+
+**Permission**：`GAMING:DRAW:CREATE`
+
+**Entitlement**：
+- 租戶必須啟用該遊戲。
+- `enabledPlayTypes` 必須為該遊戲的 Catalog 玩法，且租戶已啟用該玩法。
 
 **Request Body**
 ```json
@@ -54,11 +168,14 @@
 
 - `status` 可省略，預設為 `SalesOpen`。
 
+**Entitlement**：租戶必須啟用該遊戲。
+
 **Response**
 ```json
 [
   {
     "id": "guid",
+    "gameCode": "LOTTERY539",
     "salesStartAt": "2024-01-01T00:00:00Z",
     "salesCloseAt": "2024-01-02T00:00:00Z",
     "drawAt": "2024-01-02T01:00:00Z",
@@ -72,10 +189,13 @@
 ### 取得期數詳情
 `GET /games/{gameCode}/draws/{drawId}`
 
+**Entitlement**：租戶必須啟用該遊戲。
+
 **Response**
 ```json
 {
   "id": "guid",
+  "gameCode": "LOTTERY539",
   "salesStartAt": "2024-01-01T00:00:00Z",
   "salesCloseAt": "2024-01-02T00:00:00Z",
   "drawAt": "2024-01-02T01:00:00Z",
@@ -96,6 +216,10 @@
 
 ### 下注
 `POST /games/{gameCode}/draws/{drawId}/tickets`
+
+**Entitlement**：
+- 租戶必須啟用該遊戲。
+- 該玩法必須在租戶啟用範圍內，且在 Draw.EnabledPlayTypes 內。
 
 **Request Body**
 ```json
@@ -124,6 +248,10 @@
 ### 開獎 (execute)
 `POST /games/{gameCode}/draws/{drawId}/execute`
 
+**Permission**：`GAMING:DRAW:EXECUTE`
+
+**Entitlement**：租戶必須啟用該遊戲。
+
 **Response**
 - `200 OK`
 
@@ -132,6 +260,10 @@
 ### 結算 (settle)
 `POST /games/{gameCode}/draws/{drawId}/settle`
 
+**Permission**：`GAMING:DRAW:SETTLE`
+
+**Entitlement**：租戶必須啟用該遊戲。
+
 **Response**
 - `200 OK`
 
@@ -139,6 +271,10 @@
 
 ### 手動封盤
 `POST /games/{gameCode}/draws/{drawId}/manual-close`
+
+**Permission**：`GAMING:DRAW:MANUAL-CLOSE`
+
+**Entitlement**：租戶必須啟用該遊戲。
 
 **Request Body**
 ```json
@@ -155,6 +291,10 @@
 ### 重新開盤
 `POST /games/{gameCode}/draws/{drawId}/reopen`
 
+**Permission**：`GAMING:DRAW:REOPEN`
+
+**Entitlement**：租戶必須啟用該遊戲。
+
 **Response**
 - `200 OK`
 
@@ -162,6 +302,8 @@
 
 ### 取得期數允許票種清單
 `GET /games/{gameCode}/draws/{drawId}/allowed-ticket-templates`
+
+**Entitlement**：租戶必須啟用該遊戲。
 
 **Response**
 ```json
@@ -182,52 +324,14 @@
 ### 更新期數允許票種清單
 `PUT /games/{gameCode}/draws/{drawId}/allowed-ticket-templates`
 
+**Permission**：`GAMING:DRAW:UPDATE-ALLOWED-TEMPLATES`
+
+**Entitlement**：租戶必須啟用該遊戲。
+
 **Request Body**
 ```json
 {
   "templateIds": ["guid", "guid"]
-}
-```
-
-**Response**
-- `200 OK`
-
----
-
-### 取得期數獎項對應
-`GET /games/{gameCode}/draws/{drawId}/prize-mappings`
-
-**Response**
-```json
-[
-  {
-    "matchCount": 5,
-    "prizes": [
-      {
-        "prizeId": "guid",
-        "prizeName": "頭獎",
-        "prizeCost": 1000,
-        "isActive": true
-      }
-    ]
-  }
-]
-```
-
----
-
-### 更新期數獎項對應
-`PUT /games/{gameCode}/draws/{drawId}/prize-mappings`
-
-**Request Body**
-```json
-{
-  "mappings": [
-    {
-      "matchCount": 5,
-      "prizeIds": ["guid", "guid"]
-    }
-  ]
 }
 ```
 
@@ -239,12 +343,16 @@
 ### 取得我的票券
 `GET /games/{gameCode}/members/me/tickets?from=2024-01-01T00:00:00Z&to=2024-12-31T23:59:59Z`
 
+**Entitlement**：租戶必須啟用該遊戲。
+
 **Response**
 ```json
 [
   {
     "ticketId": "guid",
     "drawId": "guid",
+    "gameCode": "LOTTERY539",
+    "playTypeCode": "BASIC",
     "totalCost": 100,
     "createdAt": "2024-01-01T00:00:00Z",
     "lines": [
@@ -265,6 +373,8 @@
 
 - `status` 可省略；可用值：`awarded` / `redeemed`。
 
+**Entitlement**：租戶必須啟用該遊戲。
+
 **Response**
 ```json
 [
@@ -274,20 +384,18 @@
     "ticketId": "guid",
     "lineIndex": 0,
     "matchedCount": 5,
+    "gameCode": "LOTTERY539",
+    "playTypeCode": "BASIC",
+    "prizeTier": "Tier1",
     "prizeId": "guid",
     "prizeName": "頭獎",
+    "prizeCost": 1000,
+    "prizeRedeemValidDays": 30,
+    "prizeDescription": "獎品描述",
     "status": "Redeemed",
     "awardedAt": "2024-01-02T01:00:00Z",
     "expiresAt": "2024-02-01T01:00:00Z",
-    "redeemedAt": "2024-01-05T01:00:00Z",
-    "costSnapshot": 1000,
-    "options": [
-      {
-        "prizeId": "guid",
-        "prizeName": "頭獎",
-        "prizeCost": 1000
-      }
-    ]
+    "redeemedAt": "2024-01-05T01:00:00Z"
   }
 ]
 ```
@@ -378,83 +486,6 @@
 
 ### 停用獎品
 `PATCH /prizes/{prizeId}/deactivate`
-
-**Response**
-- `200 OK`
-
-## 中獎規則 (Prize Rules)
-
-### 取得中獎規則清單
-`GET /games/{gameCode}/prize-rules`
-
-**Response**
-```json
-[
-  {
-    "id": "guid",
-    "matchCount": 5,
-    "prizeId": "guid",
-    "prizeName": "頭獎",
-    "isActive": true,
-    "effectiveFrom": "2024-01-01T00:00:00Z",
-    "effectiveTo": "2024-12-31T23:59:59Z",
-    "redeemValidDays": 30
-  }
-]
-```
-
----
-
-### 建立中獎規則
-`POST /games/{gameCode}/prize-rules`
-
-**Request Body**
-```json
-{
-  "matchCount": 5,
-  "prizeId": "guid",
-  "effectiveFrom": "2024-01-01T00:00:00Z",
-  "effectiveTo": "2024-12-31T23:59:59Z",
-  "redeemValidDays": 30
-}
-```
-
-**Response**
-```json
-"guid"
-```
-
----
-
-### 更新中獎規則
-`PUT /games/{gameCode}/prize-rules/{ruleId}`
-
-**Request Body**
-```json
-{
-  "matchCount": 5,
-  "prizeId": "guid",
-  "effectiveFrom": "2024-01-01T00:00:00Z",
-  "effectiveTo": "2024-12-31T23:59:59Z",
-  "redeemValidDays": 30
-}
-```
-
-**Response**
-- `200 OK`
-
----
-
-### 啟用中獎規則
-`PATCH /games/{gameCode}/prize-rules/{ruleId}/activate`
-
-**Response**
-- `200 OK`
-
----
-
-### 停用中獎規則
-`PATCH /games/{gameCode}/prize-rules/{ruleId}/deactivate`
 
 **Response**
 - `200 OK`

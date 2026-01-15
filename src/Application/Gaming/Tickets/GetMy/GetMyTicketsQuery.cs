@@ -6,4 +6,4 @@ namespace Application.Gaming.Tickets.GetMy;
 /// <summary>
 /// 取得會員票券列表查詢。
 /// </summary>
-public sealed record GetMyTicketsQuery(DateTime? From, DateTime? To) : IQuery<IReadOnlyCollection<TicketSummaryDto>>;
+public sealed record GetMyTicketsQuery(string GameCode, DateTime? From, DateTime? To) : IQuery<IReadOnlyCollection<TicketSummaryDto>>;

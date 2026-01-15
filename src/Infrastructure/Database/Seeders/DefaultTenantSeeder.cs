@@ -6,6 +6,7 @@ using Application.Abstractions.Infrastructure;
 using Domain.Security;
 using Domain.Tenants;
 using Domain.Users;
+using Domain.Gaming;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -88,6 +89,8 @@ public sealed class DefaultTenantSeeder : IDataSeeder
         await EnsureSampleResourceTreeAsync(tenant.Id, rootNode.Id);
 
         await EnsureDefaultTenantAdminAsync(tenant);
+
+        await EnsureDefaultTenantEntitlementsAsync(tenant.Id);
     }
 
     private async Task EnsureSampleResourceTreeAsync(Guid tenantId, Guid rootNodeId)
@@ -249,6 +252,54 @@ public sealed class DefaultTenantSeeder : IDataSeeder
 
         await _db.Set<Permission>().AddRangeAsync(toAdd);
         await _db.SaveChangesAsync();
+    }
+
+    private async Task EnsureDefaultTenantEntitlementsAsync(Guid tenantId)
+    {
+        bool hasGameEntitlement = await _db.TenantGameEntitlements
+            .AnyAsync(entitlement => entitlement.TenantId == tenantId);
+        if (hasGameEntitlement)
+        {
+            return;
+        }
+
+        DateTime now = DateTime.UtcNow;
+        TenantGameEntitlement gameEntitlement = TenantGameEntitlement.Create(tenantId, GameCodes.Lottery539, now);
+        TenantPlayEntitlement playEntitlement = TenantPlayEntitlement.Create(tenantId, GameCodes.Lottery539, PlayTypeCodes.Basic, now);
+
+        await _db.TenantGameEntitlements.AddAsync(gameEntitlement);
+        await _db.TenantPlayEntitlements.AddAsync(playEntitlement);
+
+        ResourceNode? rootNode = await _db.ResourceNodes
+            .FirstOrDefaultAsync(node => node.TenantId == tenantId && node.ParentId == null);
+
+        if (rootNode is null)
+        {
+            rootNode = ResourceNode.Create("Tenant Root", "root", tenantId);
+            await _db.ResourceNodes.AddAsync(rootNode);
+        }
+
+        string gameExternalKey = $"game:{GameCodes.Lottery539.Value}";
+        ResourceNode? gameNode = await _db.ResourceNodes
+            .FirstOrDefaultAsync(node => node.TenantId == tenantId && node.ExternalKey == gameExternalKey);
+        if (gameNode is null)
+        {
+            gameNode = ResourceNode.Create(GameCodes.Lottery539.Value, gameExternalKey, tenantId, rootNode.Id);
+            await _db.ResourceNodes.AddAsync(gameNode);
+        }
+
+        string playExternalKey = $"play:{GameCodes.Lottery539.Value}:{PlayTypeCodes.Basic.Value}";
+        ResourceNode? playNode = await _db.ResourceNodes
+            .FirstOrDefaultAsync(node => node.TenantId == tenantId && node.ExternalKey == playExternalKey);
+        if (playNode is null)
+        {
+            playNode = ResourceNode.Create(PlayTypeCodes.Basic.Value, playExternalKey, tenantId, gameNode.Id);
+            await _db.ResourceNodes.AddAsync(playNode);
+        }
+
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("✅ 已建立 DEF 租戶預設遊戲啟用: {GameCode}", GameCodes.Lottery539.Value);
     }
 
     private static bool IsValidTenantCode(string tenantCode)

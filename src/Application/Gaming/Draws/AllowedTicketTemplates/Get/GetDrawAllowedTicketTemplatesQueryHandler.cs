@@ -1,7 +1,9 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Gaming.Dtos;
+using Domain.Gaming;
 using Dapper;
 using SharedKernel;
 
@@ -9,12 +11,29 @@ namespace Application.Gaming.Draws.AllowedTicketTemplates.Get;
 
 internal sealed class GetDrawAllowedTicketTemplatesQueryHandler(
     IDbConnectionFactory dbConnectionFactory,
-    ITenantContext tenantContext) : IQueryHandler<GetDrawAllowedTicketTemplatesQuery, IReadOnlyCollection<DrawAllowedTicketTemplateDto>>
+    ITenantContext tenantContext,
+    IDrawRepository drawRepository,
+    IEntitlementChecker entitlementChecker) : IQueryHandler<GetDrawAllowedTicketTemplatesQuery, IReadOnlyCollection<DrawAllowedTicketTemplateDto>>
 {
     public async Task<Result<IReadOnlyCollection<DrawAllowedTicketTemplateDto>>> Handle(
         GetDrawAllowedTicketTemplatesQuery request,
         CancellationToken cancellationToken)
     {
+        Draw? draw = await drawRepository.GetByIdAsync(tenantContext.TenantId, request.DrawId, cancellationToken);
+        if (draw is null)
+        {
+            return Result.Failure<IReadOnlyCollection<DrawAllowedTicketTemplateDto>>(GamingErrors.DrawNotFound);
+        }
+
+        Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
+            tenantContext.TenantId,
+            draw.GameCode,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure<IReadOnlyCollection<DrawAllowedTicketTemplateDto>>(entitlementResult.Error);
+        }
+
         const string sql = """
             SELECT
                 t.id AS TicketTemplateId,

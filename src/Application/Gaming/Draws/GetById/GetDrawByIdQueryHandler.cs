@@ -1,7 +1,9 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Gaming.Dtos;
+using Domain.Gaming;
 using Dapper;
 using SharedKernel;
 
@@ -9,7 +11,8 @@ namespace Application.Gaming.Draws.GetById;
 
 internal sealed class GetDrawByIdQueryHandler(
     IDbConnectionFactory dbConnectionFactory,
-    ITenantContext tenantContext) : IQueryHandler<GetDrawByIdQuery, DrawDetailDto>
+    ITenantContext tenantContext,
+    IEntitlementChecker entitlementChecker) : IQueryHandler<GetDrawByIdQuery, DrawDetailDto>
 {
     public async Task<Result<DrawDetailDto>> Handle(GetDrawByIdQuery request, CancellationToken cancellationToken)
     {
@@ -50,6 +53,21 @@ internal sealed class GetDrawByIdQueryHandler(
         if (draw is null)
         {
             return Result.Failure<DrawDetailDto>(Domain.Gaming.GamingErrors.DrawNotFound);
+        }
+
+        Result<GameCode> gameCodeResult = GameCode.Create(draw.GameCode);
+        if (gameCodeResult.IsFailure)
+        {
+            return Result.Failure<DrawDetailDto>(gameCodeResult.Error);
+        }
+
+        Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
+            tenantContext.TenantId,
+            gameCodeResult.Value,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure<DrawDetailDto>(entitlementResult.Error);
         }
 
         return draw;

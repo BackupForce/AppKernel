@@ -35,6 +35,10 @@ public static class GamingErrors
         "Gaming.GameCodeRequired",
         "遊戲代碼不可為空白。");
 
+    public static readonly Error GameNotFound = Error.NotFound(
+        "Gaming.GameNotFound",
+        "找不到遊戲。");
+
     public static readonly Error PlayTypeCodeRequired = Error.Validation(
         "Gaming.PlayTypeCodeRequired",
         "玩法代碼不可為空白。");
@@ -178,6 +182,14 @@ public static class GamingErrors
     public static readonly Error PlayTypeAlreadyEnabled = Error.Validation(
         "Gaming.PlayTypeAlreadyEnabled",
         "玩法已啟用。");
+
+    public static readonly Error GameNotEntitled = Error.Forbidden(
+        "Gaming.GameNotEntitled",
+        "租戶未啟用該遊戲。");
+
+    public static readonly Error PlayNotEntitled = Error.Forbidden(
+        "Gaming.PlayNotEntitled",
+        "租戶未啟用該玩法。");
 
     public static readonly Error PrizeTierNotAllowed = Error.Validation(
         "Gaming.PrizeTierNotAllowed",
