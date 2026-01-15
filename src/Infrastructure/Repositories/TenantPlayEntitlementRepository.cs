@@ -10,7 +10,7 @@ internal sealed class TenantPlayEntitlementRepository(ApplicationDbContext conte
         Guid tenantId,
         GameCode gameCode,
         PlayTypeCode playTypeCode,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         return context.TenantPlayEntitlements
             .AsTracking()
@@ -21,7 +21,7 @@ internal sealed class TenantPlayEntitlementRepository(ApplicationDbContext conte
                 cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<TenantPlayEntitlement>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<TenantPlayEntitlement>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
         return await context.TenantPlayEntitlements
             .AsNoTracking()

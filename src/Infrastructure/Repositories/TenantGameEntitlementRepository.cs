@@ -6,7 +6,7 @@ namespace Infrastructure.Repositories;
 
 internal sealed class TenantGameEntitlementRepository(ApplicationDbContext context) : ITenantGameEntitlementRepository
 {
-    public Task<TenantGameEntitlement?> GetAsync(Guid tenantId, GameCode gameCode, CancellationToken cancellationToken)
+    public Task<TenantGameEntitlement?> GetAsync(Guid tenantId, GameCode gameCode, CancellationToken cancellationToken = default)
     {
         return context.TenantGameEntitlements
             .AsTracking()
@@ -15,7 +15,7 @@ internal sealed class TenantGameEntitlementRepository(ApplicationDbContext conte
                 cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<TenantGameEntitlement>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<TenantGameEntitlement>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
         return await context.TenantGameEntitlements
             .AsNoTracking()
