@@ -6,6 +6,10 @@ using Application.Gaming.Draws.Execute;
 using Application.Gaming.Draws.GetById;
 using Application.Gaming.Draws.GetOpen;
 using Application.Gaming.Draws.ManualClose;
+using Application.Gaming.Draws.PrizePool;
+using Application.Gaming.Draws.PrizePool.Get;
+using Application.Gaming.Draws.PrizePool.Update;
+using Application.Gaming.Draws.PrizePool.Validate;
 using Application.Gaming.Draws.Reopen;
 using Application.Gaming.Draws.Settle;
 using Application.Gaming.Dtos;
@@ -183,5 +187,66 @@ internal static class GamingDrawEndpoints
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("UpdateGameDrawAllowedTicketTemplates");
+
+        group.MapGet(
+                "/games/{gameCode}/draws/{drawId:guid}/prize-pool",
+                async (string gameCode, Guid drawId, ISender sender, CancellationToken ct) =>
+                {
+                    GetDrawPrizePoolQuery query = new GetDrawPrizePoolQuery(drawId);
+                    return await UseCaseInvoker.Send<GetDrawPrizePoolQuery, DrawPrizePoolDto>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
+            .Produces<DrawPrizePoolDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("GetGameDrawPrizePool");
+
+        group.MapPut(
+                "/games/{gameCode}/draws/{drawId:guid}/prize-pool",
+                async (string gameCode, Guid drawId, UpdateDrawPrizePoolRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    UpdateDrawPrizePoolCommand command = new UpdateDrawPrizePoolCommand(
+                        drawId,
+                        request.Items.Select(item => new UpdateDrawPrizePoolItem(
+                            item.PlayTypeCode,
+                            item.Tier,
+                            new PrizeOptionDto(
+                                item.Option.PrizeId,
+                                item.Option.Name,
+                                item.Option.Cost,
+                                item.Option.RedeemValidDays,
+                                item.Option.Description))).ToList());
+                    return await UseCaseInvoker.Send<UpdateDrawPrizePoolCommand, DrawPrizePoolDto>(
+                        command,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
+            .Produces<DrawPrizePoolDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("UpdateGameDrawPrizePool");
+
+        group.MapGet(
+                "/games/{gameCode}/draws/{drawId:guid}/prize-pool/validation",
+                async (string gameCode, Guid drawId, ISender sender, CancellationToken ct) =>
+                {
+                    ValidateDrawPrizePoolQuery query = new ValidateDrawPrizePoolQuery(drawId);
+                    return await UseCaseInvoker.Send<ValidateDrawPrizePoolQuery, DrawPrizePoolValidationDto>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
+            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
+            .Produces<DrawPrizePoolValidationDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("ValidateGameDrawPrizePool");
     }
 }

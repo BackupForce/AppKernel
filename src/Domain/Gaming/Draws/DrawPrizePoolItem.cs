@@ -16,7 +16,7 @@ public sealed class DrawPrizePoolItem : Entity
         Guid drawId,
         PlayTypeCode playTypeCode,
         PrizeTier tier,
-        PrizeOption option) : base(id)
+        PrizeOption? option) : base(id)
     {
         TenantId = tenantId;
         DrawId = drawId;
@@ -37,7 +37,9 @@ public sealed class DrawPrizePoolItem : Entity
 
     public PrizeTier Tier { get; private set; }
 
-    public PrizeOption Option { get; private set; } = null!;
+    public PrizeOption? Option { get; private set; }
+
+    public bool IsConfigured => Option is not null;
 
     public static DrawPrizePoolItem Create(
         Guid tenantId,
@@ -47,6 +49,15 @@ public sealed class DrawPrizePoolItem : Entity
         PrizeOption option)
     {
         return new DrawPrizePoolItem(Guid.NewGuid(), tenantId, drawId, playTypeCode, tier, option);
+    }
+
+    public static DrawPrizePoolItem CreateEmpty(
+        Guid tenantId,
+        Guid drawId,
+        PlayTypeCode playTypeCode,
+        PrizeTier tier)
+    {
+        return new DrawPrizePoolItem(Guid.NewGuid(), tenantId, drawId, playTypeCode, tier, null);
     }
 
     /// <summary>

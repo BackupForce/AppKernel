@@ -199,6 +199,14 @@ public static class GamingErrors
         "Gaming.PrizePoolIncomplete",
         "期數獎項配置不完整。");
 
+    public static readonly Error PrizePoolSlotMissing = Error.Validation(
+        "Gaming.PrizePoolSlotMissing",
+        "期數獎項配置缺少獎項槽位。");
+
+    public static readonly Error PrizePoolNotConfigured = Error.Validation(
+        "Gaming.PrizePoolNotConfigured",
+        "期數獎項槽位尚未設定。");
+
     public static readonly Error DrawManuallyClosed = Error.Validation(
         "Gaming.DrawManuallyClosed",
         "期數已手動封盤。");
