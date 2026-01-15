@@ -166,7 +166,8 @@ public sealed class Draw : Entity
         DateTime drawAt,
         DrawStatus initialStatus,
         int? redeemValidDays,
-        DateTime utcNow)
+        DateTime utcNow,
+        PlayRuleRegistry registry)
     {
         if (tenantId == Guid.Empty)
         {
@@ -200,6 +201,8 @@ public sealed class Draw : Entity
             utcNow,
             utcNow);
 
+        draw.EnsurePrizePoolSlotsInitialized(registry);
+
         return draw;
     }
 
@@ -226,6 +229,8 @@ public sealed class Draw : Entity
             var item = DrawEnabledPlayType.Create(TenantId, Id, playType);
             _enabledPlayTypes.Add(item);
         }
+
+        EnsurePrizePoolSlotsInitialized(registry);
 
         return Result.Success();
     }
@@ -254,12 +259,10 @@ public sealed class Draw : Entity
         DrawPrizePoolItem? existing = _prizePool.Find(item => item.PlayTypeCode == playType && item.Tier == tier);
         if (existing is null)
         {
-            _prizePool.Add(DrawPrizePoolItem.Create(TenantId, Id, playType, tier, option));
+            return Result.Failure(GamingErrors.PrizePoolSlotMissing);
         }
-        else
-        {
-            existing.Update(option);
-        }
+
+        existing.Update(option);
 
         return Result.Success();
     }
@@ -274,10 +277,15 @@ public sealed class Draw : Entity
             IPlayRule rule = registry.GetRule(GameCode, enabled.PlayTypeCode);
             foreach (PrizeTier tier in rule.GetTiers())
             {
-                bool exists = _prizePool.Any(item => item.PlayTypeCode == enabled.PlayTypeCode && item.Tier == tier);
-                if (!exists)
+                DrawPrizePoolItem? slot = _prizePool.Find(item => item.PlayTypeCode == enabled.PlayTypeCode && item.Tier == tier);
+                if (slot is null)
                 {
-                    return Result.Failure(GamingErrors.PrizePoolIncomplete);
+                    return Result.Failure(GamingErrors.PrizePoolSlotMissing);
+                }
+
+                if (slot.Option is null)
+                {
+                    return Result.Failure(GamingErrors.PrizePoolNotConfigured);
                 }
             }
         }
@@ -291,6 +299,24 @@ public sealed class Draw : Entity
     public PrizeOption? FindPrizeOption(PlayTypeCode playType, PrizeTier tier)
     {
         return _prizePool.Find(item => item.PlayTypeCode == playType && item.Tier == tier)?.Option;
+    }
+
+    private void EnsurePrizePoolSlotsInitialized(PlayRuleRegistry registry)
+    {
+        foreach (DrawEnabledPlayType enabled in _enabledPlayTypes)
+        {
+            IPlayRule rule = registry.GetRule(GameCode, enabled.PlayTypeCode);
+            foreach (PrizeTier tier in rule.GetTiers())
+            {
+                bool exists = _prizePool.Any(item => item.PlayTypeCode == enabled.PlayTypeCode && item.Tier == tier);
+                if (exists)
+                {
+                    continue;
+                }
+
+                _prizePool.Add(DrawPrizePoolItem.CreateEmpty(TenantId, Id, enabled.PlayTypeCode, tier));
+            }
+        }
     }
 
     /// <summary>

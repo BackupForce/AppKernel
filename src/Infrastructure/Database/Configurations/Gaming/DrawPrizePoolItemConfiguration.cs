@@ -36,6 +36,7 @@ internal sealed class DrawPrizePoolItemConfiguration : IEntityTypeConfiguration<
                 option.Property(o => o.RedeemValidDays).HasColumnName("prize_redeem_valid_days_snapshot");
                 option.Property(o => o.Description).HasColumnName("prize_description_snapshot").HasMaxLength(256);
             });
+        builder.Navigation(item => item.Option).IsRequired(false);
 
         builder.HasIndex(item => new { item.TenantId, item.DrawId, item.PlayTypeCode, item.Tier }).IsUnique();
     }
