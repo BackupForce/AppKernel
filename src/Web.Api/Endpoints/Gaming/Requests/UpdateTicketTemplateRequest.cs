@@ -1,5 +1,3 @@
-using Domain.Gaming;
-
 namespace Web.Api.Endpoints.Gaming.Requests;
 
 /// <summary>

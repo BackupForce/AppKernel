@@ -19,7 +19,7 @@ public class PermissionEvaluatorTests
             .Returns(permissions);
 
         PermissionEvaluator evaluator = new PermissionEvaluator(provider);
-        PermissionRequirement requirement = new PermissionRequirement(
+        var requirement = new PermissionCheckContext(
             "USERS:CREATE",
             PermissionScope.Tenant,
             tenantId,
@@ -38,7 +38,7 @@ public class PermissionEvaluatorTests
         IGrantedPermissionProvider provider = Substitute.For<IGrantedPermissionProvider>();
 
         PermissionEvaluator evaluator = new PermissionEvaluator(provider);
-        PermissionRequirement requirement = new PermissionRequirement(
+        var requirement = new PermissionCheckContext(
             "USERS:CREATE",
             PermissionScope.Tenant,
             null,
@@ -58,7 +58,7 @@ public class PermissionEvaluatorTests
         IGrantedPermissionProvider provider = Substitute.For<IGrantedPermissionProvider>();
 
         PermissionEvaluator evaluator = new PermissionEvaluator(provider);
-        PermissionRequirement requirement = new PermissionRequirement(
+        var requirement = new PermissionCheckContext(
             "POINTS:ME:VIEW",
             PermissionScope.Self,
             null,
@@ -80,7 +80,7 @@ public class PermissionEvaluatorTests
             .Returns(permissions);
 
         PermissionEvaluator evaluator = new PermissionEvaluator(provider);
-        PermissionRequirement requirement = new PermissionRequirement(
+        var requirement = new PermissionCheckContext(
             "TENANTS:CREATE",
             PermissionScope.Platform,
             null,

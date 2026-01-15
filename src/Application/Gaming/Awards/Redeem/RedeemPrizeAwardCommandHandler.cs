@@ -1,7 +1,10 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
-using Domain.Gaming;
+using Domain.Gaming.PrizeAwards;
+using Domain.Gaming.RedeemRecords;
+using Domain.Gaming.Repositories;
+using Domain.Gaming.Shared;
 using Domain.Members;
 using SharedKernel;
 

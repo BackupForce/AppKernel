@@ -3,9 +3,11 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Gaming.Dtos;
-using Domain.Gaming;
 using Dapper;
 using SharedKernel;
+using Domain.Gaming.Draws;
+using Domain.Gaming.Repositories;
+using Domain.Gaming.Shared;
 
 namespace Application.Gaming.Draws.AllowedTicketTemplates.Get;
 

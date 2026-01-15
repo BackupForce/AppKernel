@@ -1,5 +1,7 @@
 using Application.Abstractions.Caching;
-using Domain.Gaming;
+using Domain.Gaming.Catalog;
+using Domain.Gaming.Entitlements;
+using Domain.Gaming.Shared;
 using FluentAssertions;
 using Infrastructure.Database;
 using Infrastructure.Gaming;

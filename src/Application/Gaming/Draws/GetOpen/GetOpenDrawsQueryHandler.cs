@@ -3,9 +3,9 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Gaming.Dtos;
-using Domain.Gaming;
 using Dapper;
 using SharedKernel;
+using Domain.Gaming.Catalog;
 
 namespace Application.Gaming.Draws.GetOpen;
 

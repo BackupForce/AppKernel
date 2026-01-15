@@ -1,4 +1,5 @@
-﻿using Domain.Gaming;
+﻿using Domain.Gaming.Repositories;
+using Domain.Gaming.Tickets;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 

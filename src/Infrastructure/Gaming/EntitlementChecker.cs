@@ -1,6 +1,8 @@
 using Application.Abstractions.Caching;
 using Application.Abstractions.Gaming;
-using Domain.Gaming;
+using Domain.Gaming.Catalog;
+using Domain.Gaming.Entitlements;
+using Domain.Gaming.Shared;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;

@@ -1,7 +1,8 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
-using Domain.Gaming;
+using Domain.Gaming.Prizes;
+using Domain.Gaming.Repositories;
 using SharedKernel;
 
 namespace Application.Gaming.Prizes.Create;

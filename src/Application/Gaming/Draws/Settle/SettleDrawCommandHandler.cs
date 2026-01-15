@@ -2,8 +2,12 @@
 using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
-using Domain.Gaming;
-using Domain.Gaming.Services;
+using Domain.Gaming.Draws;
+using Domain.Gaming.PrizeAwards;
+using Domain.Gaming.Repositories;
+using Domain.Gaming.Rules;
+using Domain.Gaming.Shared;
+using Domain.Gaming.Tickets;
 using SharedKernel;
 
 namespace Application.Gaming.Draws.Settle;

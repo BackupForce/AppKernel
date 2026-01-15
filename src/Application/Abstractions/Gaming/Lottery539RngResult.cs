@@ -1,4 +1,4 @@
-using Domain.Gaming;
+using Domain.Gaming.Shared;
 
 namespace Application.Abstractions.Gaming;
 

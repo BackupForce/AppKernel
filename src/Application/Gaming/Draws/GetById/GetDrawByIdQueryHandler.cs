@@ -3,9 +3,10 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Gaming.Dtos;
-using Domain.Gaming;
 using Dapper;
 using SharedKernel;
+using Domain.Gaming.Catalog;
+using Domain.Gaming.Shared;
 
 namespace Application.Gaming.Draws.GetById;
 
@@ -52,7 +53,7 @@ internal sealed class GetDrawByIdQueryHandler(
 
         if (draw is null)
         {
-            return Result.Failure<DrawDetailDto>(Domain.Gaming.GamingErrors.DrawNotFound);
+            return Result.Failure<DrawDetailDto>(GamingErrors.DrawNotFound);
         }
 
         Result<GameCode> gameCodeResult = GameCode.Create(draw.GameCode);

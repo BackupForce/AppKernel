@@ -1,5 +1,5 @@
 using Application.Abstractions.Messaging;
-using Domain.Gaming;
+using Domain.Gaming.TicketTemplates;
 
 namespace Application.Gaming.TicketTemplates.Create;
 

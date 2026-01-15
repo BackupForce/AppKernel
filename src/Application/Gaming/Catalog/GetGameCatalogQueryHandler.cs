@@ -1,7 +1,7 @@
 using Application.Abstractions.Messaging;
 using Application.Gaming.Dtos;
-using Domain.Gaming;
-using Domain.Gaming.Services;
+using Domain.Gaming.Catalog;
+using Domain.Gaming.Rules;
 using SharedKernel;
 
 namespace Application.Gaming.Catalog;

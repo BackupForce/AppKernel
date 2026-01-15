@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using Application.Abstractions.Gaming;
-using Domain.Gaming;
+using Domain.Gaming.Shared;
 using SharedKernel;
 
 namespace Infrastructure.Gaming;

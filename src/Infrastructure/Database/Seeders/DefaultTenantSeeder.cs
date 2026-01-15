@@ -6,11 +6,12 @@ using Application.Abstractions.Infrastructure;
 using Domain.Security;
 using Domain.Tenants;
 using Domain.Users;
-using Domain.Gaming;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Trace;
+using Domain.Gaming.Entitlements;
+using Domain.Gaming.Catalog;
 
 namespace Infrastructure.Database.Seeders;
 

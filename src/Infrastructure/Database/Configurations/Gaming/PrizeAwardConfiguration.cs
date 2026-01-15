@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Domain.Gaming.PrizeAwards;
 
 namespace Infrastructure.Database.Configurations.Gaming;
 

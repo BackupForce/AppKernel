@@ -1,5 +1,7 @@
-using Domain.Gaming;
-using Domain.Gaming.Services;
+using Domain.Gaming.Catalog;
+using Domain.Gaming.Draws;
+using Domain.Gaming.Rules;
+using Domain.Gaming.Shared;
 using FluentAssertions;
 using SharedKernel;
 

@@ -1,8 +1,11 @@
 using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
-using Domain.Gaming;
-using Domain.Gaming.Services;
+using Domain.Gaming.Catalog;
+using Domain.Gaming.Entitlements;
+using Domain.Gaming.Repositories;
+using Domain.Gaming.Rules;
+using Domain.Gaming.Shared;
 using Domain.Security;
 using SharedKernel;
 

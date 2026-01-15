@@ -1,5 +1,5 @@
-using Domain.Gaming;
-using Domain.Gaming.Services;
+using Domain.Gaming.Rules;
+using Domain.Gaming.Shared;
 using FluentAssertions;
 
 namespace Domain.UnitTests.Gaming;

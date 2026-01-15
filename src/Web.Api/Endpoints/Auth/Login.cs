@@ -1,4 +1,6 @@
-﻿using Application.Auth;
+﻿using Application.Abstractions.Authorization;
+using Application.Auth;
+using Asp.Versioning;
 using MediatR;
 using SharedKernel;
 using Web.Api.Endpoints.Users;
@@ -22,6 +24,8 @@ public class Login : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .AllowAnonymous()
+		.WithGroupName("auth-v1")
+		.WithMetadata(new ApiVersion(1, 0))
         .WithTags(Tags.Auth);
-    }
+	}
 }

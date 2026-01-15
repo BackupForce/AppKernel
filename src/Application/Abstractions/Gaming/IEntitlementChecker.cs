@@ -1,4 +1,4 @@
-using Domain.Gaming;
+using Domain.Gaming.Catalog;
 using SharedKernel;
 
 namespace Application.Abstractions.Gaming;

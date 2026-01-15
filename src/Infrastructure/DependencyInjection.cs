@@ -11,7 +11,6 @@ using Application.Abstractions.Tenants;
 using Application.Abstractions.Time;
 using Dapper;
 using Domain.Members;
-using Domain.Gaming;
 using Domain.Security;
 using Domain.Tenants;
 using Domain.Users;
@@ -50,6 +49,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using SharedKernel;
 using StackExchange.Redis;
+using Domain.Gaming.Repositories;
 
 namespace Infrastructure;
 

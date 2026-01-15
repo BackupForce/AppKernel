@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Gaming;
+using Domain.Gaming.Shared;
 using Domain.Members;
 using SharedKernel;
 
@@ -27,7 +28,7 @@ internal sealed class WalletLedgerService(
         Member? member = await memberRepository.GetByIdAsync(tenantId, memberId, cancellationToken);
         if (member is null)
         {
-            return Result.Failure<long>(Domain.Gaming.GamingErrors.MemberNotFound);
+            return Result.Failure<long>(GamingErrors.MemberNotFound);
         }
 
         MemberPointBalance balance = await memberRepository.GetPointBalanceAsync(memberId, cancellationToken)
