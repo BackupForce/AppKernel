@@ -1,5 +1,5 @@
 ﻿using Application.Abstractions.Authorization;
-using AppPermissionRequirement = Application.Abstractions.Authorization.PermissionRequirement;
+using AppPermissionCheckContext = Application.Abstractions.Authorization.PermissionCheckContext;
 using Domain.Security;
 
 namespace Infrastructure.Authorization;
@@ -14,19 +14,19 @@ public sealed class PermissionEvaluator : IPermissionEvaluator
     }
 
     public async Task<bool> AuthorizeAsync(
-        AppPermissionRequirement requirement,
+        AppPermissionCheckContext context,
         CallerContext callerContext,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(requirement.PermissionCode))
+        if (string.IsNullOrWhiteSpace(context.PermissionCode))
         {
             return false;
         }
 
-        string requiredPermission = NormalizePermissionCode(requirement.PermissionCode);
+        string requiredPermission = NormalizePermissionCode(context.PermissionCode);
         IReadOnlySet<string> grantedPermissions;
 
-        switch (requirement.Scope)
+        switch (context.Scope)
         {
             case PermissionScope.Platform:
                 grantedPermissions = await _grantedPermissionProvider.GetPlatformPermissionsAsync(
@@ -34,14 +34,14 @@ public sealed class PermissionEvaluator : IPermissionEvaluator
                     cancellationToken);
                 break;
             case PermissionScope.Tenant:
-                if (!requirement.TenantId.HasValue)
+                if (!context.TenantId.HasValue)
                 {
                     return false;
                 }
 
                 grantedPermissions = await _grantedPermissionProvider.GetTenantPermissionsAsync(
                     callerContext.CallerUserId,
-                    requirement.TenantId.Value,
+                    context.TenantId.Value,
                     cancellationToken);
                 break;
             default:

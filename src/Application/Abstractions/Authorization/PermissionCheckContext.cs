@@ -2,9 +2,9 @@
 
 namespace Application.Abstractions.Authorization;
 
-public sealed class PermissionRequirement
+public sealed class PermissionCheckContext
 {
-    public PermissionRequirement(string permissionCode, PermissionScope scope, Guid? tenantId, Guid? targetUserId)
+    public PermissionCheckContext(string permissionCode, PermissionScope scope, Guid? tenantId, Guid? targetUserId)
     {
         PermissionCode = permissionCode;
         Scope = scope;
