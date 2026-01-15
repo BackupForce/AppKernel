@@ -108,7 +108,7 @@ internal sealed class SettleDrawCommandHandler(
                 PrizeOption? option = draw.FindPrizeOption(ticket.PlayTypeCode, tier.Value);
                 if (option is null)
                 {
-                    return Result.Failure(GamingErrors.PrizePoolIncomplete);
+                    return Result.Failure(GamingErrors.PrizePoolNotConfigured);
                 }
 
                 PrizeAward award = PrizeAward.Create(
