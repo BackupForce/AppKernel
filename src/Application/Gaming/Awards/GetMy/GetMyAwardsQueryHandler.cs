@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Gaming.Dtos;
 using Domain.Gaming;
@@ -13,12 +14,28 @@ internal sealed class GetMyAwardsQueryHandler(
     IDbConnectionFactory dbConnectionFactory,
     IMemberRepository memberRepository,
     ITenantContext tenantContext,
-    IUserContext userContext) : IQueryHandler<GetMyAwardsQuery, IReadOnlyCollection<PrizeAwardDto>>
+    IUserContext userContext,
+    IEntitlementChecker entitlementChecker) : IQueryHandler<GetMyAwardsQuery, IReadOnlyCollection<PrizeAwardDto>>
 {
     public async Task<Result<IReadOnlyCollection<PrizeAwardDto>>> Handle(
         GetMyAwardsQuery request,
         CancellationToken cancellationToken)
     {
+        Result<GameCode> gameCodeResult = GameCode.Create(request.GameCode);
+        if (gameCodeResult.IsFailure)
+        {
+            return Result.Failure<IReadOnlyCollection<PrizeAwardDto>>(gameCodeResult.Error);
+        }
+
+        Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
+            tenantContext.TenantId,
+            gameCodeResult.Value,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure<IReadOnlyCollection<PrizeAwardDto>>(entitlementResult.Error);
+        }
+
         Member? member = await memberRepository.GetByUserIdAsync(tenantContext.TenantId, userContext.UserId, cancellationToken);
         if (member is null)
         {
@@ -62,6 +79,7 @@ internal sealed class GetMyAwardsQueryHandler(
             LEFT JOIN gaming.redeem_records r ON r.prize_award_id = a.id
             WHERE a.tenant_id = @TenantId
               AND a.member_id = @MemberId
+              AND a.game_code = @GameCode
               AND (@Status IS NULL OR a.status = @Status)
             ORDER BY a.awarded_at DESC
             """;
@@ -70,7 +88,7 @@ internal sealed class GetMyAwardsQueryHandler(
 
         IEnumerable<PrizeAwardRow> rows = await connection.QueryAsync<PrizeAwardRow>(
             sql,
-            new { tenantContext.TenantId, MemberId = member.Id, Status = statusValue });
+            new { tenantContext.TenantId, MemberId = member.Id, Status = statusValue, GameCode = gameCodeResult.Value.Value });
 
         return rows.Select(row => new PrizeAwardDto(
                 row.AwardId,

@@ -124,6 +124,8 @@ public static class DependencyInjection
         services.AddScoped<IPrizeRepository, PrizeRepository>();
         services.AddScoped<IPrizeAwardRepository, PrizeAwardRepository>();
         services.AddScoped<IRedeemRecordRepository, RedeemRecordRepository>();
+        services.AddScoped<ITenantGameEntitlementRepository, TenantGameEntitlementRepository>();
+        services.AddScoped<ITenantPlayEntitlementRepository, TenantPlayEntitlementRepository>();
 
         return services;
     }
@@ -209,6 +211,8 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<IUserContext, UserContext>();
         services.AddScoped<ITenantContext, TenantContext>();
+        services.AddScoped<IEntitlementChecker, EntitlementChecker>();
+        services.AddScoped<IEntitlementCacheInvalidator, EntitlementCacheInvalidator>();
 
         services.AddSingleton<IJwtService>(provider =>
             new JwtService(jwtSettings.SecretKey, jwtSettings.ExpireMinutes));

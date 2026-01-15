@@ -429,6 +429,90 @@ namespace Infrastructure.Migrations
                     b.ToTable("redeem_records", "gaming");
                 });
 
+            modelBuilder.Entity("Domain.Gaming.TenantGameEntitlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("DisabledAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("disabled_at_utc");
+
+                    b.Property<DateTime>("EnabledAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("enabled_at_utc");
+
+                    b.Property<string>("GameCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("game_code");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_enabled");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tenant_game_entitlements");
+
+                    b.HasIndex("TenantId", "GameCode")
+                        .IsUnique()
+                        .HasDatabaseName("ux_tenant_game_entitlements_tenant_game");
+
+                    b.ToTable("tenant_game_entitlements", "gaming");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.TenantPlayEntitlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("DisabledAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("disabled_at_utc");
+
+                    b.Property<DateTime>("EnabledAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("enabled_at_utc");
+
+                    b.Property<string>("GameCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("game_code");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_enabled");
+
+                    b.Property<string>("PlayTypeCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("play_type_code");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tenant_play_entitlements");
+
+                    b.HasIndex("TenantId", "GameCode", "PlayTypeCode")
+                        .IsUnique()
+                        .HasDatabaseName("ux_tenant_play_entitlements_tenant_game_play");
+
+                    b.ToTable("tenant_play_entitlements", "gaming");
+                });
+
             modelBuilder.Entity("Domain.Gaming.Ticket", b =>
                 {
                     b.Property<Guid>("Id")

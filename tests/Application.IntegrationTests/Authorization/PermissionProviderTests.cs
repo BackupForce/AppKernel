@@ -126,6 +126,41 @@ public class PermissionProviderTests : BaseIntegrationTest
         result.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task HasPermissionAsync_Should_Allow_WhenGameNodeCoversPlayNode()
+    {
+        var tenantId = Guid.NewGuid();
+        var tenant = Tenant.Create(tenantId, "TNE", "Tenant E");
+        DbContext.Tenants.Add(tenant);
+
+        Email email = Email.Create("user4@example.com").Value;
+        var name = new Name("User Four");
+        var user = User.Create(email, name, "hash", true, UserType.Tenant, tenantId);
+        DbContext.Users.Add(user);
+
+        var rootNode = ResourceNode.Create("Root", "root-gaming", tenantId);
+        var gameNode = ResourceNode.Create("LOTTERY539", "game:LOTTERY539", tenantId, rootNode.Id);
+        var playNode = ResourceNode.Create("BASIC", "play:LOTTERY539:BASIC", tenantId, gameNode.Id);
+        DbContext.ResourceNodes.AddRange(rootNode, gameNode, playNode);
+
+        var assignment = PermissionAssignment.Create(
+            SubjectType.User,
+            Decision.Allow,
+            user.Id,
+            "GAMING:DRAW:CREATE",
+            tenantId,
+            gameNode.Id);
+        DbContext.PermissionAssignments.Add(assignment);
+
+        await DbContext.SaveChangesAsync();
+
+        PermissionProvider provider = CreateProvider();
+
+        bool result = await provider.HasPermissionAsync(user.Id, "GAMING:DRAW:CREATE", playNode.Id, tenantId);
+
+        result.Should().BeTrue();
+    }
+
     private PermissionProvider CreateProvider()
     {
         ICacheService cacheService = ServiceProvider.GetRequiredService<ICacheService>();

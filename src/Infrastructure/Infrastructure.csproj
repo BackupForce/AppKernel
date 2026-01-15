@@ -36,6 +36,7 @@
 	<InternalsVisibleTo Include="ArchitectureTests" />
 	<InternalsVisibleTo Include="Api.FunctionalTests" />
 	<InternalsVisibleTo Include="Application.IntegrationTests" />
+	<InternalsVisibleTo Include="Infrastructure.UnitTests" />
   </ItemGroup>
 
   <ItemGroup>
