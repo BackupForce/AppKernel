@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Domain.Security;
 using Domain.Users;
-using AppPermissionRequirement = Application.Abstractions.Authorization.PermissionRequirement;
+using AppPermissionCheckContext = Application.Abstractions.Authorization.PermissionCheckContext;
 
 namespace Infrastructure.Authorization;
 
@@ -85,7 +85,7 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
                     return;
                 }
 
-                AppPermissionRequirement platformRequirement = new AppPermissionRequirement(
+                AppPermissionCheckContext platformRequirement = new AppPermissionCheckContext(
                     requiredPermission,
                     PermissionScope.Platform,
                     null,
