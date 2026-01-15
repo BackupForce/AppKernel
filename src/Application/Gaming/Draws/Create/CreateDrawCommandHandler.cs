@@ -59,6 +59,7 @@ internal sealed class CreateDrawCommandHandler(
             return Result.Failure<Guid>(entitlementResult.Error);
         }
 
+        PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
         Result<Draw> drawResult = Draw.Create(
             tenantContext.TenantId,
             gameCodeResult.Value,
@@ -67,7 +68,8 @@ internal sealed class CreateDrawCommandHandler(
             request.DrawAt,
             initialStatus,
             request.RedeemValidDays,
-            now);
+            now,
+            registry);
 
         if (drawResult.IsFailure)
         {
@@ -76,7 +78,6 @@ internal sealed class CreateDrawCommandHandler(
 
         Draw draw = drawResult.Value;
 
-        PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
         if (request.EnabledPlayTypes.Count > 0)
         {
             List<PlayTypeCode> playTypes = new List<PlayTypeCode>();
