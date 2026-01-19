@@ -1,13 +1,14 @@
 ﻿using Domain.Gaming.Catalog;
+using Domain.Gaming.Shared;
 using SharedKernel;
 
 namespace Domain.Gaming.Tickets;
 
 /// <summary>
-/// 票券聚合根，代表一次購買，可包含多注（多個 TicketLine）。
+/// 票券聚合根，代表一次發放或領取，可包含多注（多個 TicketLine）。
 /// </summary>
 /// <remarks>
-/// 多注設計可降低交易與記錄成本，並保留每一注的 LineIndex 以便結算與防重。
+/// 多注設計保留每一注的 LineIndex 以便結算與防重。
 /// </remarks>
 public sealed class Ticket : Entity
 {
@@ -16,23 +17,34 @@ public sealed class Ticket : Entity
     private Ticket(
         Guid id,
         Guid tenantId,
-        Guid drawId,
         GameCode gameCode,
         PlayTypeCode playTypeCode,
         Guid memberId,
-        Guid ticketTemplateId,
-        decimal priceSnapshot,
-        long totalCost,
+        Guid? campaignId,
+        Guid? ticketTemplateId,
+        Guid? drawId,
+        decimal? priceSnapshot,
+        long? totalCost,
+        DateTime issuedAtUtc,
+        IssuedByType issuedByType,
+        Guid? issuedByUserId,
+        string? issuedReason,
         DateTime createdAt) : base(id)
     {
         TenantId = tenantId;
-        DrawId = drawId;
         GameCode = gameCode;
         PlayTypeCode = playTypeCode;
         MemberId = memberId;
+        CampaignId = campaignId;
         TicketTemplateId = ticketTemplateId;
+        DrawId = drawId;
         PriceSnapshot = priceSnapshot;
         TotalCost = totalCost;
+        IssuedAtUtc = issuedAtUtc;
+        IssuedByType = issuedByType;
+        IssuedByUserId = issuedByUserId;
+        IssuedReason = issuedReason;
+        SubmissionStatus = TicketSubmissionStatus.NotSubmitted;
         CreatedAt = createdAt;
     }
 
@@ -46,9 +58,9 @@ public sealed class Ticket : Entity
     public Guid TenantId { get; private set; }
 
     /// <summary>
-    /// 對應期數。
+    /// 主要期數識別（相容舊查詢，已改由 TicketDraw 維護逐期關係）。
     /// </summary>
-    public Guid DrawId { get; private set; }
+    public Guid? DrawId { get; private set; }
 
     /// <summary>
     /// 遊戲代碼（與期數一致）。
@@ -66,19 +78,69 @@ public sealed class Ticket : Entity
     public Guid MemberId { get; private set; }
 
     /// <summary>
-    /// 票種模板識別，對應下單時選用的 TicketTemplate。
+    /// 活動識別（若由活動發放）。
     /// </summary>
-    public Guid TicketTemplateId { get; private set; }
+    public Guid? CampaignId { get; private set; }
+
+    /// <summary>
+    /// 票種模板識別，對應發放時選用的 TicketTemplate。
+    /// </summary>
+    public Guid? TicketTemplateId { get; private set; }
 
     /// <summary>
     /// 票價快照，避免後續模板改價影響歷史稽核。
     /// </summary>
-    public decimal PriceSnapshot { get; private set; }
+    public decimal? PriceSnapshot { get; private set; }
 
     /// <summary>
     /// 此票券總成本（所有 Line 加總），用於帳本扣點與報表。
     /// </summary>
-    public long TotalCost { get; private set; }
+    public long? TotalCost { get; private set; }
+
+    /// <summary>
+    /// 發放時間（UTC）。
+    /// </summary>
+    public DateTime IssuedAtUtc { get; private set; }
+
+    /// <summary>
+    /// 發放來源類型。
+    /// </summary>
+    public IssuedByType IssuedByType { get; private set; }
+
+    /// <summary>
+    /// 發放人員識別（選填）。
+    /// </summary>
+    public Guid? IssuedByUserId { get; private set; }
+
+    /// <summary>
+    /// 發放原因（選填）。
+    /// </summary>
+    public string? IssuedReason { get; private set; }
+
+    /// <summary>
+    /// 提交狀態。
+    /// </summary>
+    public TicketSubmissionStatus SubmissionStatus { get; private set; }
+
+    /// <summary>
+    /// 提交時間（UTC）。
+    /// </summary>
+    public DateTime? SubmittedAtUtc { get; private set; }
+
+    /// <summary>
+    /// 作廢時間（UTC）。
+    /// </summary>
+    public DateTime? CancelledAtUtc { get; private set; }
+
+    /// <summary>
+    /// 作廢原因（選填）。
+    /// </summary>
+    public string? CancelledReason { get; private set; }
+
+    /// <summary>
+    /// 作廢人員識別（選填）。
+    /// </summary>
+    public Guid? CancelledByUserId { get; private set; }
 
     /// <summary>
     /// 建立時間（UTC）。
@@ -95,16 +157,75 @@ public sealed class Ticket : Entity
     /// </summary>
     public static Ticket Create(
         Guid tenantId,
-        Guid drawId,
         GameCode gameCode,
         PlayTypeCode playTypeCode,
         Guid memberId,
-        Guid ticketTemplateId,
-        decimal priceSnapshot,
-        long totalCost,
+        Guid? campaignId,
+        Guid? ticketTemplateId,
+        Guid? drawId,
+        decimal? priceSnapshot,
+        long? totalCost,
+        DateTime issuedAtUtc,
+        IssuedByType issuedByType,
+        Guid? issuedByUserId,
+        string? issuedReason,
         DateTime createdAt)
     {
-        return new Ticket(Guid.NewGuid(), tenantId, drawId, gameCode, playTypeCode, memberId, ticketTemplateId, priceSnapshot, totalCost, createdAt);
+        return new Ticket(
+            Guid.NewGuid(),
+            tenantId,
+            gameCode,
+            playTypeCode,
+            memberId,
+            campaignId,
+            ticketTemplateId,
+            drawId,
+            priceSnapshot,
+            totalCost,
+            issuedAtUtc,
+            issuedByType,
+            issuedByUserId,
+            issuedReason,
+            createdAt);
+    }
+
+    /// <summary>
+    /// 提交投注號碼，僅允許一次。
+    /// </summary>
+    public Result SubmitNumbers(LotteryNumbers numbers, DateTime utcNow)
+    {
+        if (SubmissionStatus != TicketSubmissionStatus.NotSubmitted)
+        {
+            return Result.Failure(GamingErrors.TicketAlreadySubmitted);
+        }
+
+        if (_lines.Count > 0)
+        {
+            return Result.Failure(GamingErrors.TicketNumbersAlreadySubmitted);
+        }
+
+        Result<TicketLine> lineResult = TicketLine.Create(Id, 0, numbers);
+        if (lineResult.IsFailure)
+        {
+            return Result.Failure(lineResult.Error);
+        }
+
+        _lines.Add(lineResult.Value);
+        SubmissionStatus = TicketSubmissionStatus.Submitted;
+        SubmittedAtUtc = utcNow;
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// 作廢票券。
+    /// </summary>
+    public void Cancel(Guid? cancelledByUserId, string? reason, DateTime utcNow)
+    {
+        SubmissionStatus = TicketSubmissionStatus.Cancelled;
+        CancelledAtUtc = utcNow;
+        CancelledReason = reason;
+        CancelledByUserId = cancelledByUserId;
     }
 
     /// <summary>

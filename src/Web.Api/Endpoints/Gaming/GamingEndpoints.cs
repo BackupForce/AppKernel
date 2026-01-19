@@ -58,6 +58,7 @@ public sealed class GamingEndpoints : IEndpoint
         Entitlements.GamingEntitlementEndpoints.Map(group);
         Catalog.GamingCatalogEndpoints.Map(group);
         Members.GamingMemberEndpoints.Map(group);
+        Tickets.GamingTicketEndpoints.Map(group);
         
         MapRedeemEndpoints(group);
     }

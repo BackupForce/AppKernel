@@ -5,6 +5,7 @@ using Application.Abstractions.Messaging;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Shared;
+using Domain.Gaming.Tickets;
 using SharedKernel;
 
 namespace Application.Gaming.Draws.Execute;
@@ -17,6 +18,7 @@ namespace Application.Gaming.Draws.Execute;
 /// </remarks>
 internal sealed class ExecuteDrawCommandHandler(
     IDrawRepository drawRepository,
+    ITicketDrawRepository ticketDrawRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
@@ -75,6 +77,22 @@ internal sealed class ExecuteDrawCommandHandler(
         draw.Execute(rngResult.Numbers, serverSeedReveal, rngResult.Algorithm, rngResult.DerivedInput, now);
 
         drawRepository.Update(draw);
+
+        if (draw.IsEffectivelyClosed(now))
+        {
+            IReadOnlyCollection<TicketDraw> pendingTicketDraws = await ticketDrawRepository.GetPendingForUnsubmittedTicketsAsync(
+                tenantContext.TenantId,
+                draw.Id,
+                cancellationToken);
+
+            foreach (TicketDraw ticketDraw in pendingTicketDraws)
+            {
+                ticketDraw.MarkInvalid(now);
+            }
+
+            ticketDrawRepository.UpdateRange(pendingTicketDraws);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

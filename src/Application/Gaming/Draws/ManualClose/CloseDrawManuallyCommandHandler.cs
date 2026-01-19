@@ -5,6 +5,7 @@ using Application.Abstractions.Messaging;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Shared;
+using Domain.Gaming.Tickets;
 using SharedKernel;
 
 namespace Application.Gaming.Draws.ManualClose;
@@ -14,6 +15,7 @@ namespace Application.Gaming.Draws.ManualClose;
 /// </summary>
 internal sealed class CloseDrawManuallyCommandHandler(
     IDrawRepository drawRepository,
+    ITicketDrawRepository ticketDrawRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
@@ -41,8 +43,25 @@ internal sealed class CloseDrawManuallyCommandHandler(
             return Result.Failure(GamingErrors.DrawAlreadyExecuted);
         }
 
-        draw.CloseManually(request.Reason, dateTimeProvider.UtcNow);
+        DateTime now = dateTimeProvider.UtcNow;
+        draw.CloseManually(request.Reason, now);
         drawRepository.Update(draw);
+
+        if (draw.IsEffectivelyClosed(now))
+        {
+            IReadOnlyCollection<TicketDraw> pendingTicketDraws = await ticketDrawRepository.GetPendingForUnsubmittedTicketsAsync(
+                tenantContext.TenantId,
+                draw.Id,
+                cancellationToken);
+
+            foreach (TicketDraw ticketDraw in pendingTicketDraws)
+            {
+                ticketDraw.MarkInvalid(now);
+            }
+
+            ticketDrawRepository.UpdateRange(pendingTicketDraws);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

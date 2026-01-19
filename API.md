@@ -71,6 +71,66 @@
   ```
 - **描述**：回傳前端可用的 UI 友善權限目錄。 【F:src/Web.Api/Endpoints/Permissions/PermissionsEndpoints.cs†L6-L25】【F:src/Application/Authorization/PermissionCatalogDto.cs†L7-L28】【F:src/Application/Authorization/PermissionUiCatalogProvider.cs†L15-L156】
 
+## Gaming - 票券
+
+- **路由前綴**：`/api/v1/tenants/{tenantId}/gaming`
+- **授權**：所有端點需登入；部分端點要求 `member` 或 `tenant user` 角色。
+
+### POST `/api/v1/tenants/{tenantId}/gaming/tickets/issue`
+- **授權**：TenantUser
+- **請求體**
+  ```json
+  {
+    "memberId": "guid",
+    "campaignId": "guid",
+    "ticketTemplateId": "guid|null",
+    "issuedReason": "string|null"
+  }
+  ```
+- **成功回應**
+  ```json
+  {
+    "ticketId": "guid",
+    "drawIds": ["guid"]
+  }
+  ```
+- **描述**：客服/後台發券並回傳可參與期數。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L14-L49】【F:src/Application/Gaming/Tickets/Issue/IssueTicketCommandHandler.cs†L19-L168】
+
+### POST `/api/v1/tenants/{tenantId}/gaming/tickets/campaigns/{campaignId}/claim`
+- **授權**：Member
+- **成功回應**
+  ```json
+  {
+    "ticketId": "guid",
+    "drawIds": ["guid"]
+  }
+  ```
+- **描述**：會員領取活動票券，同活動僅可領取一次。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L51-L72】【F:src/Application/Gaming/Tickets/Claim/ClaimCampaignTicketCommandHandler.cs†L18-L154】
+
+### POST `/api/v1/tenants/{tenantId}/gaming/tickets/{ticketId}/submit`
+- **授權**：Member
+- **請求體**
+  ```json
+  {
+    "numbers": [1, 2, 3, 4, 5]
+  }
+  ```
+- **描述**：提交票券號碼，僅允許一次。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L74-L93】【F:src/Application/Gaming/Tickets/Submit/SubmitTicketNumbersCommandHandler.cs†L17-L92】
+
+### POST `/api/v1/tenants/{tenantId}/gaming/tickets/{ticketId}/draws/{drawId}/redeem`
+- **授權**：Member
+- **描述**：逐期兌獎，只能對已結算的 TicketDraw。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L95-L114】【F:src/Application/Gaming/Tickets/Redeem/RedeemTicketDrawCommandHandler.cs†L11-L52】
+
+### POST `/api/v1/tenants/{tenantId}/gaming/tickets/{ticketId}/cancel`
+- **授權**：TenantUser
+- **請求體**
+  ```json
+  {
+    "reason": "string|null"
+  }
+  ```
+- **描述**：整張票券作廢，若任一期已開獎/結算則拒絕。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L116-L136】【F:src/Application/Gaming/Tickets/Cancel/CancelTicketCommandHandler.cs†L14-L63】
+
 ## 使用者 (Users) – 管理後台
 
 - **路由前綴**：`/api/v{version}/users`

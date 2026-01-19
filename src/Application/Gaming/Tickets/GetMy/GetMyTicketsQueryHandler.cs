@@ -9,6 +9,7 @@ using SharedKernel;
 using Domain.Gaming.Rules;
 using Domain.Gaming.Catalog;
 using Domain.Gaming.Shared;
+using Domain.Gaming.Tickets;
 
 namespace Application.Gaming.Tickets.GetMy;
 
@@ -19,15 +20,19 @@ internal sealed class GetMyTicketsQueryHandler(
     IUserContext userContext,
     IEntitlementChecker entitlementChecker) : IQueryHandler<GetMyTicketsQuery, IReadOnlyCollection<TicketSummaryDto>>
 {
-    private sealed record TicketLineRow(
+    private sealed record TicketRow(
         Guid TicketId,
-        Guid DrawId,
+        Guid? CampaignId,
         string GameCode,
         string PlayTypeCode,
-        long TotalCost,
-        DateTime CreatedAt,
-        int LineIndex,
-        string Numbers,
+        TicketSubmissionStatus SubmissionStatus,
+        DateTime IssuedAtUtc,
+        DateTime? SubmittedAtUtc,
+        int? LineIndex,
+        string? Numbers,
+        Guid? DrawId,
+        TicketDrawParticipationStatus? ParticipationStatus,
+        DateTime? DrawAt,
         string? WinningNumbers);
 
     public async Task<Result<IReadOnlyCollection<TicketSummaryDto>>> Handle(
@@ -58,28 +63,33 @@ internal sealed class GetMyTicketsQueryHandler(
         const string sql = """
             SELECT
                 t.id AS TicketId,
-                t.draw_id AS DrawId,
+                t.campaign_id AS CampaignId,
                 t.game_code AS GameCode,
                 t.play_type_code AS PlayTypeCode,
-                t.total_cost AS TotalCost,
-                t.created_at AS CreatedAt,
+                t.submission_status AS SubmissionStatus,
+                t.issued_at_utc AS IssuedAtUtc,
+                t.submitted_at_utc AS SubmittedAtUtc,
                 l.line_index AS LineIndex,
                 l.numbers AS Numbers,
+                td.draw_id AS DrawId,
+                td.participation_status AS ParticipationStatus,
+                d.draw_at AS DrawAt,
                 d.winning_numbers AS WinningNumbers
             FROM gaming.tickets t
-            INNER JOIN gaming.ticket_lines l ON l.ticket_id = t.id
-            INNER JOIN gaming.draws d ON d.id = t.draw_id
+            LEFT JOIN gaming.ticket_lines l ON l.ticket_id = t.id
+            LEFT JOIN gaming.ticket_draws td ON td.ticket_id = t.id
+            LEFT JOIN gaming.draws d ON d.id = td.draw_id
             WHERE t.tenant_id = @TenantId
               AND t.member_id = @MemberId
               AND t.game_code = @GameCode
-              AND (@From IS NULL OR t.created_at >= @From)
-              AND (@To IS NULL OR t.created_at <= @To)
-            ORDER BY t.created_at DESC, l.line_index ASC
+              AND (@From IS NULL OR t.issued_at_utc >= @From)
+              AND (@To IS NULL OR t.issued_at_utc <= @To)
+            ORDER BY t.issued_at_utc DESC
             """;
 
         using System.Data.IDbConnection connection = dbConnectionFactory.GetOpenConnection();
 
-        IEnumerable<TicketLineRow> rows = await connection.QueryAsync<TicketLineRow>(
+        IEnumerable<TicketRow> rows = await connection.QueryAsync<TicketRow>(
             sql,
             new
             {
@@ -92,43 +102,64 @@ internal sealed class GetMyTicketsQueryHandler(
 
         Dictionary<Guid, TicketSummaryDto> ticketMap = new Dictionary<Guid, TicketSummaryDto>();
         Dictionary<Guid, List<TicketLineSummaryDto>> lineMap = new Dictionary<Guid, List<TicketLineSummaryDto>>();
+        Dictionary<Guid, List<TicketDrawSummaryDto>> drawMap = new Dictionary<Guid, List<TicketDrawSummaryDto>>();
 
-        foreach (TicketLineRow row in rows)
+        foreach (TicketRow row in rows)
         {
             if (!ticketMap.ContainsKey(row.TicketId))
             {
                 ticketMap[row.TicketId] = new TicketSummaryDto(
                     row.TicketId,
-                    row.DrawId,
+                    row.CampaignId,
                     row.GameCode,
                     row.PlayTypeCode,
-                    row.TotalCost,
-                    row.CreatedAt,
-                    Array.Empty<TicketLineSummaryDto>());
+                    row.SubmissionStatus,
+                    row.IssuedAtUtc,
+                    row.SubmittedAtUtc,
+                    Array.Empty<TicketLineSummaryDto>(),
+                    Array.Empty<TicketDrawSummaryDto>());
                 lineMap[row.TicketId] = new List<TicketLineSummaryDto>();
+                drawMap[row.TicketId] = new List<TicketDrawSummaryDto>();
             }
 
-            int matchedCount = 0;
-            if (!string.IsNullOrWhiteSpace(row.WinningNumbers))
+            if (row.LineIndex.HasValue && !string.IsNullOrWhiteSpace(row.Numbers)
+                && lineMap[row.TicketId].All(item => item.LineIndex != row.LineIndex.Value))
             {
-                Result<LotteryNumbers> winningResult = LotteryNumbers.Parse(row.WinningNumbers);
-                Result<LotteryNumbers> lineResult = LotteryNumbers.Parse(row.Numbers);
-                if (winningResult.IsSuccess && lineResult.IsSuccess)
+                lineMap[row.TicketId].Add(new TicketLineSummaryDto(row.LineIndex.Value, row.Numbers));
+            }
+
+            if (row.DrawId.HasValue && row.ParticipationStatus.HasValue && row.DrawAt.HasValue)
+            {
+                int matchedCount = 0;
+                if (!string.IsNullOrWhiteSpace(row.WinningNumbers) && !string.IsNullOrWhiteSpace(row.Numbers))
                 {
-                    matchedCount = Lottery539MatchCalculator.CalculateMatchedCount(
-                        winningResult.Value.Numbers,
-                        lineResult.Value.Numbers);
+                    Result<LotteryNumbers> winningResult = LotteryNumbers.Parse(row.WinningNumbers);
+                    Result<LotteryNumbers> lineResult = LotteryNumbers.Parse(row.Numbers);
+                    if (winningResult.IsSuccess && lineResult.IsSuccess)
+                    {
+                        matchedCount = Lottery539MatchCalculator.CalculateMatchedCount(
+                            winningResult.Value.Numbers,
+                            lineResult.Value.Numbers);
+                    }
+                }
+
+                if (drawMap[row.TicketId].All(item => item.DrawId != row.DrawId.Value))
+                {
+                    drawMap[row.TicketId].Add(new TicketDrawSummaryDto(
+                        row.DrawId.Value,
+                        row.DrawAt.Value,
+                        row.ParticipationStatus.Value,
+                        matchedCount));
                 }
             }
-
-            lineMap[row.TicketId].Add(new TicketLineSummaryDto(row.LineIndex, row.Numbers, matchedCount));
         }
 
         List<TicketSummaryDto> result = new List<TicketSummaryDto>();
         foreach (KeyValuePair<Guid, TicketSummaryDto> entry in ticketMap)
         {
             IReadOnlyCollection<TicketLineSummaryDto> lines = lineMap[entry.Key];
-            TicketSummaryDto ticket = entry.Value with { Lines = lines };
+            IReadOnlyCollection<TicketDrawSummaryDto> draws = drawMap[entry.Key];
+            TicketSummaryDto ticket = entry.Value with { Lines = lines, Draws = draws };
             result.Add(ticket);
         }
 
