@@ -7,17 +7,13 @@ namespace Domain.Gaming.Repositories;
 /// </summary>
 public interface ITicketRepository
 {
-    /// <summary>
-    /// 依期數取得所有票券（結算用）。
-    /// </summary>
-    Task<IReadOnlyCollection<Ticket>> GetByDrawIdAsync(
+    Task<Ticket?> GetByIdAsync(Guid tenantId, Guid ticketId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<Ticket>> GetByIdsAsync(
         Guid tenantId,
-        Guid drawId,
+        IReadOnlyCollection<Guid> ticketIds,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// 依會員取得票券（查詢用）。
-    /// </summary>
     Task<IReadOnlyCollection<Ticket>> GetByMemberIdAsync(
         Guid tenantId,
         Guid memberId,
@@ -25,13 +21,15 @@ public interface ITicketRepository
         DateTime? to,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// 新增票券。
-    /// </summary>
+    Task<bool> ExistsForCampaignAsync(
+        Guid tenantId,
+        Guid memberId,
+        Guid campaignId,
+        CancellationToken cancellationToken = default);
+
     void Insert(Ticket ticket);
 
-    /// <summary>
-    /// 新增票券中的單注。
-    /// </summary>
+    void Update(Ticket ticket);
+
     void InsertLine(TicketLine line);
 }

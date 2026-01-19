@@ -127,6 +127,46 @@ public static class GamingErrors
         "Gaming.TicketLineInvalid",
         "下注明細不正確。");
 
+    public static readonly Error TicketNotFound = Error.NotFound(
+        "Gaming.TicketNotFound",
+        "找不到票券。");
+
+    public static readonly Error TicketAlreadySubmitted = Error.Validation(
+        "Gaming.TicketAlreadySubmitted",
+        "票券已提交。");
+
+    public static readonly Error TicketNumbersAlreadySubmitted = Error.Validation(
+        "Gaming.TicketNumbersAlreadySubmitted",
+        "票券號碼已提交。");
+
+    public static readonly Error TicketNotSubmitted = Error.Validation(
+        "Gaming.TicketNotSubmitted",
+        "票券尚未提交。");
+
+    public static readonly Error TicketCancelled = Error.Validation(
+        "Gaming.TicketCancelled",
+        "票券已作廢。");
+
+    public static readonly Error TicketDrawNotAvailable = Error.Validation(
+        "Gaming.TicketDrawNotAvailable",
+        "活動尚無可參與的期數。");
+
+    public static readonly Error TicketDrawNotFound = Error.NotFound(
+        "Gaming.TicketDrawNotFound",
+        "找不到票券期數。");
+
+    public static readonly Error TicketDrawNotSettled = Error.Validation(
+        "Gaming.TicketDrawNotSettled",
+        "該期尚未結算。");
+
+    public static readonly Error TicketDrawAlreadyRedeemed = Error.Validation(
+        "Gaming.TicketDrawAlreadyRedeemed",
+        "該期已兌獎。");
+
+    public static readonly Error TicketCannotCancelAfterDraw = Error.Validation(
+        "Gaming.TicketCannotCancelAfterDraw",
+        "已開獎或結算的票券無法作廢。");
+
     public static readonly Error TicketTemplateNotFound = Error.NotFound(
         "Gaming.TicketTemplateNotFound",
         "找不到票種模板。");
@@ -218,6 +258,34 @@ public static class GamingErrors
     public static readonly Error DrawReopenWindowInvalid = Error.Validation(
         "Gaming.DrawReopenWindowInvalid",
         "解封時已不在可下注時間窗內。");
+
+    public static readonly Error CampaignNotFound = Error.NotFound(
+        "Gaming.CampaignNotFound",
+        "找不到活動。");
+
+    public static readonly Error CampaignNameRequired = Error.Validation(
+        "Gaming.CampaignNameRequired",
+        "活動名稱不可為空白。");
+
+    public static readonly Error CampaignGrantWindowInvalid = Error.Validation(
+        "Gaming.CampaignGrantWindowInvalid",
+        "活動發放時間窗設定不正確。");
+
+    public static readonly Error CampaignInactive = Error.Validation(
+        "Gaming.CampaignInactive",
+        "活動尚未開放或已結束。");
+
+    public static readonly Error CampaignDrawDuplicated = Error.Validation(
+        "Gaming.CampaignDrawDuplicated",
+        "活動期數重複。");
+
+    public static readonly Error CampaignAlreadyClaimed = Error.Validation(
+        "Gaming.CampaignAlreadyClaimed",
+        "活動已領取。");
+
+    public static readonly Error CampaignDrawPlayTypeNotEnabled = Error.Validation(
+        "Gaming.CampaignDrawPlayTypeNotEnabled",
+        "期數尚未啟用指定玩法。");
 
     public static readonly Error PrizeAwardOptionNotFound = Error.Validation(
         "Gaming.PrizeAwardOptionNotFound",

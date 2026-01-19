@@ -1,3 +1,5 @@
+using Domain.Gaming.Tickets;
+
 namespace Application.Gaming.Dtos;
 
 /// <summary>
@@ -5,9 +7,11 @@ namespace Application.Gaming.Dtos;
 /// </summary>
 public sealed record TicketSummaryDto(
     Guid TicketId,
-    Guid DrawId,
+    Guid? CampaignId,
     string GameCode,
     string PlayTypeCode,
-    long TotalCost,
-    DateTime CreatedAt,
-    IReadOnlyCollection<TicketLineSummaryDto> Lines);
+    TicketSubmissionStatus SubmissionStatus,
+    DateTime IssuedAtUtc,
+    DateTime? SubmittedAtUtc,
+    IReadOnlyCollection<TicketLineSummaryDto> Lines,
+    IReadOnlyCollection<TicketDrawSummaryDto> Draws);

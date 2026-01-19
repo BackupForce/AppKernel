@@ -7,6 +7,7 @@ using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Domain.Gaming.Draws;
+using Domain.Gaming.Campaigns;
 using Domain.Gaming.Prizes;
 using Domain.Gaming.Tickets;
 using Domain.Gaming.Entitlements;
@@ -26,11 +27,15 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<MemberAssetLedger> MemberAssetLedgers { get; set; }
     public DbSet<MemberActivityLog> MemberActivityLogs { get; set; }
     public DbSet<Draw> Draws { get; set; }
+    public DbSet<Campaign> Campaigns { get; set; }
+    public DbSet<CampaignDraw> CampaignDraws { get; set; }
     public DbSet<DrawEnabledPlayType> DrawEnabledPlayTypes { get; set; }
     public DbSet<DrawAllowedTicketTemplate> DrawAllowedTicketTemplates { get; set; }
     public DbSet<DrawPrizePoolItem> DrawPrizePoolItems { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<TicketLine> TicketLines { get; set; }
+    public DbSet<TicketDraw> TicketDraws { get; set; }
+    public DbSet<TicketLineResult> TicketLineResults { get; set; }
     public DbSet<TicketTemplate> TicketTemplates { get; set; }
     public DbSet<Prize> Prizes { get; set; }
     public DbSet<PrizeAward> PrizeAwards { get; set; }
