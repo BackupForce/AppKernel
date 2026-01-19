@@ -1,6 +1,7 @@
 using Domain.Gaming;
-using Microsoft.EntityFrameworkCore;
+using Domain.Gaming.TicketTemplates;
 using Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configurations.Gaming;

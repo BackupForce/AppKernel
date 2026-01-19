@@ -143,17 +143,17 @@ public sealed class Draw : Entity
     /// <summary>
     /// 供 EF 追蹤的玩法清單。
     /// </summary>
-    public IReadOnlyCollection<DrawEnabledPlayType> EnabledPlayTypeItems => _enabledPlayTypes.AsReadOnly();
+    public IReadOnlyCollection<DrawEnabledPlayType> EnabledPlayTypeItems => _enabledPlayTypes;
 
     /// <summary>
     /// 本期獎項配置（玩法 + 獎級）。
     /// </summary>
-    public IReadOnlyCollection<DrawPrizePoolItem> PrizePool => _prizePool.AsReadOnly();
+    public IReadOnlyCollection<DrawPrizePoolItem> PrizePool => _prizePool;
 
     /// <summary>
     /// 供 EF 追蹤的獎項配置清單。
     /// </summary>
-    public IReadOnlyCollection<DrawPrizePoolItem> PrizePoolItems => _prizePool.AsReadOnly();
+    public IReadOnlyCollection<DrawPrizePoolItem> PrizePoolItems => _prizePool;
 
     /// <summary>
     /// 建立新期數並檢查時間邏輯，避免售票區間顛倒。

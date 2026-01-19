@@ -1,4 +1,5 @@
 using Domain.Gaming;
+using Domain.Gaming.Catalog;
 using Domain.Gaming.Draws;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;

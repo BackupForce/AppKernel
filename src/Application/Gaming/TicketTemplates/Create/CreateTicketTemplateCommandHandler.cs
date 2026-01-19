@@ -1,7 +1,9 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Gaming.Repositories;
 using Domain.Gaming.Shared;
+using Domain.Gaming.TicketTemplates;
 using SharedKernel;
 
 namespace Application.Gaming.TicketTemplates.Create;

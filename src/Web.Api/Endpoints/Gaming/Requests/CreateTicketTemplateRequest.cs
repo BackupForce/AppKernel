@@ -1,3 +1,5 @@
+using Domain.Gaming.TicketTemplates;
+
 namespace Web.Api.Endpoints.Gaming.Requests;
 
 /// <summary>

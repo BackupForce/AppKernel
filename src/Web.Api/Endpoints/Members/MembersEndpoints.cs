@@ -28,7 +28,7 @@ public sealed class MembersEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        RouteGroupBuilder group = app.MapGroup("/members")
+        RouteGroupBuilder group = app.MapGroup("/tenants/{tenantId:guid}/members")
             .WithGroupName("admin-v1")
             .WithMetadata(new ApiVersion(1, 0))
             .RequireAuthorization(AuthorizationPolicyNames.TenantUser)

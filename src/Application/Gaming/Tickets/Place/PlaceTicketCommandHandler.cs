@@ -9,6 +9,7 @@ using Domain.Gaming.Repositories;
 using Domain.Gaming.Rules;
 using Domain.Gaming.Shared;
 using Domain.Gaming.Tickets;
+using Domain.Gaming.TicketTemplates;
 using Domain.Members;
 using SharedKernel;
 

@@ -5,6 +5,7 @@ using Application.Abstractions.Messaging;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Shared;
+using Domain.Gaming.TicketTemplates;
 using SharedKernel;
 
 namespace Application.Gaming.Draws.AllowedTicketTemplates.Update;

@@ -105,9 +105,9 @@ internal sealed class EntitlementChecker(ApplicationDbContext dbContext, ICacheS
 
     private sealed class TenantEntitlementCache
     {
-        public HashSet<string> EnabledGameCodes { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> EnabledGameCodes { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 
-        public Dictionary<string, HashSet<string>> EnabledPlayTypesByGame { get; } =
+        public Dictionary<string, HashSet<string>> EnabledPlayTypesByGame { get; init; } =
             new(StringComparer.OrdinalIgnoreCase);
     }
 }

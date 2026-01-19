@@ -1,8 +1,9 @@
 ﻿using Domain.Gaming;
-using Microsoft.EntityFrameworkCore;
-using Infrastructure.Database;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Domain.Gaming.Catalog;
 using Domain.Gaming.Tickets;
+using Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configurations.Gaming;
 

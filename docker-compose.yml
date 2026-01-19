@@ -39,7 +39,7 @@ services:
     container_name: redis
     restart: always
     ports:
-      - '6379:6379'
+      - '6380:6379'
 
   aspire-dashboard:
     image: mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest
