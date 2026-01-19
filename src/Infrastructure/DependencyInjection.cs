@@ -50,7 +50,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using SharedKernel;
 using StackExchange.Redis;
-using Domain.Gaming.Repositories;
 
 namespace Infrastructure;
 

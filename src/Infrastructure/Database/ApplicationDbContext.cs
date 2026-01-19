@@ -13,13 +13,7 @@ using Domain.Tenants;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Domain.Gaming.Draws;
 using Domain.Gaming.Campaigns;
-using Domain.Gaming.Prizes;
-using Domain.Gaming.Tickets;
-using Domain.Gaming.Entitlements;
-using Domain.Gaming.PrizeAwards;
-using Domain.Gaming.RedeemRecords;
 
 namespace Infrastructure.Database;
 

@@ -123,7 +123,7 @@ internal sealed class GetMyTicketsQueryHandler(
             }
 
             if (row.LineIndex.HasValue && !string.IsNullOrWhiteSpace(row.Numbers)
-                && lineMap[row.TicketId].All(item => item.LineIndex != row.LineIndex.Value))
+                && lineMap[row.TicketId].TrueForAll(item => item.LineIndex != row.LineIndex.Value))
             {
                 lineMap[row.TicketId].Add(new TicketLineSummaryDto(row.LineIndex.Value, row.Numbers));
             }
@@ -143,7 +143,7 @@ internal sealed class GetMyTicketsQueryHandler(
                     }
                 }
 
-                if (drawMap[row.TicketId].All(item => item.DrawId != row.DrawId.Value))
+                if (drawMap[row.TicketId].TrueForAll(item => item.DrawId != row.DrawId.Value))
                 {
                     drawMap[row.TicketId].Add(new TicketDrawSummaryDto(
                         row.DrawId.Value,

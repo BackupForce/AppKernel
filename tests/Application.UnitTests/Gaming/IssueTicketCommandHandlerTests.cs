@@ -89,7 +89,7 @@ public sealed class IssueTicketCommandHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.DrawIds.Should().ContainSingle().Which.Should().Be(draw1.Id);
-        await ticketDrawRepository.Received(1).Insert(Arg.Any<TicketDraw>());
+        ticketDrawRepository.Received(1).Insert(Arg.Any<TicketDraw>());
     }
 
     private static Draw CreateDraw(Guid tenantId, DateTime openAt, DateTime closeAt, DateTime drawAt)

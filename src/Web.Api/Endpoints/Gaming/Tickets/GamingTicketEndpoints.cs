@@ -1,3 +1,4 @@
+using Application.Abstractions.Authorization;
 using Application.Gaming.Tickets.Cancel;
 using Application.Gaming.Tickets.Claim;
 using Application.Gaming.Tickets.Issue;
@@ -59,11 +60,12 @@ internal static class GamingTicketEndpoints
                 "/{ticketId:guid}/submit",
                 async (Guid ticketId, SubmitTicketNumbersRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    SubmitTicketNumbersCommand command = new SubmitTicketNumbersCommand(ticketId, request.Numbers);
-                    return await UseCaseInvoker.Send<SubmitTicketNumbersCommand>(
+                    SubmitTicketNumbersCommand command =
+                        new(ticketId, request.Numbers);
+
+                    return await UseCaseInvoker.Send(
                         command,
                         sender,
-                        () => Results.Ok(),
                         ct);
                 })
             .RequireAuthorization(AuthorizationPolicyNames.Member)
@@ -79,7 +81,6 @@ internal static class GamingTicketEndpoints
                     return await UseCaseInvoker.Send<RedeemTicketDrawCommand>(
                         command,
                         sender,
-                        () => Results.Ok(),
                         ct);
                 })
             .RequireAuthorization(AuthorizationPolicyNames.Member)
@@ -95,7 +96,6 @@ internal static class GamingTicketEndpoints
                     return await UseCaseInvoker.Send<CancelTicketCommand>(
                         command,
                         sender,
-                        () => Results.Ok(),
                         ct);
                 })
             .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
