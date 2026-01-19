@@ -3,7 +3,6 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Domain.Gaming.Draws;
-using Domain.Gaming.PrizeAwards;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Rules;
 using Domain.Gaming.Shared;
@@ -21,7 +20,8 @@ namespace Application.Gaming.Draws.Settle;
 internal sealed class SettleDrawCommandHandler(
     IDrawRepository drawRepository,
     ITicketRepository ticketRepository,
-    IPrizeAwardRepository prizeAwardRepository,
+    ITicketDrawRepository ticketDrawRepository,
+    ITicketLineResultRepository ticketLineResultRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
@@ -64,69 +64,81 @@ internal sealed class SettleDrawCommandHandler(
 
         DateTime now = dateTimeProvider.UtcNow;
 
-        // 結算時依期數批次取得所有票券。
-        IReadOnlyCollection<Ticket> tickets = await ticketRepository.GetByDrawIdAsync(
+        IReadOnlyCollection<TicketDraw> ticketDraws = await ticketDrawRepository.GetByDrawIdAsync(
             tenantContext.TenantId,
             draw.Id,
+            TicketDrawParticipationStatus.Active,
             cancellationToken);
 
-        foreach (Ticket ticket in tickets)
+        if (ticketDraws.Count == 0)
         {
-            foreach (TicketLine line in ticket.Lines)
+            return Result.Success();
+        }
+
+        IReadOnlyCollection<Guid> ticketIds = ticketDraws.Select(item => item.TicketId).Distinct().ToList();
+        IReadOnlyCollection<Ticket> tickets = await ticketRepository.GetByIdsAsync(
+            tenantContext.TenantId,
+            ticketIds,
+            cancellationToken);
+        Dictionary<Guid, Ticket> ticketMap = tickets.ToDictionary(ticket => ticket.Id, ticket => ticket);
+
+        foreach (TicketDraw ticketDraw in ticketDraws)
+        {
+            if (!ticketMap.TryGetValue(ticketDraw.TicketId, out Ticket? ticket))
             {
-                LotteryNumbers? lineNumbers = line.ParseNumbers();
-                if (lineNumbers is null)
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                IPlayRule rule = registry.GetRule(draw.GameCode, ticket.PlayTypeCode);
-                PrizeTier? tier = rule.Evaluate(lineNumbers, winningNumbers);
-                if (tier is null)
-                {
-                    continue;
-                }
+            TicketLine? line = ticket.Lines.FirstOrDefault(item => item.LineIndex == 0);
+            if (line is null)
+            {
+                ticketDraw.MarkSettled(now);
+                ticketDrawRepository.Update(ticketDraw);
+                continue;
+            }
 
-                int matchedCount = Lottery539MatchCalculator.CalculateMatchedCount(
-                    winningNumbers.Numbers,
-                    lineNumbers.Numbers);
+            LotteryNumbers? lineNumbers = line.ParseNumbers();
+            if (lineNumbers is null)
+            {
+                ticketDraw.MarkSettled(now);
+                ticketDrawRepository.Update(ticketDraw);
+                continue;
+            }
 
-                // 防重：以 TenantId + DrawId + TicketId + LineIndex 作為唯一鍵概念。
-                bool exists = await prizeAwardRepository.ExistsAsync(
+            IPlayRule rule = registry.GetRule(draw.GameCode, ticket.PlayTypeCode);
+            PrizeTier? tier = rule.Evaluate(lineNumbers, winningNumbers);
+            if (tier is not null)
+            {
+                bool exists = await ticketLineResultRepository.ExistsAsync(
                     tenantContext.TenantId,
-                    draw.Id,
                     ticket.Id,
+                    draw.Id,
                     line.LineIndex,
                     cancellationToken);
 
-                if (exists)
+                if (!exists)
                 {
-                    // 結算重跑時必須具備 idempotency，避免重複產生 Award。
-                    continue;
+                    PrizeOption? option = draw.FindPrizeOption(ticket.PlayTypeCode, tier.Value);
+                    if (option is null)
+                    {
+                        return Result.Failure(GamingErrors.PrizePoolNotConfigured);
+                    }
+
+                    TicketLineResult result = TicketLineResult.Create(
+                        tenantContext.TenantId,
+                        ticket.Id,
+                        draw.Id,
+                        line.LineIndex,
+                        tier.Value,
+                        option.Cost,
+                        now);
+
+                    ticketLineResultRepository.Insert(result);
                 }
-
-                PrizeOption? option = draw.FindPrizeOption(ticket.PlayTypeCode, tier.Value);
-                if (option is null)
-                {
-                    return Result.Failure(GamingErrors.PrizePoolNotConfigured);
-                }
-
-                PrizeAward award = PrizeAward.Create(
-                    tenantContext.TenantId,
-                    ticket.MemberId,
-                    draw.Id,
-                    draw.GameCode,
-                    ticket.PlayTypeCode,
-                    ticket.Id,
-                    line.LineIndex,
-                    matchedCount,
-                    tier.Value,
-                    option,
-                    ResolveAwardExpiry(option, draw, now),
-                    now);
-
-                prizeAwardRepository.Insert(award);
             }
+
+            ticketDraw.MarkSettled(now);
+            ticketDrawRepository.Update(ticketDraw);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -134,14 +146,4 @@ internal sealed class SettleDrawCommandHandler(
         return Result.Success();
     }
 
-    private static DateTime? ResolveAwardExpiry(PrizeOption option, Draw draw, DateTime now)
-    {
-        int? validDays = option.RedeemValidDays ?? draw.RedeemValidDays;
-        if (!validDays.HasValue || validDays.Value <= 0)
-        {
-            return null;
-        }
-
-        return now.AddDays(validDays.Value);
-    }
 }

@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
@@ -16,18 +15,15 @@ using SharedKernel;
 namespace Application.Gaming.Tickets.Place;
 
 /// <summary>
-/// 下注流程：驗證期數、建立票券、扣點並持久化。
+/// 下注流程：驗證期數、建立票券並提交號碼。
 /// </summary>
-/// <remarks>
-/// Application 層透過 IWalletLedgerService 等介面與外部系統互動，確保依賴方向正確。
-/// </remarks>
 internal sealed class PlaceTicketCommandHandler(
     IDrawRepository drawRepository,
     ITicketRepository ticketRepository,
+    ITicketDrawRepository ticketDrawRepository,
     ITicketTemplateRepository ticketTemplateRepository,
     IDrawAllowedTicketTemplateRepository drawAllowedTicketTemplateRepository,
     IMemberRepository memberRepository,
-    IWalletLedgerService walletLedgerService,
     IServerSeedStore serverSeedStore,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
@@ -149,86 +145,63 @@ internal sealed class PlaceTicketCommandHandler(
             return Result.Failure<Guid>(GamingErrors.TicketLineInvalid);
         }
 
-        if (request.Lines.Count > template.MaxLinesPerTicket)
+        if (request.Lines.Count > 1 || request.Lines.Count > template.MaxLinesPerTicket)
         {
             return Result.Failure<Guid>(GamingErrors.TicketLinesExceedLimit);
         }
 
-        // 中文註解：每注價格以模板單價計算，總成本 = 單價 * 注數。
-        decimal totalCostDecimal = template.Price * request.Lines.Count;
-        if (decimal.Truncate(totalCostDecimal) != totalCostDecimal)
-        {
-            // 中文註解：帳本點數以整數為單位，若出現小數價格直接拒絕。
-            return Result.Failure<Guid>(GamingErrors.TicketTemplatePriceInvalid);
-        }
-
-        long totalCost = (long)totalCostDecimal;
-        // 中文註解：PriceSnapshot 記錄下單當下的模板單價，避免日後調價影響稽核。
         Ticket ticket = Ticket.Create(
             tenantContext.TenantId,
-            draw.Id,
             draw.GameCode,
             playTypeCode,
             member.Id,
+            null,
             template.Id,
-            template.Price,
-            totalCost,
+            draw.Id,
+            null,
+            null,
+            now,
+            IssuedByType.System,
+            userContext.UserId,
+            "direct_place",
             now);
 
-        int lineIndex = 0;
-        foreach (IReadOnlyCollection<int> lineNumbers in request.Lines)
+        Result<LotteryNumbers> numbersResult = LotteryNumbers.Create(request.Lines.First());
+        if (numbersResult.IsFailure)
         {
-            Result<LotteryNumbers> numbersResult = LotteryNumbers.Create(lineNumbers);
-            if (numbersResult.IsFailure)
-            {
-                return Result.Failure<Guid>(numbersResult.Error);
-            }
-
-            Result validateResult = rule.ValidateBet(numbersResult.Value);
-            if (validateResult.IsFailure)
-            {
-                return Result.Failure<Guid>(validateResult.Error);
-            }
-
-            Result<TicketLine> lineResult = TicketLine.Create(ticket.Id, lineIndex, numbersResult.Value);
-            if (lineResult.IsFailure)
-            {
-                return Result.Failure<Guid>(lineResult.Error);
-            }
-
-            TicketLine line = lineResult.Value;
-            ticket.AddLine(line);
-            lineIndex++;
+            return Result.Failure<Guid>(numbersResult.Error);
         }
 
-        // 下注與扣點需在同一交易中完成，避免票券落地但扣點失敗。
-        using IDbTransaction transaction = await unitOfWork.BeginTransactionAsync();
-
-        // reference 使用 ticket.Id，避免外部帳本重複扣點。
-        Result<long> debitResult = await walletLedgerService.DebitAsync(
-            tenantContext.TenantId,
-            member.Id,
-            totalCost,
-            "gaming_ticket",
-            ticket.Id.ToString(),
-            "539 下注扣點",
-            cancellationToken);
-
-        if (debitResult.IsFailure)
+        Result validateResult = rule.ValidateBet(numbersResult.Value);
+        if (validateResult.IsFailure)
         {
-            return Result.Failure<Guid>(debitResult.Error);
+            return Result.Failure<Guid>(validateResult.Error);
+        }
+
+        Result submitResult = ticket.SubmitNumbers(numbersResult.Value, now);
+        if (submitResult.IsFailure)
+        {
+            return Result.Failure<Guid>(submitResult.Error);
+        }
+
+        TicketLine line = ticket.Lines.Single();
+        TicketDraw ticketDraw = TicketDraw.Create(tenantContext.TenantId, ticket.Id, draw.Id, now);
+        if (draw.IsWithinSalesWindow(now))
+        {
+            ticketDraw.MarkActive(now);
+        }
+        else
+        {
+            ticketDraw.MarkInvalid(now);
         }
 
         drawRepository.Update(draw);
         ticketRepository.Insert(ticket);
+        ticketDrawRepository.Insert(ticketDraw);
 
-        foreach (TicketLine line in ticket.Lines)
-        {
-            ticketRepository.InsertLine(line);
-        }
+        ticketRepository.InsertLine(line);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        transaction.Commit();
 
         return ticket.Id;
     }
