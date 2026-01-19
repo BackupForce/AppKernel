@@ -1,5 +1,12 @@
 ﻿using System.Data;
 using Application.Abstractions.Data;
+using Domain.Gaming.Draws;
+using Domain.Gaming.Entitlements;
+using Domain.Gaming.PrizeAwards;
+using Domain.Gaming.Prizes;
+using Domain.Gaming.RedeemRecords;
+using Domain.Gaming.Tickets;
+using Domain.Gaming.TicketTemplates;
 using Domain.Members;
 using Domain.Security;
 using Domain.Tenants;
