@@ -105,7 +105,7 @@ internal sealed class LoginCommandHandler(
             sessionExpiresAtUtc);
         refreshTokenRepository.Insert(refreshTokenRecord);
 
-        var accessToken = jwtService.IssueAccessToken(
+        (string Token, DateTime ExpiresAtUtc) accessToken = jwtService.IssueAccessToken(
             user.Id,
             user.Name.ToString(),
             user.Type,

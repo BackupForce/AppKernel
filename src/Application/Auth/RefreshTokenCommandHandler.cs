@@ -83,7 +83,7 @@ internal sealed class RefreshTokenCommandHandler(
         tokenRecord.MarkRotated(newRecord.Id, utcNow);
         session.Touch(utcNow);
 
-        var accessToken = jwtService.IssueAccessToken(
+        (string Token, DateTime ExpiresAtUtc) accessToken = jwtService.IssueAccessToken(
             user.Id,
             user.Name.ToString(),
             user.Type,

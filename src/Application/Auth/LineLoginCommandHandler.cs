@@ -9,6 +9,7 @@ using Domain.Users;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SharedKernel;
+using System.Security.Cryptography; // 新增引用
 
 namespace Application.Auth;
 
@@ -149,7 +150,7 @@ internal sealed class LineLoginCommandHandler(
             sessionExpiresAtUtc);
         refreshTokenRepository.Insert(refreshTokenRecord);
 
-        var accessToken = jwtService.IssueAccessToken(
+        (string Token, DateTime ExpiresAtUtc) accessToken = jwtService.IssueAccessToken(
             user.Id,
             user.Name.ToString(),
             user.Type,
@@ -272,7 +273,12 @@ internal sealed class LineLoginCommandHandler(
         string candidate;
         do
         {
-            string randomDigits = Random.Shared.Next(0, 9999).ToString("0000");
+            // 使用密碼編譯安全性亂數產生器
+            int randomNumber;
+            byte[] bytes = new byte[2];
+            RandomNumberGenerator.Fill(bytes);
+            randomNumber = BitConverter.ToUInt16(bytes, 0) % 10000;
+            string randomDigits = randomNumber.ToString("0000", System.Globalization.CultureInfo.InvariantCulture);
             candidate = $"{prefix}{randomDigits}";
         } while (!await memberRepository.IsMemberNoUniqueAsync(tenantId, candidate, cancellationToken));
 
