@@ -4,7 +4,6 @@ using Application.Abstractions.Messaging;
 using Domain.Auth;
 using Domain.Tenants;
 using Domain.Users;
-using Microsoft.Extensions.Options;
 using SharedKernel;
 
 namespace Application.Auth;
@@ -20,7 +19,7 @@ internal sealed class LoginCommandHandler(
     IRefreshTokenHasher refreshTokenHasher,
     IDateTimeProvider dateTimeProvider,
     IUnitOfWork unitOfWork,
-    IOptions<AuthTokenOptions> authTokenOptions
+    IAuthTokenSettings authTokenSettings
     ) : ICommandHandler<LoginCommand, LoginResponse>
 {
 	public async Task<Result<LoginResponse>> Handle(
@@ -80,9 +79,8 @@ internal sealed class LoginCommandHandler(
             return Result.Failure<LoginResponse>(AuthErrors.TenantNotFound);
         }
 
-        AuthTokenOptions options = authTokenOptions.Value;
         DateTime utcNow = dateTimeProvider.UtcNow;
-        DateTime sessionExpiresAtUtc = utcNow.AddDays(options.RefreshTokenTtlDays);
+        DateTime sessionExpiresAtUtc = utcNow.AddDays(authTokenSettings.RefreshTokenTtlDays);
 
         AuthSession session = AuthSession.Create(
             tenant.Id,

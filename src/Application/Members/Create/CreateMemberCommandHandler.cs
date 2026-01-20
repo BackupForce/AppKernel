@@ -2,6 +2,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Caching;
 using Application.Abstractions.Data;
+using Application.Abstractions.Identity;
 using Application.Abstractions.Messaging;
 using Domain.Members;
 using Domain.Security;
@@ -14,6 +15,7 @@ internal sealed class CreateMemberCommandHandler(
     IResourceNodeRepository resourceNodeRepository,
     ITenantContext tenantContext,
     IDateTimeProvider dateTimeProvider,
+    IMemberNoGenerator memberNoGenerator,
     IUnitOfWork unitOfWork,
     ICacheService cacheService) : ICommandHandler<CreateMemberCommand, Guid>
 {
@@ -31,7 +33,10 @@ internal sealed class CreateMemberCommandHandler(
         }
 
         string memberNo = string.IsNullOrWhiteSpace(request.MemberNo)
-            ? await GenerateMemberNoAsync(cancellationToken)
+            ? await memberNoGenerator.GenerateAsync(
+                tenantId,
+                MemberNoGenerationMode.Timestamp,
+                cancellationToken)
             : request.MemberNo!;
 
         if (!await memberRepository.IsMemberNoUniqueAsync(tenantId, memberNo, cancellationToken))
@@ -52,7 +57,7 @@ internal sealed class CreateMemberCommandHandler(
         Guid? parentNodeId = await resourceNodeRepository.GetRootNodeIdAsync(tenantId, cancellationToken);
         var memberNode = ResourceNode.Create(
             member.DisplayName,
-            $"member:{member.Id:D}",
+            ResourceNodeKeys.Member(member.Id),
             tenantId,
             parentNodeId);
 
@@ -70,16 +75,4 @@ internal sealed class CreateMemberCommandHandler(
         return member.Id;
     }
 
-    private async Task<string> GenerateMemberNoAsync(CancellationToken cancellationToken)
-    {
-        // 中文註解：採用時間戳 + 簡短亂數，降低碰撞機率，仍以唯一性檢查保護。
-        string memberNo;
-        do
-        {
-            memberNo = $"MBR-{dateTimeProvider.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
-        }
-        while (!await memberRepository.IsMemberNoUniqueAsync(tenantContext.TenantId, memberNo, cancellationToken));
-
-        return memberNo;
-    }
 }

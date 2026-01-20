@@ -18,6 +18,7 @@ using Asp.Versioning;
 using Domain.Security;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using SharedKernel;
 using Web.Api.Common;
 using Web.Api.Endpoints.Members.Requests;
 using Web.Api.Extensions;
@@ -34,7 +35,7 @@ public sealed class MembersEndpoints : IEndpoint
             .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
             .WithTags("Members");
 
-        var memberNodeMetadata = new ResourceNodeMetadata("id", "member:");
+        var memberNodeMetadata = new ResourceNodeMetadata("id", ResourceNodeKeys.MemberPrefix);
 
         // 改用顯式 handler 參數宣告，避免 Minimal API 自動推斷 route/body/service 造成例外。
         group.MapPost(

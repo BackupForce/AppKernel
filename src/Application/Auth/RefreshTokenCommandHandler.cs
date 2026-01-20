@@ -3,7 +3,6 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Auth;
 using Domain.Users;
-using Microsoft.Extensions.Options;
 using SharedKernel;
 
 namespace Application.Auth;
@@ -16,7 +15,7 @@ internal sealed class RefreshTokenCommandHandler(
     IJwtService jwtService,
     IDateTimeProvider dateTimeProvider,
     IUnitOfWork unitOfWork,
-    IOptions<AuthTokenOptions> authTokenOptions)
+    IAuthTokenSettings authTokenSettings)
     : ICommandHandler<RefreshTokenCommand, RefreshTokenResponse>
 {
     public async Task<Result<RefreshTokenResponse>> Handle(
@@ -28,7 +27,6 @@ internal sealed class RefreshTokenCommandHandler(
             return Result.Failure<RefreshTokenResponse>(AuthErrors.InvalidRefreshToken);
         }
 
-        AuthTokenOptions options = authTokenOptions.Value;
         DateTime utcNow = dateTimeProvider.UtcNow;
         string tokenHash = refreshTokenHasher.Hash(command.RefreshToken);
 
@@ -77,7 +75,7 @@ internal sealed class RefreshTokenCommandHandler(
             session.Id,
             newRefreshTokenHash,
             utcNow,
-            utcNow.AddDays(options.RefreshTokenTtlDays));
+            utcNow.AddDays(authTokenSettings.RefreshTokenTtlDays));
         refreshTokenRepository.Insert(newRecord);
 
         tokenRecord.MarkRotated(newRecord.Id, utcNow);

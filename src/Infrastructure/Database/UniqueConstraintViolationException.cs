@@ -1,4 +1,4 @@
-﻿namespace Application.Abstractions.Data;
+namespace Infrastructure.Database;
 
 public sealed class UniqueConstraintViolationException : Exception
 {
