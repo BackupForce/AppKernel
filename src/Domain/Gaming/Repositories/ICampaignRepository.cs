@@ -9,4 +9,6 @@ public interface ICampaignRepository
     void Insert(Campaign campaign);
 
     void Update(Campaign campaign);
+
+    void Remove(Campaign campaign);
 }
