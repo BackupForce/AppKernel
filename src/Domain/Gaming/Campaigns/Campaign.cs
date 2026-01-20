@@ -98,4 +98,66 @@ public sealed class Campaign : Entity
         _draws.Add(CampaignDraw.Create(TenantId, Id, drawId, utcNow));
         return Result.Success();
     }
+
+    public Result Update(string name, DateTime grantOpenAtUtc, DateTime grantCloseAtUtc)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Result.Failure(GamingErrors.CampaignNameRequired);
+        }
+
+        if (grantOpenAtUtc >= grantCloseAtUtc)
+        {
+            return Result.Failure(GamingErrors.CampaignGrantWindowInvalid);
+        }
+
+        Name = name.Trim();
+        GrantOpenAtUtc = grantOpenAtUtc;
+        GrantCloseAtUtc = grantCloseAtUtc;
+        return Result.Success();
+    }
+
+    public Result Activate(DateTime utcNow)
+    {
+        if (Status != CampaignStatus.Draft)
+        {
+            return Result.Failure(GamingErrors.CampaignNotDraft);
+        }
+
+        if (_draws.Count == 0)
+        {
+            return Result.Failure(GamingErrors.CampaignDrawRequired);
+        }
+
+        Status = CampaignStatus.Active;
+        return Result.Success();
+    }
+
+    public Result End(DateTime utcNow)
+    {
+        if (Status != CampaignStatus.Active)
+        {
+            return Result.Failure(GamingErrors.CampaignNotActive);
+        }
+
+        Status = CampaignStatus.Ended;
+        return Result.Success();
+    }
+
+    public Result RemoveDraw(Guid drawId)
+    {
+        if (Status != CampaignStatus.Draft)
+        {
+            return Result.Failure(GamingErrors.CampaignNotDraft);
+        }
+
+        CampaignDraw? existing = _draws.FirstOrDefault(item => item.DrawId == drawId);
+        if (existing is null)
+        {
+            return Result.Failure(GamingErrors.CampaignDrawNotFound);
+        }
+
+        _draws.Remove(existing);
+        return Result.Success();
+    }
 }
