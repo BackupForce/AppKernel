@@ -2,4 +2,8 @@
 
 namespace Application.Auth;
 
-public sealed record LineLoginCommand(string AccessToken) : ICommand<LineLoginResponse>;
+public sealed record LineLoginCommand(
+    string AccessToken,
+    string? DeviceId,
+    string? UserAgent,
+    string? Ip) : ICommand<LineLoginResponse>;

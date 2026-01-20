@@ -13,5 +13,15 @@ public interface IJwtService
         IEnumerable<string> roles,
         IEnumerable<Guid> nodeIds,
         IEnumerable<string> permissions);
+
+    (string Token, DateTime ExpiresAtUtc) IssueAccessToken(
+        Guid userId,
+        string userName,
+        UserType userType,
+        Guid? tenantId,
+        IEnumerable<string> roles,
+        IEnumerable<Guid> nodeIds,
+        IEnumerable<string> permissions,
+        DateTime utcNow);
     JwtPayloadDto? ValidateToken(string token);
 }

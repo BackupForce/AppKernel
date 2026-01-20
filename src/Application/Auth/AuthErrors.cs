@@ -35,4 +35,24 @@ internal static class AuthErrors
     public static readonly Error TenantContextMissing = Error.Validation(
         "Auth.TenantContextMissing",
         "Tenant context is unavailable.");
+
+    public static readonly Error InvalidRefreshToken = Error.Unauthorized(
+        "invalid_refresh_token",
+        "Refresh token is invalid.");
+
+    public static readonly Error RefreshTokenExpired = Error.Unauthorized(
+        "refresh_token_expired",
+        "Refresh token is expired.");
+
+    public static readonly Error RefreshTokenReused = Error.Unauthorized(
+        "refresh_token_reused",
+        "Refresh token reuse detected.");
+
+    public static readonly Error SessionRevoked = Error.Unauthorized(
+        "session_revoked",
+        "Session is revoked.");
+
+    public static Error SessionNotFound(Guid sessionId) => Error.NotFound(
+        "Auth.SessionNotFound",
+        $"Session with id '{sessionId}' was not found.");
 }

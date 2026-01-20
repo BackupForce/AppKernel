@@ -7,7 +7,9 @@
 - **JWT Bearer**：除標示 `AllowAnonymous` 以外的端點都需要在 `Authorization` 標頭帶入 `Bearer <token>`。
 - **權限控制**：部分路由額外要求特定權限（例如 `members:read`）；權限常數定義於 `Domain.Security.Permission`。 【F:src/Domain/Security/Permission.cs†L9-L83】
 - **節點授權**：授權處理器僅會以 `tenantId`/`TenantId` 解析 tenant node 作為 fallback，不會再自動從路由的 `id`/`externalKey` 解析節點。若 API 需要節點授權，請在 handler 內自行從 query/header/body 解析 `nodeId` 或 `externalKey` 並手動指定。
-- **錯誤響應**：使用 RFC 7807 的 `application/problem+json`，`title`/`detail` 會依錯誤類型填入，驗證錯誤會在 `extensions.errors` 帶回欄位訊息。 【F:src/Web.Api/Infrastructure/CustomResults.cs†L6-L73】
+- **錯誤響應**：使用 RFC 7807 的 `application/problem+json`，`title`/`detail` 會依錯誤類型填入，`extensions.errorCode` 會帶回錯誤碼，驗證錯誤會在 `extensions.errors` 帶回欄位訊息。 【F:src/Web.Api/Infrastructure/CustomResults.cs†L6-L80】
+- **時區**：所有時間皆為 UTC。
+- **Refresh Token 傳遞規則**：若 `AuthTokenOptions.UseRefreshTokenCookie = true`，refresh token 會寫入 HttpOnly Secure Cookie（Path 預設 `/auth/refresh`）；若改為 `false`，則 refresh token 會回傳於 body 且 refresh 時需在 body 傳入。
 
 ## 基本端點
 
@@ -18,17 +20,84 @@
   {
     "email": "user@example.com",
     "password": "string",
-    "tenantCode": "string"
+    "tenantCode": "string",
+    "deviceId": "string|null"
   }
   ```
 - **成功回應**
   ```json
   {
-    "token": "jwt-token",
-    "expiration": "2024-12-31T12:00:00Z"
+    "accessToken": "jwt-token",
+    "accessTokenExpiresAtUtc": "2024-12-31T12:00:00Z",
+    "refreshToken": "refresh-token|null",
+    "sessionId": "guid"
   }
   ```
-- **描述**：驗證帳密並發出 JWT。 【F:src/Web.Api/Endpoints/Auth/Login.cs†L9-L26】【F:src/Application/Auth/LoginRequest.cs†L8-L16】【F:src/Application/Auth/LoginResponse.cs†L8-L16】
+- **描述**：驗證帳密並發出 JWT/Refresh Token；若啟用 cookie 模式，refresh token 只會寫入 HttpOnly Cookie。 【F:src/Web.Api/Endpoints/Auth/Login.cs†L10-L60】【F:src/Application/Auth/LoginRequest.cs†L6-L14】【F:src/Application/Auth/LoginResponse.cs†L5-L11】
+
+### POST `/api/v1/auth/refresh`
+- **授權**：匿名可呼叫。
+- **Cookie 模式**：若 `AuthTokenOptions.UseRefreshTokenCookie = true`，可不送 body。
+- **請求體**
+  ```json
+  {
+    "refreshToken": "string|null"
+  }
+  ```
+- **成功回應**
+  ```json
+  {
+    "accessToken": "jwt-token",
+    "accessTokenExpiresAtUtc": "2024-12-31T12:00:00Z",
+    "refreshToken": "refresh-token|null",
+    "sessionId": "guid"
+  }
+  ```
+- **錯誤碼**：
+  - `invalid_refresh_token`
+  - `refresh_token_expired`
+  - `refresh_token_reused`
+  - `session_revoked`
+- **描述**：使用 refresh token 進行 rotation，偵測重放會撤銷整個 session。 【F:src/Web.Api/Endpoints/Auth/Refresh.cs†L9-L73】【F:src/Application/Auth/RefreshTokenCommandHandler.cs†L18-L103】
+
+### POST `/api/v1/auth/logout`
+- **授權**：匿名可呼叫。
+- **Cookie 模式**：若 `AuthTokenOptions.UseRefreshTokenCookie = true`，可不送 body。
+- **請求體**
+  ```json
+  {
+    "refreshToken": "string|null"
+  }
+  ```
+- **描述**：撤銷目前 session 的 refresh token，並清除 refresh cookie（若啟用）。 【F:src/Web.Api/Endpoints/Auth/Logout.cs†L9-L48】【F:src/Application/Auth/LogoutCommandHandler.cs†L13-L44】
+
+### POST `/api/v1/auth/logout-all`
+- **授權**：需要登入。
+- **描述**：撤銷該使用者在租戶下的所有 session。 【F:src/Web.Api/Endpoints/Auth/LogoutAll.cs†L8-L27】【F:src/Application/Auth/LogoutAllCommandHandler.cs†L12-L44】
+
+### GET `/api/v1/auth/sessions`
+- **授權**：需要登入。
+- **成功回應**
+  ```json
+  [
+    {
+      "id": "guid",
+      "createdAtUtc": "2024-12-31T12:00:00Z",
+      "lastUsedAtUtc": "2024-12-31T12:05:00Z",
+      "expiresAtUtc": "2025-01-31T12:00:00Z",
+      "revokedAtUtc": "2024-12-31T12:30:00Z|null",
+      "revokeReason": "logout|null",
+      "userAgent": "string|null",
+      "ip": "string|null",
+      "deviceId": "string|null"
+    }
+  ]
+  ```
+- **描述**：列出尚未過期的登入 session。 【F:src/Web.Api/Endpoints/Auth/Sessions.cs†L9-L30】【F:src/Application/Auth/GetSessionsQueryHandler.cs†L14-L44】
+
+### DELETE `/api/v1/auth/sessions/{sessionId}`
+- **授權**：需要登入。
+- **描述**：撤銷指定 session。 【F:src/Web.Api/Endpoints/Auth/Sessions.cs†L32-L49】【F:src/Application/Auth/RevokeSessionCommandHandler.cs†L13-L47】
 
 ### GET `/api/v1/account/me`
 - **授權**：需要登入（無額外權限）。

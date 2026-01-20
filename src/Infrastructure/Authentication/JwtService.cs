@@ -8,18 +8,24 @@ using Application.Abstractions.Authentication;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using Domain.Users;
+using Infrastructure.Settings;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Authentication;
 
 public class JwtService : IJwtService
 {
     private readonly string _secretKey;
-    private readonly int _expireMinutes;
+    private readonly string _issuer;
+    private readonly string _audience;
+    private readonly AuthTokenOptions _authTokenOptions;
 
-    public JwtService(string secretKey, int expireMinutes = 60)
+    public JwtService(JwtSettings settings, IOptions<AuthTokenOptions> authTokenOptions)
     {
-        _secretKey = secretKey;
-        _expireMinutes = expireMinutes;
+        _secretKey = settings.SecretKey;
+        _issuer = settings.Issuer;
+        _audience = settings.Audience;
+        _authTokenOptions = authTokenOptions.Value;
     }
 
     public string GenerateToken(
@@ -28,8 +34,29 @@ public class JwtService : IJwtService
          UserType userType,
          Guid? tenantId,
          IEnumerable<string> roles,
-         IEnumerable<Guid> nodeIds,
-         IEnumerable<string> permissions)
+        IEnumerable<Guid> nodeIds,
+        IEnumerable<string> permissions)
+    {
+        return IssueAccessToken(
+            userId,
+            userName,
+            userType,
+            tenantId,
+            roles,
+            nodeIds,
+            permissions,
+            DateTime.UtcNow).Token;
+    }
+
+    public (string Token, DateTime ExpiresAtUtc) IssueAccessToken(
+        Guid userId,
+        string userName,
+        UserType userType,
+        Guid? tenantId,
+        IEnumerable<string> roles,
+        IEnumerable<Guid> nodeIds,
+        IEnumerable<string> permissions,
+        DateTime utcNow)
     {
         var claims = new List<Claim>
         {
@@ -49,15 +76,16 @@ public class JwtService : IJwtService
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        DateTime expiresAtUtc = utcNow.AddMinutes(_authTokenOptions.AccessTokenTtlMinutes);
 
         var token = new JwtSecurityToken(
-            issuer: "appkernel",
-            audience: "appkernel",
+            issuer: _issuer,
+            audience: _audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_expireMinutes),
+            expires: expiresAtUtc,
             signingCredentials: credentials);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return (new JwtSecurityTokenHandler().WriteToken(token), expiresAtUtc);
     }
 
     public JwtPayloadDto? ValidateToken(string token)
@@ -73,8 +101,8 @@ public class JwtService : IJwtService
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = "appkernel",
-                ValidAudience = "appkernel",
+                ValidIssuer = _issuer,
+                ValidAudience = _audience,
                 IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
                 ClockSkew = TimeSpan.Zero
             }, out _);
