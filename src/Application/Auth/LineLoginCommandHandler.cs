@@ -2,10 +2,12 @@
 using Application.Abstractions.Data;
 using Application.Abstractions.Identity;
 using Application.Abstractions.Messaging;
+using Domain.Auth;
 using Domain.Members;
 using Domain.Security;
 using Domain.Users;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SharedKernel;
 
 namespace Application.Auth;
@@ -20,6 +22,11 @@ internal sealed class LineLoginCommandHandler(
     IPasswordHasher passwordHasher,
     IUnitOfWork unitOfWork,
     IExternalIdentityVerifier externalIdentityVerifier,
+    IAuthSessionRepository authSessionRepository,
+    IRefreshTokenRepository refreshTokenRepository,
+    IRefreshTokenGenerator refreshTokenGenerator,
+    IRefreshTokenHasher refreshTokenHasher,
+    IOptions<AuthTokenOptions> authTokenOptions,
     ILogger<LineLoginCommandHandler> logger)
     : ICommandHandler<LineLoginCommand, LineLoginResponse>
 {
@@ -117,23 +124,54 @@ internal sealed class LineLoginCommandHandler(
             return Result.Failure<LineLoginResponse>(AuthErrors.LineVerifyFailed);
         }
 
-        string token = jwtService.GenerateToken(
+        AuthTokenOptions options = authTokenOptions.Value;
+        DateTime utcNow = dateTimeProvider.UtcNow;
+        DateTime sessionExpiresAtUtc = utcNow.AddDays(options.RefreshTokenTtlDays);
+
+        AuthSession session = AuthSession.Create(
+            tenantId,
+            user.Id,
+            utcNow,
+            sessionExpiresAtUtc,
+            command.UserAgent,
+            command.Ip,
+            command.DeviceId);
+        session.Touch(utcNow);
+        authSessionRepository.Insert(session);
+
+        string refreshTokenPlain = refreshTokenGenerator.GenerateToken();
+        string refreshTokenHash = refreshTokenHasher.Hash(refreshTokenPlain);
+
+        RefreshTokenRecord refreshTokenRecord = RefreshTokenRecord.Create(
+            session.Id,
+            refreshTokenHash,
+            utcNow,
+            sessionExpiresAtUtc);
+        refreshTokenRepository.Insert(refreshTokenRecord);
+
+        var accessToken = jwtService.IssueAccessToken(
             user.Id,
             user.Name.ToString(),
             user.Type,
             tenantId,
             Array.Empty<string>(),
             Array.Empty<Guid>(),
-            Array.Empty<string>());
+            Array.Empty<string>(),
+            utcNow);
 
         LineLoginResponse response = new LineLoginResponse
         {
-            Token = token,
+            AccessToken = accessToken.Token,
+            AccessTokenExpiresAtUtc = accessToken.ExpiresAtUtc,
+            RefreshToken = refreshTokenPlain,
+            SessionId = session.Id,
             UserId = user.Id,
             TenantId = tenantId,
             MemberId = member?.Id,
             MemberNo = member?.MemberNo
         };
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return response;
     }
@@ -225,17 +263,20 @@ internal sealed class LineLoginCommandHandler(
         return memberResult.Value;
     }
 
-    private async Task<string> GenerateMemberNoAsync(Guid tenantId, CancellationToken cancellationToken)
+    private async Task<string> GenerateMemberNoAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken)
     {
-        // 中文註解：沿用時間戳 + 簡短亂數生成會員編號，搭配唯一性檢查避免衝突。
-        string memberNo;
+        string prefix = tenantId.ToString("N")[..6].ToUpperInvariant();
+
+        string candidate;
         do
         {
-            memberNo = $"MBR-{dateTimeProvider.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
-        }
-        while (!await memberRepository.IsMemberNoUniqueAsync(tenantId, memberNo, cancellationToken));
+            string randomDigits = Random.Shared.Next(0, 9999).ToString("0000");
+            candidate = $"{prefix}{randomDigits}";
+        } while (!await memberRepository.IsMemberNoUniqueAsync(tenantId, candidate, cancellationToken));
 
-        return memberNo;
+        return candidate;
     }
 
     private static string NormalizeForLookup(string value)

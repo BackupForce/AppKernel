@@ -16,7 +16,7 @@ public static class CustomResults
             detail: GetDetail(result.Error),
             type: GetType(result.Error.Type),
             statusCode: GetStatusCode(result.Error.Type),
-            extensions: GetErrors(result));
+            extensions: GetExtensions(result));
 
         static string GetTitle(Error error) =>
             error.Type switch
@@ -25,6 +25,8 @@ public static class CustomResults
                 ErrorType.Problem => error.Code,
                 ErrorType.NotFound => error.Code,
                 ErrorType.Conflict => error.Code,
+                ErrorType.Forbidden => error.Code,
+                ErrorType.Unauthorized => error.Code,
                 _ => "Server failure"
             };
 
@@ -35,6 +37,8 @@ public static class CustomResults
                 ErrorType.Problem => error.Description,
                 ErrorType.NotFound => error.Description,
                 ErrorType.Conflict => error.Description,
+                ErrorType.Forbidden => error.Description,
+                ErrorType.Unauthorized => error.Description,
                 _ => "An unexpected error occurred"
             };
 
@@ -45,6 +49,8 @@ public static class CustomResults
                 ErrorType.Problem => "https://tools.ietf.org/html/rfc7231#section-6.5.1",
                 ErrorType.NotFound => "https://tools.ietf.org/html/rfc7231#section-6.5.4",
                 ErrorType.Conflict => "https://tools.ietf.org/html/rfc7231#section-6.5.8",
+                ErrorType.Forbidden => "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+                ErrorType.Unauthorized => "https://tools.ietf.org/html/rfc7235#section-3.1",
                 _ => "https://tools.ietf.org/html/rfc7231#section-6.6.1"
             };
 
@@ -54,20 +60,25 @@ public static class CustomResults
                 ErrorType.Validation => StatusCodes.Status400BadRequest,
                 ErrorType.NotFound => StatusCodes.Status404NotFound,
                 ErrorType.Conflict => StatusCodes.Status409Conflict,
+                ErrorType.Forbidden => StatusCodes.Status403Forbidden,
+                ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
                 _ => StatusCodes.Status500InternalServerError
             };
 
-        static Dictionary<string, object?>? GetErrors(Result result)
+        static Dictionary<string, object?> GetExtensions(Result result)
         {
+            Dictionary<string, object?> extensions = new()
+            {
+                { "errorCode", result.Error.Code }
+            };
+
             if (result.Error is not ValidationError validationError)
             {
-                return null;
+                return extensions;
             }
 
-            return new Dictionary<string, object?>
-            {
-                { "errors", validationError.Errors }
-            };
+            extensions["errors"] = validationError.Errors;
+            return extensions;
         }
     }
 }

@@ -8,34 +8,44 @@ using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Auth;
-public class Login : IEndpoint
+
+public sealed class Refresh : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("auth/login", async (
-            LoginRequest request,
+        app.MapPost("auth/refresh", async (
+            RefreshTokenRequest? request,
             HttpContext httpContext,
             ISender sender,
             IOptions<AuthTokenOptions> authTokenOptions,
             CancellationToken cancellationToken) =>
         {
-            string? userAgent = httpContext.Request.Headers.UserAgent.ToString();
-            string? ip = httpContext.Connection.RemoteIpAddress?.ToString();
-
-            LoginCommand command = new LoginCommand(
-                request.Email,
-                request.Password,
-                request.TenantCode,
-                request.DeviceId,
-                userAgent,
-                ip);
-
-            Result<LoginResponse> result = await sender.Send(command, cancellationToken);
-
             AuthTokenOptions options = authTokenOptions.Value;
+
+            if (options.UseRefreshTokenCookie && !OriginValidationHelper.IsSameOrigin(httpContext.Request))
+            {
+                return CustomResults.Problem(Result.Failure(AuthErrors.InvalidRefreshToken));
+            }
+
+            string? refreshToken = options.UseRefreshTokenCookie
+                ? httpContext.Request.Cookies[options.RefreshCookieName]
+                : null;
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                refreshToken = request?.RefreshToken;
+            }
+
+            RefreshTokenCommand command = new RefreshTokenCommand(
+                refreshToken ?? string.Empty,
+                httpContext.Request.Headers.UserAgent.ToString(),
+                httpContext.Connection.RemoteIpAddress?.ToString());
+
+            Result<RefreshTokenResponse> result = await sender.Send(command, cancellationToken);
+
             return result.Match(response =>
             {
-                LoginResponse payload = response;
+                RefreshTokenResponse payload = response;
                 if (options.UseRefreshTokenCookie && response.RefreshToken is not null)
                 {
                     DateTime refreshExpiresAtUtc = DateTime.UtcNow.AddDays(options.RefreshTokenTtlDays);
@@ -45,7 +55,7 @@ public class Login : IEndpoint
                         response.RefreshToken,
                         refreshExpiresAtUtc);
 
-                    payload = new LoginResponse
+                    payload = new RefreshTokenResponse
                     {
                         AccessToken = response.AccessToken,
                         AccessTokenExpiresAtUtc = response.AccessTokenExpiresAtUtc,
@@ -58,8 +68,8 @@ public class Login : IEndpoint
             }, CustomResults.Problem);
         })
         .AllowAnonymous()
-		.WithGroupName("auth-v1")
-		.WithMetadata(new ApiVersion(1, 0))
+        .WithGroupName("auth-v1")
+        .WithMetadata(new ApiVersion(1, 0))
         .WithTags(Tags.Auth);
-	}
+    }
 }

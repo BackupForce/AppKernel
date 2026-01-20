@@ -7,6 +7,7 @@ using Domain.Gaming.Prizes;
 using Domain.Gaming.RedeemRecords;
 using Domain.Gaming.Tickets;
 using Domain.Gaming.TicketTemplates;
+using Domain.Auth;
 using Domain.Members;
 using Domain.Security;
 using Domain.Tenants;
@@ -48,6 +49,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<PermissionAssignment> PermissionAssignments { get; set; }
     public DbSet<Group> Groups { get; set; }
     public DbSet<UserGroup> UserGroups { get; set; }
+    public DbSet<AuthSession> AuthSessions { get; set; }
+    public DbSet<RefreshTokenRecord> RefreshTokenRecords { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
