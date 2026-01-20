@@ -1,8 +1,10 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Auth;
 using Domain.Tenants;
 using Domain.Users;
+using Microsoft.Extensions.Options;
 using SharedKernel;
 
 namespace Application.Auth;
@@ -10,8 +12,15 @@ namespace Application.Auth;
 internal sealed class LoginCommandHandler(
 	IUserRepository userRepository,
     ITenantRepository tenantRepository,
-	IJwtService _jwtService,
-    IPasswordHasher hasher
+    IAuthSessionRepository authSessionRepository,
+    IRefreshTokenRepository refreshTokenRepository,
+	IJwtService jwtService,
+    IPasswordHasher hasher,
+    IRefreshTokenGenerator refreshTokenGenerator,
+    IRefreshTokenHasher refreshTokenHasher,
+    IDateTimeProvider dateTimeProvider,
+    IUnitOfWork unitOfWork,
+    IOptions<AuthTokenOptions> authTokenOptions
     ) : ICommandHandler<LoginCommand, LoginResponse>
 {
 	public async Task<Result<LoginResponse>> Handle(
@@ -71,18 +80,50 @@ internal sealed class LoginCommandHandler(
             return Result.Failure<LoginResponse>(AuthErrors.TenantNotFound);
         }
 
-		// Generate token and directly use it in the response
-		return Result.Success(new LoginResponse
-		{
-				Token = _jwtService.GenerateToken(
-					user.Id,
-					user.Name.ToString(),
-                    user.Type,
-                    user.IsPlatform() ? null : tenant.Id,
-					user.Roles.Select(r => r.Name).ToArray(),
-					Array.Empty<Guid>(),
-					Array.Empty<string>())
-			});
+        AuthTokenOptions options = authTokenOptions.Value;
+        DateTime utcNow = dateTimeProvider.UtcNow;
+        DateTime sessionExpiresAtUtc = utcNow.AddDays(options.RefreshTokenTtlDays);
+
+        AuthSession session = AuthSession.Create(
+            tenant.Id,
+            user.Id,
+            utcNow,
+            sessionExpiresAtUtc,
+            command.UserAgent,
+            command.Ip,
+            command.DeviceId);
+        session.Touch(utcNow);
+        authSessionRepository.Insert(session);
+
+        string refreshTokenPlain = refreshTokenGenerator.GenerateToken();
+        string refreshTokenHash = refreshTokenHasher.Hash(refreshTokenPlain);
+
+        RefreshTokenRecord refreshTokenRecord = RefreshTokenRecord.Create(
+            session.Id,
+            refreshTokenHash,
+            utcNow,
+            sessionExpiresAtUtc);
+        refreshTokenRepository.Insert(refreshTokenRecord);
+
+        var accessToken = jwtService.IssueAccessToken(
+            user.Id,
+            user.Name.ToString(),
+            user.Type,
+            user.IsPlatform() ? null : tenant.Id,
+            user.Roles.Select(r => r.Name).ToArray(),
+            Array.Empty<Guid>(),
+            Array.Empty<string>(),
+            utcNow);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success(new LoginResponse
+        {
+            AccessToken = accessToken.Token,
+            AccessTokenExpiresAtUtc = accessToken.ExpiresAtUtc,
+            RefreshToken = refreshTokenPlain,
+            SessionId = session.Id
+        });
 	}
 
     private static string NormalizeForLookup(string value)

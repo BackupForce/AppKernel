@@ -10,6 +10,7 @@ using Application.Abstractions.Infrastructure;
 using Application.Abstractions.Tenants;
 using Application.Abstractions.Time;
 using Dapper;
+using Domain.Auth;
 using Domain.Gaming.Repositories;
 using Domain.Members;
 using Domain.Security;
@@ -50,6 +51,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using SharedKernel;
 using StackExchange.Redis;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure;
 
@@ -130,6 +132,8 @@ public static class DependencyInjection
         services.AddScoped<IRedeemRecordRepository, RedeemRecordRepository>();
         services.AddScoped<ITenantGameEntitlementRepository, TenantGameEntitlementRepository>();
         services.AddScoped<ITenantPlayEntitlementRepository, TenantPlayEntitlementRepository>();
+        services.AddScoped<IAuthSessionRepository, AuthSessionRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         return services;
     }
@@ -210,6 +214,15 @@ public static class DependencyInjection
         JwtSettings jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>()
             ?? throw new InvalidOperationException("JwtSettings section is missing or malformed.");
 
+        services.AddOptions<AuthTokenOptions>()
+            .BindConfiguration("AuthTokenOptions")
+            .Validate(options => options.AccessTokenTtlMinutes > 0, "AuthTokenOptions:AccessTokenTtlMinutes must be positive.")
+            .Validate(options => options.RefreshTokenTtlDays > 0, "AuthTokenOptions:RefreshTokenTtlDays must be positive.")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.RefreshTokenPepper), "AuthTokenOptions:RefreshTokenPepper is required.")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.RefreshCookieName), "AuthTokenOptions:RefreshCookieName is required.")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.RefreshCookiePath), "AuthTokenOptions:RefreshCookiePath is required.")
+            .ValidateOnStart();
+
         services.AddJwtAuthentication(jwtSettings);
 
         services.AddHttpContextAccessor();
@@ -219,7 +232,10 @@ public static class DependencyInjection
         services.AddScoped<IEntitlementCacheInvalidator, EntitlementCacheInvalidator>();
 
         services.AddSingleton<IJwtService>(provider =>
-            new JwtService(jwtSettings.SecretKey, jwtSettings.ExpireMinutes));
+            new JwtService(jwtSettings, provider.GetRequiredService<IOptions<AuthTokenOptions>>()));
+
+        services.AddSingleton<IRefreshTokenGenerator, RefreshTokenGenerator>();
+        services.AddSingleton<IRefreshTokenHasher, RefreshTokenHasher>();
 
 
         services.AddOptions<LineIdentityOptions>()
