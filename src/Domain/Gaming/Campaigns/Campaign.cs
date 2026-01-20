@@ -130,6 +130,7 @@ public sealed class Campaign : Entity
         }
 
         Status = CampaignStatus.Active;
+        GrantOpenAtUtc = utcNow;
         return Result.Success();
     }
 
@@ -141,6 +142,7 @@ public sealed class Campaign : Entity
         }
 
         Status = CampaignStatus.Ended;
+        GrantCloseAtUtc = utcNow;
         return Result.Success();
     }
 
@@ -151,7 +153,7 @@ public sealed class Campaign : Entity
             return Result.Failure(GamingErrors.CampaignNotDraft);
         }
 
-        CampaignDraw? existing = _draws.FirstOrDefault(item => item.DrawId == drawId);
+        CampaignDraw? existing = _draws.Find(item => item.DrawId == drawId);
         if (existing is null)
         {
             return Result.Failure(GamingErrors.CampaignDrawNotFound);

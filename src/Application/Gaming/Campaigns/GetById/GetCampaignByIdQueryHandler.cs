@@ -76,7 +76,7 @@ internal sealed class GetCampaignByIdQueryHandler(
             summary.PlayTypeCode,
             summary.GrantOpenAtUtc,
             summary.GrantCloseAtUtc,
-            summary.DrawCount,
+            (int)summary.DrawCount, // 修正：將 long 轉型為 int
             summary.CreatedAtUtc,
             draws);
 

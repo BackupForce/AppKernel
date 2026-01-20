@@ -11,5 +11,5 @@ public sealed record CampaignSummaryDto(
     string PlayTypeCode,
     DateTime GrantOpenAtUtc,
     DateTime GrantCloseAtUtc,
-    int DrawCount,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    long DrawCount);
