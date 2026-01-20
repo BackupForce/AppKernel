@@ -4,6 +4,7 @@ using Domain.Security;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SharedKernel;
 
 namespace Infrastructure.Database.Seeders;
 
@@ -43,7 +44,7 @@ public sealed class MemberResourceNodeSeeder : IDataSeeder
         var tenantIds = members.Select(member => member.TenantId).Distinct().ToList();
         var existingNodes = await _db.ResourceNodes
             .AsNoTracking()
-            .Where(node => tenantIds.Contains(node.TenantId) && node.ExternalKey.StartsWith("member:"))
+            .Where(node => tenantIds.Contains(node.TenantId) && node.ExternalKey.StartsWith(ResourceNodeKeys.MemberPrefix))
             .Select(node => new { node.TenantId, node.ExternalKey })
             .ToListAsync();
 
@@ -54,7 +55,7 @@ public sealed class MemberResourceNodeSeeder : IDataSeeder
         var nodesToAdd = new List<ResourceNode>();
         foreach (var member in members)
         {
-            string externalKey = $"member:{member.Id:D}";
+            string externalKey = ResourceNodeKeys.Member(member.Id);
             if (existingKeys.Contains((member.TenantId, externalKey)))
             {
                 continue;

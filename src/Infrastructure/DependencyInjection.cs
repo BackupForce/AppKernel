@@ -81,9 +81,11 @@ public static class DependencyInjection
         services.AddScoped<IDataSeeder, RootUserSeeder>();
         services.AddScoped<IDataSeeder, DefaultTenantSeeder>();
         services.AddScoped<IDataSeeder, MemberResourceNodeSeeder>();
+        services.AddScoped<ILineLoginPersistenceService, LineLoginPersistenceService>();
         services.AddScoped<SuperAdminSeeder>();
         // 中文註解：外部身份驗證由 Infrastructure 實作。
         services.AddScoped<IExternalIdentityVerifier, LineIdentityVerifier>();
+        services.AddScoped<IMemberNoGenerator, MemberNoGenerator>();
         services.AddScoped<ILottery539RngService, Lottery539RngService>();
         services.AddScoped<IServerSeedStore, ServerSeedStore>();
         services.AddScoped<IWalletLedgerService, WalletLedgerService>();
@@ -225,6 +227,8 @@ public static class DependencyInjection
 
         services.AddJwtAuthentication(jwtSettings);
 
+        services.AddSingleton<IAuthTokenSettings, AuthTokenSettings>();
+
         services.AddHttpContextAccessor();
         services.AddScoped<IUserContext, UserContext>();
         services.AddScoped<ITenantContext, TenantContext>();
@@ -245,6 +249,13 @@ public static class DependencyInjection
             .Validate(o => o.VerifyIdTokenEndpoint is not null, "LineIdentity:VerifyIdTokenEndpoint is required.")
             .Validate(o => !string.IsNullOrWhiteSpace(o.ChannelId), "LineIdentity:ChannelId is required.")
             .ValidateOnStart();
+
+        services.AddOptions<LineLoginOptions>()
+            .BindConfiguration("LineLogin")
+            .Validate(o => !string.IsNullOrWhiteSpace(o.EmailDomain), "LineLogin:EmailDomain is required.")
+            .ValidateOnStart();
+
+        services.AddSingleton<ILineLoginSettings, LineLoginSettings>();
 
         return services;
     }

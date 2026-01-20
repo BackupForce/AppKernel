@@ -16,6 +16,19 @@ internal sealed class TenantContext : ITenantContext
         TryResolveTenantId(_httpContextAccessor.HttpContext)
         ?? throw new ApplicationException("Tenant context is unavailable");
 
+    public bool TryGetTenantId(out Guid tenantId)
+    {
+        Guid? resolved = TryResolveTenantId(_httpContextAccessor.HttpContext);
+        if (resolved.HasValue)
+        {
+            tenantId = resolved.Value;
+            return true;
+        }
+
+        tenantId = Guid.Empty;
+        return false;
+    }
+
     private static Guid? TryResolveTenantId(HttpContext? httpContext)
     {
         if (httpContext is null)
