@@ -25,4 +25,9 @@ internal sealed class CampaignRepository(ApplicationDbContext context) : ICampai
     {
         context.Campaigns.Update(campaign);
     }
+
+    public void Remove(Campaign campaign)
+    {
+        context.Campaigns.Remove(campaign);
+    }
 }

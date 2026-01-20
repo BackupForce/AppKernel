@@ -164,6 +164,13 @@ public sealed class Permission
         public static readonly Permission DrawManualClose = new(213, "GAMING:DRAW:MANUAL-CLOSE", "手動封盤", PermissionScope.Tenant);
         public static readonly Permission DrawReopen = new(214, "GAMING:DRAW:REOPEN", "重新開盤", PermissionScope.Tenant);
         public static readonly Permission DrawUpdateAllowedTemplates = new(215, "GAMING:DRAW:UPDATE-ALLOWED-TEMPLATES", "更新期數允許票種", PermissionScope.Tenant);
+        public static readonly Permission CampaignRead = new(220, "gaming.campaign.read", "檢視活動", PermissionScope.Tenant);
+        public static readonly Permission CampaignCreate = new(221, "gaming.campaign.create", "建立活動", PermissionScope.Tenant);
+        public static readonly Permission CampaignUpdate = new(222, "gaming.campaign.update", "更新活動", PermissionScope.Tenant);
+        public static readonly Permission CampaignActivate = new(223, "gaming.campaign.activate", "啟用活動", PermissionScope.Tenant);
+        public static readonly Permission CampaignEnd = new(224, "gaming.campaign.end", "結束活動", PermissionScope.Tenant);
+        public static readonly Permission CampaignDelete = new(225, "gaming.campaign.delete", "刪除活動", PermissionScope.Tenant);
+        public static readonly Permission CampaignDrawManage = new(226, "gaming.campaign.draw.manage", "管理活動期數", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {
@@ -175,7 +182,14 @@ public sealed class Permission
             DrawSettle,
             DrawManualClose,
             DrawReopen,
-            DrawUpdateAllowedTemplates
+            DrawUpdateAllowedTemplates,
+            CampaignRead,
+            CampaignCreate,
+            CampaignUpdate,
+            CampaignActivate,
+            CampaignEnd,
+            CampaignDelete,
+            CampaignDrawManage
         };
     }
 

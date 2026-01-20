@@ -275,9 +275,37 @@ public static class GamingErrors
         "Gaming.CampaignInactive",
         "活動尚未開放或已結束。");
 
+    public static readonly Error CampaignNotDraft = Error.Validation(
+        "Gaming.CampaignNotDraft",
+        "活動狀態必須為草稿。");
+
+    public static readonly Error CampaignNotActive = Error.Validation(
+        "Gaming.CampaignNotActive",
+        "活動狀態必須為啟用中。");
+
+    public static readonly Error CampaignDrawRequired = Error.Validation(
+        "Gaming.CampaignDrawRequired",
+        "活動至少需要綁定一個期數。");
+
     public static readonly Error CampaignDrawDuplicated = Error.Validation(
         "Gaming.CampaignDrawDuplicated",
         "活動期數重複。");
+
+    public static readonly Error CampaignDrawNotFound = Error.Validation(
+        "Gaming.CampaignDrawNotFound",
+        "活動期數不存在。");
+
+    public static readonly Error CampaignTenantMismatch = Error.Forbidden(
+        "Gaming.CampaignTenantMismatch",
+        "租戶資訊不一致。");
+
+    public static readonly Error CampaignDrawGameCodeMismatch = Error.Validation(
+        "Gaming.CampaignDrawGameCodeMismatch",
+        "活動遊戲與期數遊戲不一致。");
+
+    public static readonly Error CampaignStatusInvalid = Error.Validation(
+        "Gaming.CampaignStatusInvalid",
+        "活動狀態不正確。");
 
     public static readonly Error CampaignAlreadyClaimed = Error.Validation(
         "Gaming.CampaignAlreadyClaimed",
