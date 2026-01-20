@@ -2,7 +2,7 @@
 
 namespace Application.Auth;
 
-internal static class AuthErrors
+public static class AuthErrors
 {
     public static readonly Error TenantCodeRequired = Error.Validation(
         "Auth.TenantCodeRequired",

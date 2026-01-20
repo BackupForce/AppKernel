@@ -39,12 +39,17 @@ public sealed class Logout : IEndpoint
             LogoutCommand command = new LogoutCommand(refreshToken ?? string.Empty);
             Result result = await sender.Send(command, cancellationToken);
 
-            if (result.IsSuccess && options.UseRefreshTokenCookie)
-            {
-                RefreshTokenCookieHelper.ClearRefreshTokenCookie(httpContext.Response, options);
-            }
+            return result.Match(
+                 onSuccess: () =>
+                 {
+                     if (options.UseRefreshTokenCookie)
+                     {
+                         RefreshTokenCookieHelper.ClearRefreshTokenCookie(httpContext.Response, options);
+                     }
 
-            return result.Match(Results.Ok, CustomResults.Problem);
+                     return Results.Ok();
+                 },
+                 onFailure: CustomResults.Problem);
         })
         .AllowAnonymous()
         .WithGroupName("auth-v1")

@@ -8,7 +8,7 @@ public static class OriginValidationHelper
     {
         string? origin = request.Headers.Origin;
         string? referer = request.Headers.Referer;
-        string? host = request.Host.Value;
+        string host = request.Host.Value ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(origin) && string.IsNullOrWhiteSpace(referer))
         {
@@ -43,7 +43,7 @@ public static class OriginValidationHelper
         string requestScheme = request.Scheme;
         return string.Equals(uri.Host, request.Host.Host, StringComparison.OrdinalIgnoreCase)
             && string.Equals(uri.Scheme, requestScheme, StringComparison.OrdinalIgnoreCase)
-            && (request.Host.Port == uri.Port || (request.Host.Port is null && uri.IsDefaultPort))
+            && (request.Host.Port == uri.Port || request.Host.Port is null && uri.IsDefaultPort)
             && string.Equals(uri.Authority, host, StringComparison.OrdinalIgnoreCase);
     }
 }

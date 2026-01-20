@@ -18,7 +18,9 @@ public sealed class LogoutAll : IEndpoint
             LogoutAllCommand command = new();
             Result result = await sender.Send(command, cancellationToken);
 
-            return result.Match(Results.Ok, CustomResults.Problem);
+            return result.Match(
+             onSuccess: () => Results.Ok(),
+             onFailure: CustomResults.Problem);
         })
         .RequireAuthorization()
         .WithGroupName("auth-v1")

@@ -3,6 +3,7 @@ using Asp.Versioning;
 using MediatR;
 using SharedKernel;
 using Web.Api.Common;
+using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Auth;
@@ -35,7 +36,9 @@ public sealed class Sessions : IEndpoint
             RevokeSessionCommand command = new(sessionId);
             Result result = await sender.Send(command, cancellationToken);
 
-            return result.Match(Results.Ok, CustomResults.Problem);
+            return result.Match(
+                onSuccess: () => Results.Ok(),
+                onFailure: CustomResults.Problem);
         })
         .RequireAuthorization()
         .WithGroupName("auth-v1")
