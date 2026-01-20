@@ -5,6 +5,7 @@ using Domain.Members;
 using Domain.Users;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
+using System.Security.Cryptography; // 新增引用
 
 namespace Application.Auth;
 
@@ -60,7 +61,7 @@ internal sealed class LineLoginCommandHandler(
         User user = persistenceResult.User;
         Member? member = persistenceResult.Member;
 
-        var accessToken = jwtService.IssueAccessToken(
+        (string Token, DateTime ExpiresAtUtc) accessToken = jwtService.IssueAccessToken(
             user.Id,
             user.Name.ToString(),
             user.Type,

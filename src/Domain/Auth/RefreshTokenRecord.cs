@@ -36,7 +36,7 @@ public sealed class RefreshTokenRecord : Entity
 
     public Guid? ReplacedByTokenId { get; private set; }
 
-    public AuthSession? Session { get; private set; }
+    public AuthSession? Session { get; set; }
 
     public static RefreshTokenRecord Create(
         Guid sessionId,
