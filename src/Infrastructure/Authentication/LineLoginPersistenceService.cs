@@ -13,6 +13,7 @@ namespace Infrastructure.Authentication;
 internal sealed class LineLoginPersistenceService(
     ApplicationDbContext dbContext,
     IUserRepository userRepository,
+    IUserLoginBindingReader userLoginBindingReader,
     IMemberRepository memberRepository,
     IResourceNodeRepository resourceNodeRepository,
     IDateTimeProvider dateTimeProvider,
@@ -36,13 +37,15 @@ internal sealed class LineLoginPersistenceService(
         string? deviceId,
         CancellationToken cancellationToken)
     {
-        string normalizedLineUserId = NormalizeForLookup(lineUserId);
+        string normalizedLineUserId = LoginBinding.Normalize(LoginProvider.Line, lineUserId);
 
-        User? user = await userRepository.GetMemberByNormalizedLineUserIdAsync(
+        User? user = await userLoginBindingReader.FindUserByLoginAsync(
             tenantId,
+            LoginProvider.Line,
             normalizedLineUserId,
             cancellationToken);
         Member? member = null;
+        bool isNewMember = false;
 
         if (user is null)
         {
@@ -53,12 +56,17 @@ internal sealed class LineLoginPersistenceService(
                 cancellationToken);
             user = creation.User;
             member = creation.Member;
+            isNewMember = true;
         }
 
         if (member is null)
         {
             member = await memberRepository.GetByUserIdAsync(tenantId, user.Id, cancellationToken);
-            member ??= await CreateMemberForExistingUserAsync(tenantId, user.Id, displayName, cancellationToken);
+            if (member is null)
+            {
+                member = await CreateMemberForExistingUserAsync(tenantId, user.Id, displayName, cancellationToken);
+                isNewMember = true;
+            }
         }
 
         LineLoginPersistenceResult result = await CreateSessionAsync(
@@ -68,9 +76,10 @@ internal sealed class LineLoginPersistenceService(
             userAgent,
             ip,
             deviceId,
+            lineUserId,
             cancellationToken);
 
-        return result;
+        return result with { IsNewMember = isNewMember };
     }
 
     private async Task<LineLoginPersistenceResult> CreateSessionAsync(
@@ -80,6 +89,7 @@ internal sealed class LineLoginPersistenceService(
         string? userAgent,
         string? ip,
         string? deviceId,
+        string lineUserId,
         CancellationToken cancellationToken)
     {
         DateTime utcNow = dateTimeProvider.UtcNow;
@@ -115,9 +125,10 @@ internal sealed class LineLoginPersistenceService(
             logger.LogWarning(ex, "中文註解：LINE 登入併發新增失敗，改用重查流程。");
             dbContext.ChangeTracker.Clear();
 
-            User? existingUser = await userRepository.GetMemberByNormalizedLineUserIdAsync(
+            User? existingUser = await userLoginBindingReader.FindUserByLoginAsync(
                 tenantId,
-                NormalizeForLookup(user.LineUserId ?? string.Empty),
+                LoginProvider.Line,
+                LoginBinding.Normalize(LoginProvider.Line, lineUserId),
                 cancellationToken);
             if (existingUser is null)
             {
@@ -138,6 +149,7 @@ internal sealed class LineLoginPersistenceService(
                 userAgent,
                 ip,
                 deviceId,
+                lineUserId,
                 cancellationToken);
         }
 
@@ -166,8 +178,13 @@ internal sealed class LineLoginPersistenceService(
             passwordHash,
             false,
             UserType.Member,
-            tenantId,
-            lineUserId);
+            tenantId);
+
+        Result bindResult = user.BindLogin(LoginProvider.Line, lineUserId, dateTimeProvider.UtcNow);
+        if (bindResult.IsFailure)
+        {
+            throw new InvalidOperationException(bindResult.Error.Description);
+        }
 
         Member member = await CreateMemberEntityAsync(tenantId, user.Id, displayName, cancellationToken);
 
@@ -231,11 +248,6 @@ internal sealed class LineLoginPersistenceService(
         }
 
         return memberResult.Value;
-    }
-
-    private static string NormalizeForLookup(string value)
-    {
-        return value.Trim().ToUpperInvariant();
     }
 
     private sealed record MemberLoginCreation(User User, Member Member);

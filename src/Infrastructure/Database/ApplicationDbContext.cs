@@ -49,6 +49,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<PermissionAssignment> PermissionAssignments { get; set; }
     public DbSet<Group> Groups { get; set; }
     public DbSet<UserGroup> UserGroups { get; set; }
+    public DbSet<LoginBinding> LoginBindings { get; set; }
     public DbSet<AuthSession> AuthSessions { get; set; }
     public DbSet<RefreshTokenRecord> RefreshTokenRecords { get; set; }
 

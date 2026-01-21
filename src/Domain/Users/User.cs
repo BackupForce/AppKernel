@@ -12,8 +12,7 @@ public sealed class User : Entity
         string passwordhash,
         bool hasPublicProfile,
         UserType type,
-        Guid? tenantId,
-        string? lineUserId)
+        Guid? tenantId)
         : base(id)
     {
         Email = email;
@@ -23,7 +22,6 @@ public sealed class User : Entity
         Type = type;
         TenantId = tenantId;
         NormalizedEmail = NormalizeForLookup(email.Value);
-        SetLineUserId(lineUserId);
 
         EnsureTypeInvariant(type, tenantId);
     }
@@ -38,6 +36,9 @@ public sealed class User : Entity
     private readonly List<UserGroup> _userGroups = new();
     public IReadOnlyCollection<UserGroup> UserGroups => _userGroups.ToList();
 
+    private readonly List<LoginBinding> _loginBindings = new();
+    public IReadOnlyCollection<LoginBinding> LoginBindings => _loginBindings.ToList();
+
     public Email Email { get; private set; }
 
     public string NormalizedEmail { get; private set; } = string.Empty;
@@ -51,10 +52,6 @@ public sealed class User : Entity
     public UserType Type { get; private set; }
 
     public Guid? TenantId { get; private set; }
-
-    public string? LineUserId { get; private set; }
-
-    public string? NormalizedLineUserId { get; private set; }
 
     public bool HasRole(int roleId)
     {
@@ -84,13 +81,12 @@ public sealed class User : Entity
         string passwordhash,
         bool hasPublicProfile,
         UserType type,
-        Guid? tenantId,
-        string? lineUserId = null)
+        Guid? tenantId)
     {
         // 中文註解：建立使用者時先檢查型別與租戶不變式，避免建立非法資料。
         EnsureTypeInvariant(type, tenantId);
 
-        User user = new User(Guid.NewGuid(), email, name, passwordhash, hasPublicProfile, type, tenantId, lineUserId);
+        User user = new User(Guid.NewGuid(), email, name, passwordhash, hasPublicProfile, type, tenantId);
 
         user.Raise(new UserCreatedDomainEvent(user.Id));
         //寫入初始Role
@@ -105,6 +101,11 @@ public sealed class User : Entity
 
         Type = type;
         TenantId = tenantId;
+
+        foreach (LoginBinding binding in _loginBindings)
+        {
+            binding.UpdateTenantId(tenantId);
+        }
     }
 
     public bool IsPlatform()
@@ -183,15 +184,60 @@ public sealed class User : Entity
         }
     }
 
-    public void SetLineUserId(string? lineUserId)
+    public Result BindLogin(LoginProvider provider, string providerKey, DateTime utcNow)
     {
-        if (string.IsNullOrWhiteSpace(lineUserId))
+        if (string.IsNullOrWhiteSpace(providerKey))
         {
-            return;
+            return Result.Failure(UserErrors.LoginProviderKeyRequired);
         }
 
-        LineUserId = lineUserId.Trim();
-        NormalizedLineUserId = NormalizeForLookup(lineUserId);
+        LoginBinding? existing = _loginBindings.FirstOrDefault(binding => binding.Provider == provider);
+        if (existing is not null)
+        {
+            string normalizedKey = LoginBinding.Normalize(provider, providerKey);
+            if (existing.NormalizedProviderKey == normalizedKey)
+            {
+                return Result.Success();
+            }
+
+            return Result.Failure(UserErrors.LoginProviderAlreadyBound(provider));
+        }
+
+        Result<LoginBinding> creationResult = LoginBinding.Create(provider, providerKey, Id, TenantId, utcNow);
+        if (creationResult.IsFailure)
+        {
+            return Result.Failure(creationResult.Error);
+        }
+
+        _loginBindings.Add(creationResult.Value);
+        return Result.Success();
+    }
+
+    public Result UnbindLogin(LoginProvider provider)
+    {
+        LoginBinding? existing = _loginBindings.FirstOrDefault(binding => binding.Provider == provider);
+        if (existing is null)
+        {
+            return Result.Failure(UserErrors.LoginProviderNotBound(provider));
+        }
+
+        if (_loginBindings.Count == 1)
+        {
+            return Result.Failure(UserErrors.LoginBindingRequired);
+        }
+
+        _loginBindings.Remove(existing);
+        return Result.Success();
+    }
+
+    public bool HasLogin(LoginProvider provider)
+    {
+        return _loginBindings.Any(binding => binding.Provider == provider);
+    }
+
+    public LoginBinding? GetLogin(LoginProvider provider)
+    {
+        return _loginBindings.FirstOrDefault(binding => binding.Provider == provider);
     }
 
     private static string NormalizeForLookup(string value)

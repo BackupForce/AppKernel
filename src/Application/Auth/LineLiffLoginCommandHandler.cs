@@ -1,4 +1,5 @@
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Data;
 using Application.Abstractions.Identity;
 using Application.Abstractions.Messaging;
 using Domain.Members;
@@ -8,18 +9,23 @@ using SharedKernel;
 
 namespace Application.Auth;
 
-internal sealed class LineLoginCommandHandler(
+internal sealed class LineLiffLoginCommandHandler(
     ITenantContext tenantContext,
+    IUserLoginBindingReader loginBindingReader,
     ILineLoginPersistenceService lineLoginPersistenceService,
     IJwtService jwtService,
     ILineAuthService lineAuthService,
-    ILogger<LineLoginCommandHandler> logger)
-    : ICommandHandler<LineLoginCommand, LineLoginResponse>
+    IMemberRepository memberRepository,
+    IDateTimeProvider dateTimeProvider,
+    IUnitOfWork unitOfWork,
+    ILogger<LineLiffLoginCommandHandler> logger)
+    : ICommandHandler<LineLiffLoginCommand, LineLoginResponse>
 {
     private const string DefaultMemberDisplayName = "LINE會員";
+    private const string MemberAutoRegisterAction = "member.auto_register.liff";
 
     public async Task<Result<LineLoginResponse>> Handle(
-        LineLoginCommand command,
+        LineLiffLoginCommand command,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(command.AccessToken))
@@ -32,7 +38,6 @@ internal sealed class LineLoginCommandHandler(
             return Result.Failure<LineLoginResponse>(AuthErrors.TenantContextMissing);
         }
 
-        // 中文註解：Application 只知道「拿 token 換 user id」，不關心 HTTP/JSON 細節。
         ExternalIdentityResult verifyResult = await lineAuthService.VerifyAccessTokenAsync(
             command.AccessToken,
             cancellationToken);
@@ -48,10 +53,26 @@ internal sealed class LineLoginCommandHandler(
         }
 
         string lineUserId = verifyResult.LineUserId;
+        string normalizedKey = LoginBinding.Normalize(LoginProvider.Line, lineUserId);
+
+        User? existingUser = await loginBindingReader.FindUserByLoginAsync(
+            tenantId,
+            LoginProvider.Line,
+            normalizedKey,
+            cancellationToken);
+        if (existingUser is not null && !existingUser.IsMember())
+        {
+            return Result.Failure<LineLoginResponse>(AuthErrors.LineLoginUserTypeInvalid);
+        }
+
+        string displayName = string.IsNullOrWhiteSpace(command.DisplayName)
+            ? DefaultMemberDisplayName
+            : command.DisplayName.Trim();
+
         LineLoginPersistenceResult persistenceResult = await lineLoginPersistenceService.PersistAsync(
             tenantId,
             lineUserId,
-            DefaultMemberDisplayName,
+            displayName,
             command.UserAgent,
             command.Ip,
             command.DeviceId,
@@ -59,6 +80,26 @@ internal sealed class LineLoginCommandHandler(
 
         User user = persistenceResult.User;
         Member? member = persistenceResult.Member;
+
+        if (!user.IsMember())
+        {
+            return Result.Failure<LineLoginResponse>(AuthErrors.LineLoginUserTypeInvalid);
+        }
+
+        if (persistenceResult.IsNewMember && member is not null)
+        {
+            string? payload = "{\"source\":\"liff\",\"provider\":\"line\"}";
+            MemberActivityLog log = MemberActivityLog.Create(
+                member.Id,
+                MemberAutoRegisterAction,
+                command.Ip,
+                command.UserAgent,
+                null,
+                payload,
+                dateTimeProvider.UtcNow);
+            memberRepository.InsertActivity(log);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
 
         (string Token, DateTime ExpiresAtUtc) accessToken = jwtService.IssueAccessToken(
             user.Id,
@@ -82,7 +123,7 @@ internal sealed class LineLoginCommandHandler(
             MemberNo = member?.MemberNo
         };
 
-        logger.LogInformation("Line login succeeded for user {UserId}.", user.Id);
+        logger.LogInformation("LINE LIFF login succeeded for user {UserId}.", user.Id);
 
         return response;
     }

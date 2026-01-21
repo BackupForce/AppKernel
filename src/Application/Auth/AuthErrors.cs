@@ -32,6 +32,10 @@ public static class AuthErrors
         "Auth.LineUserIdMissing",
         "LINE 使用者識別碼缺失。");
 
+    public static readonly Error LineLoginUserTypeInvalid = Error.Validation(
+        "Auth.LineLoginUserTypeInvalid",
+        "LINE 登入帳號類型不正確。");
+
     public static readonly Error TenantContextMissing = Error.Validation(
         "Auth.TenantContextMissing",
         "Tenant context is unavailable.");

@@ -6,7 +6,6 @@ public interface IUserRepository
     Task<User?> GetByIdWithRolesAsync(Guid id, CancellationToken cancellationToken = default);
     Task<User?> GetByIdWithGroupsAsync(Guid id, CancellationToken cancellationToken = default);
     Task<User?> GetTenantUserByNormalizedEmailAsync(Guid tenantId, string normalizedEmail, CancellationToken cancellationToken = default);
-    Task<User?> GetMemberByNormalizedLineUserIdAsync(Guid tenantId, string normalizedLineUserId, CancellationToken cancellationToken = default);
 
     Task<bool> IsEmailUniqueAsync(Email email);
 

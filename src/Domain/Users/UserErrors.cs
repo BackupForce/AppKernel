@@ -43,4 +43,20 @@ public static class UserErrors
     public static readonly Error TenantIdRequired = Error.Validation(
         "Users.TenantIdRequired",
         "租戶使用者必須指定 TenantId。");
+
+    public static readonly Error LoginProviderKeyRequired = Error.Validation(
+        "Users.LoginProviderKeyRequired",
+        "登入識別值不可為空。");
+
+    public static Error LoginProviderAlreadyBound(LoginProvider provider) => Error.Conflict(
+        "Users.LoginProviderAlreadyBound",
+        $"登入方式 {provider} 已綁定其他識別值。");
+
+    public static Error LoginProviderNotBound(LoginProvider provider) => Error.NotFound(
+        "Users.LoginProviderNotBound",
+        $"登入方式 {provider} 尚未綁定。");
+
+    public static readonly Error LoginBindingRequired = Error.Validation(
+        "Users.LoginBindingRequired",
+        "使用者至少需要一種登入方式。");
 }

@@ -13,6 +13,7 @@
 **如何取得 token**
 - 透過 `POST /api/v1/auth/login` 取得管理者（Tenant User / Platform）JWT。【F:src/Web.Api/Endpoints/Auth/Login.cs†L11-L29】
 - 透過 `POST /api/v1/{tenantId}/auth/line-login` 取得 Member JWT（LINE 登入）。【F:src/Web.Api/Endpoints/Auth/LineLogin.cs†L10-L33】
+- 透過 `POST /api/v1/tenants/{tenantId}/auth/line/liff-login` 取得 Member JWT（LIFF 登入即註冊）。【F:src/Web.Api/Endpoints/Auth/LineLiffLogin.cs†L1-L57】
 
 **Authorization header 格式**
 - `Authorization: Bearer <JWT>`（標準 JWT Bearer）。【F:src/Infrastructure/Extensions/JwtAuthenticationExtensions.cs†L13-L47】
@@ -119,6 +120,7 @@
 |---|---|---|---|---|---|---|
 | Auth | POST | `/api/v1/auth/login` | None | `LoginRequest` | `LoginResponse` | 需 tenantCode；回傳 JWT。 |
 | Auth | POST | `/api/v1/{tenantId}/auth/line-login` | None | `LineLoginRequest` | `LineLoginResponse` | 需 tenantId path；自動建會員。 |
+| Auth | POST | `/api/v1/tenants/{tenantId}/auth/line/liff-login` | None | `LineLiffLoginRequest` | `LineLoginResponse` | 需 tenantId path；LIFF 登入即註冊會員。 |
 | Tenants | GET | `/api/v1/tenants/by-code/{tenantCode}` | None | N/A | `TenantLookupResponse` | tenantCode=3 碼英數。 |
 | Tenants | PUT | `/api/v1/tenants/{tenantId}/settings/timezone` | JWT + Policy(TenantUser) | `UpdateTenantTimeZoneRequest` | N/A | 更新租戶時區。 |
 | Users | GET | `/api/v2/users/{id}` | JWT + Policy(TenantUser) | N/A | `UserResponse` | v2 endpoint。 |
@@ -273,6 +275,52 @@ curl -X POST \
 - tenantId 必須與路由一致；若需支援 tenantCode 導頁，請先呼叫 `/tenants/by-code` 取得 Id。
 
 ---
+
+#### [POST] /api/v1/tenants/{tenantId}/auth/line/liff-login - LIFF 登入即註冊會員
+**Auth:** None (AllowAnonymous)【F:src/Web.Api/Endpoints/Auth/LineLiffLogin.cs†L1-L57】
+
+**Request**
+- Path params
+  | name | type | required | description |
+  |---|---|---|---|
+  | tenantId | guid | ✅ | 租戶識別碼。 |
+- Body schema
+  | name | type | required | constraints | description |
+  |---|---|---|---|---|
+  | accessToken | string | ✅ | 不可空白 | LINE access token。【F:src/Application/Auth/LineLiffLoginRequest.cs†L1-L8】【F:src/Application/Auth/LineLiffLoginCommandHandler.cs†L24-L51】 |
+  | displayName | string | ❓ | 允許空白 | 顯示名稱（未填則使用預設值）。【F:src/Application/Auth/LineLiffLoginRequest.cs†L1-L8】【F:src/Application/Auth/LineLiffLoginCommandHandler.cs†L62-L66】 |
+  | deviceId | string | ❓ | 無 | 裝置識別碼。【F:src/Application/Auth/LineLiffLoginRequest.cs†L1-L8】 |
+- Example request
+```bash
+curl -X POST \
+  "$BASE_URL/api/v1/tenants/{tenantId}/auth/line/liff-login" \
+  -H "Content-Type: application/json" \
+  -d '{"accessToken":"<line-access-token>","displayName":"LINE會員"}'
+```
+
+**Response**
+- 200 schema: `LineLoginResponse`
+  | name | type | required | description |
+  |---|---|---|---|
+  | accessToken | string | ✅ | JWT token。【F:src/Application/Auth/LineLoginResponse.cs†L5-L19】 |
+  | userId | guid | ✅ | 使用者 Id。 |
+  | tenantId | guid | ✅ | 租戶 Id。 |
+  | memberId | guid? | ❓ | 會員 Id，可能為 null。 |
+  | memberNo | string? | ❓ | 會員編號。 |
+- Example response
+```json
+{
+  "accessToken": "<jwt>",
+  "userId": "11111111-1111-1111-1111-111111111111",
+  "tenantId": "22222222-2222-2222-2222-222222222222",
+  "memberId": "33333333-3333-3333-3333-333333333333",
+  "memberNo": "MBR-20240101010101-ABC123"
+}
+```
+
+**Domain notes**
+- access token 會經由 LINE verify 流程驗證，首次登入會自動建立會員並留下 `member.auto_register.liff` 活動紀錄。【F:src/Application/Auth/LineLiffLoginCommandHandler.cs†L33-L120】
+
 
 ### Tenants
 
