@@ -29,13 +29,11 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.TenantId)
             .HasColumnName("tenant_id");
 
-        builder.Property(u => u.LineUserId)
-            .HasColumnName("line_user_id");
-
-        builder.Property(u => u.NormalizedLineUserId)
-            .HasColumnName("normalized_line_user_id");
-
         builder.HasIndex(u => u.TenantId);
+
+        builder.HasMany(u => u.LoginBindings)
+            .WithOne(binding => binding.User)
+            .HasForeignKey(binding => binding.UserId);
 
         builder.ToTable(t => t.HasCheckConstraint(
              "CK_user_type",

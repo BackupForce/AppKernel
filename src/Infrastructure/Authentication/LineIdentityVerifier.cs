@@ -11,9 +11,9 @@ namespace Infrastructure.Authentication;
 public sealed class LineIdentityVerifier(
     IHttpClientFactory httpClientFactory,
     IOptions<LineIdentityOptions> options,
-    ILogger<LineIdentityVerifier> logger) : IExternalIdentityVerifier
+    ILogger<LineIdentityVerifier> logger) : ILineAuthService
 {
-    public async Task<ExternalIdentityResult> VerifyLineAccessTokenAsync(string accessToken, CancellationToken ct)
+    public async Task<ExternalIdentityResult> VerifyAccessTokenAsync(string accessToken, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
         {
