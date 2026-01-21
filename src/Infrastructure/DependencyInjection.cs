@@ -84,7 +84,7 @@ public static class DependencyInjection
         services.AddScoped<ILineLoginPersistenceService, LineLoginPersistenceService>();
         services.AddScoped<SuperAdminSeeder>();
         // 中文註解：外部身份驗證由 Infrastructure 實作。
-        services.AddScoped<IExternalIdentityVerifier, LineIdentityVerifier>();
+        services.AddScoped<ILineAuthService, LineIdentityVerifier>();
         services.AddScoped<IMemberNoGenerator, MemberNoGenerator>();
         services.AddScoped<ILottery539RngService, Lottery539RngService>();
         services.AddScoped<IServerSeedStore, ServerSeedStore>();
@@ -116,6 +116,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserLoginBindingReader, UserLoginBindingReader>();
         services.AddScoped<IMemberRepository, MemberRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ITenantRepository, TenantRepository>();

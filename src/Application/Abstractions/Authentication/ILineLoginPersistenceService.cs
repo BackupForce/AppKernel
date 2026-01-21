@@ -21,4 +21,5 @@ public sealed record LineLoginPersistenceResult(
     Member? Member,
     AuthSession Session,
     string RefreshToken,
-    DateTime IssuedAtUtc);
+    DateTime IssuedAtUtc,
+    bool IsNewMember = false);
