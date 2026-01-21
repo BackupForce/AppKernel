@@ -37,7 +37,6 @@ internal sealed class RemoveCampaignDrawCommandHandler(
             return removeResult;
         }
 
-        campaignRepository.Update(campaign);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

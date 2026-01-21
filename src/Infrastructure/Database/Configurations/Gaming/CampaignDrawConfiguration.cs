@@ -18,7 +18,7 @@ internal sealed class CampaignDrawConfiguration : IEntityTypeConfiguration<Campa
         builder.Property(item => item.DrawId).IsRequired();
         builder.Property(item => item.CreatedAtUtc).IsRequired();
 
-        builder.HasIndex(item => new { item.CampaignId, item.DrawId }).IsUnique();
+        builder.HasIndex(item => new { item.TenantId, item.CampaignId, item.DrawId }).IsUnique();
         builder.HasIndex(item => new { item.TenantId, item.CampaignId });
     }
 }

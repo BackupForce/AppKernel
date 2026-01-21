@@ -16,9 +16,4 @@ internal sealed class CampaignDrawRepository(ApplicationDbContext context) : ICa
             .Where(item => item.TenantId == tenantId && item.CampaignId == campaignId)
             .ToListAsync(cancellationToken);
     }
-
-    public void Insert(CampaignDraw campaignDraw)
-    {
-        context.CampaignDraws.Add(campaignDraw);
-    }
 }
