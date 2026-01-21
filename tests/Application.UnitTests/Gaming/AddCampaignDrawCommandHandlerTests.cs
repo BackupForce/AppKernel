@@ -53,6 +53,6 @@ public sealed class AddCampaignDrawCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(GamingErrors.CampaignNotDraft);
         await drawRepository.DidNotReceiveWithAnyArgs()
-            .GetByIdAsync(default, default, default);
+            .GetByIdAsync(Guid.Empty, Guid.Empty, default);
     }
 }
