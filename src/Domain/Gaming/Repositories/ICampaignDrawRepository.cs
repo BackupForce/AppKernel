@@ -8,6 +8,4 @@ public interface ICampaignDrawRepository
         Guid tenantId,
         Guid campaignId,
         CancellationToken cancellationToken = default);
-
-    void Insert(CampaignDraw campaignDraw);
 }

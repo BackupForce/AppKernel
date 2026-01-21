@@ -31,8 +31,12 @@ internal sealed class CampaignConfiguration : IEntityTypeConfiguration<Campaign>
 
         builder.HasMany(campaign => campaign.Draws)
             .WithOne()
-            .HasForeignKey(draw => draw.CampaignId);
+            .HasForeignKey(draw => draw.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Navigation(campaign => campaign.Draws)
+            .HasField("_draws")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasIndex(campaign => new { campaign.TenantId, campaign.GameCode, campaign.PlayTypeCode, campaign.GrantOpenAtUtc });
     }

@@ -51,7 +51,6 @@ internal sealed class AddCampaignDrawCommandHandler(
             return addResult;
         }
 
-        campaignRepository.Update(campaign);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
