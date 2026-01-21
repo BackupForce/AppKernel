@@ -4,7 +4,7 @@ namespace Domain.Gaming.Campaigns;
 
 public sealed class CampaignDraw : Entity
 {
-    private CampaignDraw(Guid id, Guid tenantId, Guid campaignId, Guid drawId, DateTime createdAtUtc) : base(id)
+    private CampaignDraw(Guid tenantId, Guid campaignId, Guid drawId, DateTime createdAtUtc)
     {
         TenantId = tenantId;
         CampaignId = campaignId;
@@ -26,6 +26,6 @@ public sealed class CampaignDraw : Entity
 
     public static CampaignDraw Create(Guid tenantId, Guid campaignId, Guid drawId, DateTime utcNow)
     {
-        return new CampaignDraw(Guid.NewGuid(), tenantId, campaignId, drawId, utcNow);
+        return new CampaignDraw(tenantId, campaignId, drawId, utcNow);
     }
 }

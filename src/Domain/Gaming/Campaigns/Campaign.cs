@@ -49,7 +49,7 @@ public sealed class Campaign : Entity
 
     public DateTime CreatedAtUtc { get; private set; }
 
-    public IReadOnlyCollection<CampaignDraw> Draws => _draws.AsReadOnly();
+    public IReadOnlyCollection<CampaignDraw> Draws => _draws;
 
     public static Result<Campaign> Create(
         Guid tenantId,

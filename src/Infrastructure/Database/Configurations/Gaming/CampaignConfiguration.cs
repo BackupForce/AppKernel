@@ -29,12 +29,12 @@ internal sealed class CampaignConfiguration : IEntityTypeConfiguration<Campaign>
         builder.Property(campaign => campaign.Status).IsRequired();
         builder.Property(campaign => campaign.CreatedAtUtc).IsRequired();
 
-        builder.HasMany(campaign => campaign.Draws)
+        builder.HasMany(c => c.Draws)
             .WithOne()
-            .HasForeignKey(draw => draw.CampaignId)
+            .HasForeignKey(d => d.CampaignId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation(campaign => campaign.Draws)
+        builder.Navigation(c => c.Draws)
             .HasField("_draws")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
