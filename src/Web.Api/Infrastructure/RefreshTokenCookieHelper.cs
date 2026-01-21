@@ -17,7 +17,7 @@ public static class RefreshTokenCookieHelper
             new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = false, //Todo:修改
                 SameSite = ParseSameSite(options.RefreshCookieSameSite),
                 Expires = expiresAtUtc,
                 Path = options.RefreshCookiePath
@@ -29,7 +29,7 @@ public static class RefreshTokenCookieHelper
         response.Cookies.Delete(options.RefreshCookieName, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = false, //Todo:修改
             SameSite = ParseSameSite(options.RefreshCookieSameSite),
             Path = options.RefreshCookiePath
         });

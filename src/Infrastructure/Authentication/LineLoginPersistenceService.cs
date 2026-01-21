@@ -58,10 +58,7 @@ internal sealed class LineLoginPersistenceService(
         if (member is null)
         {
             member = await memberRepository.GetByUserIdAsync(tenantId, user.Id, cancellationToken);
-            if (member is null)
-            {
-                member = await CreateMemberForExistingUserAsync(tenantId, user.Id, displayName, cancellationToken);
-            }
+            member ??= await CreateMemberForExistingUserAsync(tenantId, user.Id, displayName, cancellationToken);
         }
 
         LineLoginPersistenceResult result = await CreateSessionAsync(
@@ -128,14 +125,11 @@ internal sealed class LineLoginPersistenceService(
             }
 
             Member? existingMember = await memberRepository.GetByUserIdAsync(tenantId, existingUser.Id, cancellationToken);
-            if (existingMember is null)
-            {
-                existingMember = await CreateMemberForExistingUserAsync(
+            existingMember ??= await CreateMemberForExistingUserAsync(
                     tenantId,
                     existingUser.Id,
                     existingUser.Name.ToString(),
                     cancellationToken);
-            }
 
             return await CreateSessionAsync(
                 tenantId,

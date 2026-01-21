@@ -14,5 +14,5 @@ public class AuthTokenOptions
 
     public string RefreshCookieSameSite { get; set; } = "Lax";
 
-    public string RefreshCookiePath { get; set; } = "/auth/refresh";
+    public string RefreshCookiePath { get; set; } = "/";
 }

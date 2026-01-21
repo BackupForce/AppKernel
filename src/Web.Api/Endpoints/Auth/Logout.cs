@@ -22,7 +22,7 @@ public sealed class Logout : IEndpoint
         {
             AuthTokenOptions options = authTokenOptions.Value;
 
-            if (options.UseRefreshTokenCookie && !OriginValidationHelper.IsSameOrigin(httpContext.Request))
+            if (options.UseRefreshTokenCookie && !OriginValidationHelper.IsSameHost(httpContext.Request))
             {
                 return CustomResults.Problem(Result.Failure(AuthErrors.InvalidRefreshToken));
             }

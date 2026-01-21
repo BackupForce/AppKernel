@@ -38,6 +38,33 @@ public static class OriginValidationHelper
         return false;
     }
 
+    public static bool IsSameHost(HttpRequest request)
+    {
+        string? origin = request.Headers.Origin;
+        string? referer = request.Headers.Referer;
+
+        if (string.IsNullOrWhiteSpace(origin) && string.IsNullOrWhiteSpace(referer))
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(origin)
+            && Uri.TryCreate(origin, UriKind.Absolute, out Uri? originUri))
+        {
+            return string.Equals(originUri.Host, request.Host.Host, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(originUri.Scheme, request.Scheme, StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (!string.IsNullOrWhiteSpace(referer)
+            && Uri.TryCreate(referer, UriKind.Absolute, out Uri? refererUri))
+        {
+            return string.Equals(refererUri.Host, request.Host.Host, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(refererUri.Scheme, request.Scheme, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return false;
+    }
+
     private static bool IsSameHost(HttpRequest request, Uri uri, string host)
     {
         string requestScheme = request.Scheme;

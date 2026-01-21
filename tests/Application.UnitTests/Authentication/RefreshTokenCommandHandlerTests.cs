@@ -131,6 +131,9 @@ public class RefreshTokenCommandHandlerTests
 
     private RefreshTokenCommandHandler CreateHandler()
     {
+        IAuthTokenSettings authTokenSettings = Substitute.For<IAuthTokenSettings>();
+        authTokenSettings.RefreshTokenTtlDays.Returns(_options.RefreshTokenTtlDays);
+
         return new RefreshTokenCommandHandler(
             _refreshTokenRepository,
             _userRepository,
@@ -139,7 +142,7 @@ public class RefreshTokenCommandHandlerTests
             _jwtService,
             _dateTimeProvider,
             _unitOfWork,
-            Options.Create(_options));
+            authTokenSettings);
     }
 
     private static User CreateUser(Guid userId, Guid tenantId)

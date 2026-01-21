@@ -33,6 +33,7 @@ internal sealed class CampaignConfiguration : IEntityTypeConfiguration<Campaign>
             .WithOne()
             .HasForeignKey(draw => draw.CampaignId);
 
+
         builder.HasIndex(campaign => new { campaign.TenantId, campaign.GameCode, campaign.PlayTypeCode, campaign.GrantOpenAtUtc });
     }
 }
