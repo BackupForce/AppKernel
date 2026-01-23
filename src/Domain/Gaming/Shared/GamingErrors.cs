@@ -135,9 +135,17 @@ public static class GamingErrors
         "Gaming.TicketAlreadySubmitted",
         "票券已提交。");
 
+    public static readonly Error TicketAlreadySubmittedConflict = Error.Conflict(
+        "Gaming.TicketAlreadySubmitted",
+        "票券已提交。");
+
     public static readonly Error TicketNumbersAlreadySubmitted = Error.Validation(
         "Gaming.TicketNumbersAlreadySubmitted",
         "票券號碼已提交。");
+
+    public static readonly Error TicketSubmissionClosed = Error.Conflict(
+        "Gaming.TicketSubmissionClosed",
+        "已封盤，無法提交。");
 
     public static readonly Error TicketNotSubmitted = Error.Validation(
         "Gaming.TicketNotSubmitted",
@@ -210,6 +218,18 @@ public static class GamingErrors
     public static readonly Error TicketLinesExceedLimit = Error.Validation(
         "Gaming.TicketLinesExceedLimit",
         "下注注數超過票種限制。");
+
+    public static readonly Error TicketIssueQuantityInvalid = Error.Validation(
+        "Gaming.TicketIssueQuantityInvalid",
+        "發放數量不正確。");
+
+    public static readonly Error TicketIdempotencyKeyConflict = Error.Conflict(
+        "Gaming.TicketIdempotencyKeyConflict",
+        "Idempotency-Key 已被不同請求使用。");
+
+    public static readonly Error TicketIdempotencyPayloadInvalid = Error.Problem(
+        "Gaming.TicketIdempotencyPayloadInvalid",
+        "Idempotency 資料解析失敗。");
 
     public static readonly Error TicketPlayTypeNotEnabled = Error.Validation(
         "Gaming.TicketPlayTypeNotEnabled",

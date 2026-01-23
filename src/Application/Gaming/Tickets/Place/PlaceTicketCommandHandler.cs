@@ -164,6 +164,7 @@ internal sealed class PlaceTicketCommandHandler(
             IssuedByType.System,
             userContext.UserId,
             "direct_place",
+            null,
             now);
 
         Result<LotteryNumbers> numbersResult = LotteryNumbers.Create(request.Lines.First());
@@ -178,7 +179,7 @@ internal sealed class PlaceTicketCommandHandler(
             return Result.Failure<Guid>(validateResult.Error);
         }
 
-        Result submitResult = ticket.SubmitNumbers(numbersResult.Value, now);
+        Result submitResult = ticket.SubmitNumbers(numbersResult.Value, now, userContext.UserId, null, null);
         if (submitResult.IsFailure)
         {
             return Result.Failure<Guid>(submitResult.Error);
