@@ -38,7 +38,7 @@ public sealed class LoginBinding : Entity
 
     public DateTime CreatedAtUtc { get; private set; }
 
-    public User? User { get; private set; }
+    public User? User { get; set; }
 
     public static Result<LoginBinding> Create(
         LoginProvider provider,

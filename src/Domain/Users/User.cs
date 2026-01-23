@@ -191,7 +191,7 @@ public sealed class User : Entity
             return Result.Failure(UserErrors.LoginProviderKeyRequired);
         }
 
-        LoginBinding? existing = _loginBindings.FirstOrDefault(binding => binding.Provider == provider);
+        LoginBinding? existing = _loginBindings.Find(binding => binding.Provider == provider);
         if (existing is not null)
         {
             string normalizedKey = LoginBinding.Normalize(provider, providerKey);
@@ -215,7 +215,7 @@ public sealed class User : Entity
 
     public Result UnbindLogin(LoginProvider provider)
     {
-        LoginBinding? existing = _loginBindings.FirstOrDefault(binding => binding.Provider == provider);
+        LoginBinding? existing = _loginBindings.Find(binding => binding.Provider == provider);
         if (existing is null)
         {
             return Result.Failure(UserErrors.LoginProviderNotBound(provider));
@@ -237,7 +237,7 @@ public sealed class User : Entity
 
     public LoginBinding? GetLogin(LoginProvider provider)
     {
-        return _loginBindings.FirstOrDefault(binding => binding.Provider == provider);
+        return _loginBindings.Find(binding => binding.Provider == provider);
     }
 
     private static string NormalizeForLookup(string value)
