@@ -136,6 +136,7 @@ internal sealed class IssueTicketCommandHandler(
             IssuedByType.CustomerService,
             userContext.UserId,
             request.IssuedReason,
+            null,
             now);
 
         ticketRepository.Insert(ticket);

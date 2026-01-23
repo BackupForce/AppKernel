@@ -19,6 +19,7 @@ internal sealed class SubmitTicketNumbersCommandHandler(
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
+    IUserContext userContext,
     IEntitlementChecker entitlementChecker) : ICommandHandler<SubmitTicketNumbersCommand>
 {
     public async Task<Result> Handle(SubmitTicketNumbersCommand request, CancellationToken cancellationToken)
@@ -63,8 +64,26 @@ internal sealed class SubmitTicketNumbersCommandHandler(
             return Result.Failure(validationResult.Error);
         }
 
+        Guid? drawId = ticket.DrawId;
+        if (!drawId.HasValue)
+        {
+            return Result.Failure(GamingErrors.DrawNotFound);
+        }
+
+        Draw? primaryDraw = await drawRepository.GetByIdAsync(tenantContext.TenantId, drawId.Value, cancellationToken);
+        if (primaryDraw is null)
+        {
+            return Result.Failure(GamingErrors.DrawNotFound);
+        }
+
         DateTime now = dateTimeProvider.UtcNow;
-        Result submitResult = ticket.SubmitNumbers(numbersResult.Value, now);
+        Result policyResult = TicketSubmissionPolicy.EnsureCanSubmit(ticket, primaryDraw, now);
+        if (policyResult.IsFailure)
+        {
+            return Result.Failure(policyResult.Error);
+        }
+
+        Result submitResult = ticket.SubmitNumbers(numbersResult.Value, now, userContext.UserId, null, null);
         if (submitResult.IsFailure)
         {
             return Result.Failure(submitResult.Error);

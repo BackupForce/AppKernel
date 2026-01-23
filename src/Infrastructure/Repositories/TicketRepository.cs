@@ -64,6 +64,31 @@ internal sealed class TicketRepository(ApplicationDbContext context) : ITicketRe
             cancellationToken);
     }
 
+    public async Task<bool> TryMarkSubmittedAsync(
+        Guid tenantId,
+        Guid ticketId,
+        DateTime submittedAtUtc,
+        Guid? submittedByUserId,
+        string? clientReference,
+        string? note,
+        CancellationToken cancellationToken = default)
+    {
+        int affected = await context.Tickets
+            .Where(ticket => ticket.TenantId == tenantId
+                             && ticket.Id == ticketId
+                             && ticket.SubmissionStatus == TicketSubmissionStatus.NotSubmitted)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(ticket => ticket.SubmissionStatus, TicketSubmissionStatus.Submitted)
+                    .SetProperty(ticket => ticket.SubmittedAtUtc, submittedAtUtc)
+                    .SetProperty(ticket => ticket.SubmittedByUserId, submittedByUserId)
+                    .SetProperty(ticket => ticket.SubmittedClientReference, clientReference)
+                    .SetProperty(ticket => ticket.SubmittedNote, note),
+                cancellationToken);
+
+        return affected == 1;
+    }
+
     public void Insert(Ticket ticket)
     {
         context.Tickets.Add(ticket);
