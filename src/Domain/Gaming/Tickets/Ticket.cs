@@ -29,6 +29,7 @@ public sealed class Ticket : Entity
         IssuedByType issuedByType,
         Guid? issuedByUserId,
         string? issuedReason,
+        string? issuedNote,
         DateTime createdAt) : base(id)
     {
         TenantId = tenantId;
@@ -44,6 +45,7 @@ public sealed class Ticket : Entity
         IssuedByType = issuedByType;
         IssuedByUserId = issuedByUserId;
         IssuedReason = issuedReason;
+        IssuedNote = issuedNote;
         SubmissionStatus = TicketSubmissionStatus.NotSubmitted;
         CreatedAt = createdAt;
     }
@@ -118,6 +120,11 @@ public sealed class Ticket : Entity
     public string? IssuedReason { get; private set; }
 
     /// <summary>
+    /// 發放備註（選填）。
+    /// </summary>
+    public string? IssuedNote { get; private set; }
+
+    /// <summary>
     /// 提交狀態。
     /// </summary>
     public TicketSubmissionStatus SubmissionStatus { get; private set; }
@@ -126,6 +133,21 @@ public sealed class Ticket : Entity
     /// 提交時間（UTC）。
     /// </summary>
     public DateTime? SubmittedAtUtc { get; private set; }
+
+    /// <summary>
+    /// 提交人員識別（選填）。
+    /// </summary>
+    public Guid? SubmittedByUserId { get; private set; }
+
+    /// <summary>
+    /// 提交用的客戶端參考（選填）。
+    /// </summary>
+    public string? SubmittedClientReference { get; private set; }
+
+    /// <summary>
+    /// 提交備註（選填）。
+    /// </summary>
+    public string? SubmittedNote { get; private set; }
 
     /// <summary>
     /// 作廢時間（UTC）。
@@ -169,6 +191,7 @@ public sealed class Ticket : Entity
         IssuedByType issuedByType,
         Guid? issuedByUserId,
         string? issuedReason,
+        string? issuedNote,
         DateTime createdAt)
     {
         return new Ticket(
@@ -186,13 +209,19 @@ public sealed class Ticket : Entity
             issuedByType,
             issuedByUserId,
             issuedReason,
+            issuedNote,
             createdAt);
     }
 
     /// <summary>
     /// 提交投注號碼，僅允許一次。
     /// </summary>
-    public Result SubmitNumbers(LotteryNumbers numbers, DateTime utcNow)
+    public Result SubmitNumbers(
+        LotteryNumbers numbers,
+        DateTime utcNow,
+        Guid? submittedByUserId,
+        string? clientReference,
+        string? note)
     {
         if (SubmissionStatus != TicketSubmissionStatus.NotSubmitted)
         {
@@ -213,6 +242,9 @@ public sealed class Ticket : Entity
         _lines.Add(lineResult.Value);
         SubmissionStatus = TicketSubmissionStatus.Submitted;
         SubmittedAtUtc = utcNow;
+        SubmittedByUserId = submittedByUserId;
+        SubmittedClientReference = clientReference;
+        SubmittedNote = note;
 
         return Result.Success();
     }

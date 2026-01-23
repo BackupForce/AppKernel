@@ -193,6 +193,23 @@ public sealed class Permission
         };
     }
 
+    /// <summary>
+    /// 票券後台操作權限定義
+    /// </summary>
+    public static class Tickets
+    {
+        public static readonly Permission All = new(260, "tickets:*", "票券後台所有權限", PermissionScope.Tenant);
+        public static readonly Permission Issue = new(261, "tickets.issue", "後台發放票券", PermissionScope.Tenant);
+        public static readonly Permission PlaceBet = new(262, "tickets.placeBet", "後台代客下注", PermissionScope.Tenant);
+
+        public static IEnumerable<Permission> AllPermissions => new[]
+        {
+            All,
+            Issue,
+            PlaceBet
+        };
+    }
+
     public static Permission CreateForRole(string name, string description, int roleId)
     {
         // 中文註解：建立屬於角色的權限，描述預設為空字串以符合資料表不允許 null 的限制。

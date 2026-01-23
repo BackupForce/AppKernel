@@ -34,8 +34,12 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.Property(ticket => ticket.IssuedByType).IsRequired();
         builder.Property(ticket => ticket.IssuedByUserId);
         builder.Property(ticket => ticket.IssuedReason).HasMaxLength(256);
+        builder.Property(ticket => ticket.IssuedNote).HasMaxLength(512);
         builder.Property(ticket => ticket.SubmissionStatus).IsRequired();
         builder.Property(ticket => ticket.SubmittedAtUtc);
+        builder.Property(ticket => ticket.SubmittedByUserId);
+        builder.Property(ticket => ticket.SubmittedClientReference).HasMaxLength(128);
+        builder.Property(ticket => ticket.SubmittedNote).HasMaxLength(512);
         builder.Property(ticket => ticket.CancelledAtUtc);
         builder.Property(ticket => ticket.CancelledReason).HasMaxLength(256);
         builder.Property(ticket => ticket.CancelledByUserId);

@@ -38,6 +38,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<TicketLine> TicketLines { get; set; }
     public DbSet<TicketDraw> TicketDraws { get; set; }
     public DbSet<TicketLineResult> TicketLineResults { get; set; }
+    public DbSet<TicketIdempotencyRecord> TicketIdempotencyRecords { get; set; }
     public DbSet<TicketTemplate> TicketTemplates { get; set; }
     public DbSet<Prize> Prizes { get; set; }
     public DbSet<PrizeAward> PrizeAwards { get; set; }

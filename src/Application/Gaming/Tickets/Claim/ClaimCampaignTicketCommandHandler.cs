@@ -127,6 +127,7 @@ internal sealed class ClaimCampaignTicketCommandHandler(
             IssuedByType.Campaign,
             userContext.UserId,
             null,
+            null,
             now);
 
         ticketRepository.Insert(ticket);

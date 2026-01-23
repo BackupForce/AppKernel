@@ -27,6 +27,15 @@ public interface ITicketRepository
         Guid campaignId,
         CancellationToken cancellationToken = default);
 
+    Task<bool> TryMarkSubmittedAsync(
+        Guid tenantId,
+        Guid ticketId,
+        DateTime submittedAtUtc,
+        Guid? submittedByUserId,
+        string? clientReference,
+        string? note,
+        CancellationToken cancellationToken = default);
+
     void Insert(Ticket ticket);
 
     void Update(Ticket ticket);

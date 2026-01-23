@@ -129,6 +129,7 @@ public static class DependencyInjection
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<ITicketDrawRepository, TicketDrawRepository>();
         services.AddScoped<ITicketLineResultRepository, TicketLineResultRepository>();
+        services.AddScoped<ITicketIdempotencyRepository, TicketIdempotencyRepository>();
         services.AddScoped<ITicketTemplateRepository, TicketTemplateRepository>();
         services.AddScoped<IPrizeRepository, PrizeRepository>();
         services.AddScoped<IPrizeAwardRepository, PrizeAwardRepository>();

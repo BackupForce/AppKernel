@@ -22,6 +22,9 @@ public sealed class SubmitTicketNumbersCommandHandlerTests
         Guid tenantId = Guid.NewGuid();
         DateTime now = DateTime.UtcNow;
 
+        Draw openDraw = CreateDraw(tenantId, now.AddMinutes(-5), now.AddMinutes(5));
+        Draw closedDrawEntity = CreateDraw(tenantId, now.AddMinutes(-10), now.AddMinutes(-1));
+
         Ticket ticket = Ticket.Create(
             tenantId,
             GameCodes.Lottery539,
@@ -29,20 +32,18 @@ public sealed class SubmitTicketNumbersCommandHandlerTests
             Guid.NewGuid(),
             null,
             null,
-            null,
+            openDraw.Id,
             null,
             null,
             now,
             IssuedByType.Campaign,
             null,
             null,
+            null,
             now);
 
-        TicketDraw activeDraw = TicketDraw.Create(tenantId, ticket.Id, Guid.NewGuid(), now);
-        TicketDraw closedDraw = TicketDraw.Create(tenantId, ticket.Id, Guid.NewGuid(), now);
-
-        Draw openDraw = CreateDraw(tenantId, now.AddMinutes(-5), now.AddMinutes(5));
-        Draw closedDrawEntity = CreateDraw(tenantId, now.AddMinutes(-10), now.AddMinutes(-1));
+        TicketDraw activeDraw = TicketDraw.Create(tenantId, ticket.Id, openDraw.Id, now);
+        TicketDraw closedDraw = TicketDraw.Create(tenantId, ticket.Id, closedDrawEntity.Id, now);
 
         IDrawRepository drawRepository = Substitute.For<IDrawRepository>();
         ITicketRepository ticketRepository = Substitute.For<ITicketRepository>();
@@ -50,6 +51,7 @@ public sealed class SubmitTicketNumbersCommandHandlerTests
         IUnitOfWork unitOfWork = Substitute.For<IUnitOfWork>();
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         ITenantContext tenantContext = Substitute.For<ITenantContext>();
+        IUserContext userContext = Substitute.For<IUserContext>();
         IEntitlementChecker entitlementChecker = Substitute.For<IEntitlementChecker>();
 
         ticketRepository.GetByIdAsync(tenantId, ticket.Id, Arg.Any<CancellationToken>()).Returns(ticket);
@@ -61,6 +63,7 @@ public sealed class SubmitTicketNumbersCommandHandlerTests
             .Returns(Result.Success());
         dateTimeProvider.UtcNow.Returns(now);
         tenantContext.TenantId.Returns(tenantId);
+        userContext.UserId.Returns(Guid.NewGuid());
 
         SubmitTicketNumbersCommandHandler handler = new(
             drawRepository,
@@ -69,6 +72,7 @@ public sealed class SubmitTicketNumbersCommandHandlerTests
             unitOfWork,
             dateTimeProvider,
             tenantContext,
+            userContext,
             entitlementChecker);
 
         Result result = await handler.Handle(

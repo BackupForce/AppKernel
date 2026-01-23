@@ -138,7 +138,94 @@
     ]
   }
   ```
+
 - **描述**：回傳前端可用的 UI 友善權限目錄。 【F:src/Web.Api/Endpoints/Permissions/PermissionsEndpoints.cs†L6-L25】【F:src/Application/Authorization/PermissionCatalogDto.cs†L7-L28】【F:src/Application/Authorization/PermissionUiCatalogProvider.cs†L15-L156】
+
+---
+
+## Admin Tickets
+
+#### [POST] `/api/v1/admin/members/{memberId}/tickets` - 後台發放 Ticket
+**Auth:** JWT + Policy `TenantUser` + Permission `tickets.issue`。【F:src/Web.Api/Endpoints/Admin/AdminTicketEndpoints.cs†L23-L66】【F:src/Domain/Security/Permission.cs†L205-L223】
+
+**Headers**
+- `Idempotency-Key` (optional): 同 key 重送會回傳相同結果，不會重複發券。【F:src/Application/Gaming/Tickets/Admin/IssueMemberTicketsCommandHandler.cs†L22-L128】
+
+**Request**
+```json
+{
+  "gameCode": "LOTTERY539",
+  "playTypeCode": "BASIC",
+  "drawId": "00000000-0000-0000-0000-000000000000",
+  "quantity": 2,
+  "reason": "客服補發",
+  "note": "VIP 會員"
+}
+```
+
+**Response**
+- 200: `IssueMemberTicketsResult`
+```json
+{
+  "tickets": [
+    {
+      "ticketId": "11111111-1111-1111-1111-111111111111",
+      "status": "Issued",
+      "issuedAtUtc": "2024-01-01T00:00:00Z",
+      "drawId": "00000000-0000-0000-0000-000000000000",
+      "gameCode": "LOTTERY539",
+      "playTypeCode": "BASIC",
+      "issuedByStaffUserId": "22222222-2222-2222-2222-222222222222",
+      "reason": "客服補發",
+      "note": "VIP 會員"
+    }
+  ]
+}
+```
+
+**Errors**
+- 400: `Gaming.PlayTypeNotAllowed` / `Gaming.TicketPlayTypeNotEnabled` / `Gaming.TicketIssueQuantityInvalid` / `Gaming.DrawNotOpen`
+- 404: `Gaming.MemberNotFound` / `Gaming.DrawNotFound`
+- 409: `Gaming.TicketIdempotencyKeyConflict`
+
+---
+
+#### [POST] `/api/v1/admin/tickets/{ticketId}/bet` - 後台代下注（提交投注號碼）
+**Auth:** JWT + Policy `TenantUser` + Permission `tickets.placeBet`。【F:src/Web.Api/Endpoints/Admin/AdminTicketEndpoints.cs†L68-L98】【F:src/Domain/Security/Permission.cs†L205-L223】
+
+**Headers**
+- `Idempotency-Key` (optional): 同 key 重送會回傳相同結果，不會重複提交。【F:src/Application/Gaming/Tickets/Admin/PlaceTicketBetCommandHandler.cs†L22-L160】
+
+**Request**
+```json
+{
+  "numbers": [1, 2, 3, 4, 5],
+  "clientReference": "客服單號-123",
+  "note": "人工代客下注"
+}
+```
+
+**Response**
+- 200: `PlaceTicketBetResult`
+```json
+{
+  "ticketId": "11111111-1111-1111-1111-111111111111",
+  "status": "Submitted",
+  "submittedAtUtc": "2024-01-01T00:00:00Z",
+  "submittedByStaffUserId": "22222222-2222-2222-2222-222222222222",
+  "bet": {
+    "numbers": [1, 2, 3, 4, 5],
+    "clientReference": "客服單號-123",
+    "note": "人工代客下注"
+  }
+}
+```
+
+**Errors**
+- 400: `Gaming.TicketCancelled`
+- 404: `Gaming.TicketNotFound` / `Gaming.DrawNotFound`
+- 409: `Gaming.TicketAlreadySubmitted` / `Gaming.TicketSubmissionClosed` / `Gaming.TicketIdempotencyKeyConflict`
+- 422: `Gaming.LotteryNumbersRequired` / `Gaming.LotteryNumbersCountInvalid` / `Gaming.LotteryNumbersOutOfRange` / `Gaming.LotteryNumbersDuplicated`
 
 ## Gaming - 票券
 
