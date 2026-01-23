@@ -98,7 +98,7 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
             key,
             "issue_ticket",
             ComputeHash(memberId, "LOTTERY539", "BASIC", drawId, 1, "support", "note"),
-            JsonSerializer.Serialize(cached, new JsonSerializerOptions(JsonSerializerDefaults.Web)),
+            JsonSerializer.Serialize(cached, TestJson.Web),
             now);
 
         IDrawRepository drawRepository = Substitute.For<IDrawRepository>();
@@ -170,5 +170,10 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
     {
         string raw = $"{memberId:N}|{gameCode}|{playTypeCode}|{drawId:N}|{quantity}|{reason}|{note}";
         return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(raw)));
+    }
+
+    internal static class TestJson
+    {
+        internal static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web);
     }
 }

@@ -106,7 +106,7 @@ public sealed class AdminTicketEndpoints : IEndpoint
                 extensions: BuildExtensions(result.Error));
         }
 
-        return CustomResults.Problem(result.Error);
+        return CustomResults.Problem(result);
     }
 
     private static Dictionary<string, object?> BuildExtensions(Error error)
