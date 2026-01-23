@@ -11,6 +11,7 @@ using Application.Gaming.Draws.PrizePool.Get;
 using Application.Gaming.Draws.PrizePool.Update;
 using Application.Gaming.Draws.PrizePool.Validate;
 using Application.Gaming.Draws.Reopen;
+using Application.Gaming.Draws.SellingOptions;
 using Application.Gaming.Draws.Settle;
 using Application.Gaming.Dtos;
 using Application.Gaming.Tickets.Place;
@@ -70,6 +71,24 @@ internal static class GamingDrawEndpoints
             .AllowAnonymous()
             .Produces<IReadOnlyCollection<DrawSummaryDto>>(StatusCodes.Status200OK)
             .WithName("GetGameOpenDraws");
+
+        group.MapGet(
+                "/draws/selling/options",
+                async ([AsParameters] GetSellingDrawOptionsRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    GetSellingDrawOptionsQuery query = new GetSellingDrawOptionsQuery(
+                        request.GameCode,
+                        request.PlayTypeCode,
+                        request.Take);
+                    return await UseCaseInvoker.Send<GetSellingDrawOptionsQuery, IReadOnlyList<DrawSellingOptionDto>>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .AllowAnonymous()
+            .Produces<IReadOnlyList<DrawSellingOptionDto>>(StatusCodes.Status200OK)
+            .WithName("GetSellingDrawOptions");
 
         group.MapGet(
                 "/games/{gameCode}/draws/{drawId:guid}",

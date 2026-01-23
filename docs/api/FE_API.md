@@ -152,6 +152,7 @@
 | Reports | GET | `/api/v1/tenants/{tenantId}/reports/daily` | JWT + Policy(TenantUser) | Query: `date` | `DailyReportResponse` | 依租戶時區計算。 |
 | Gaming | POST | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws` | JWT + Policy(TenantUser) | `CreateDrawRequest` | `Guid` | 建立期數。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws` | None | `GetDrawsRequest`(query) | `DrawSummaryDto[]` | 取得期數列表（允許匿名）。 |
+| Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/draws/selling/options` | None | `GetSellingDrawOptionsRequest`(query) | `DrawSellingOptionDto[]` | 可售票期數下拉選項。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws/{drawId}` | None | N/A | `DrawDetailDto` | 取得期數詳情（允許匿名）。 |
 | Gaming | POST | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws/{drawId}/tickets` | JWT + Policy(Member) | `PlaceTicketRequest` | `Guid` | 會員下注。 |
 | Gaming | POST | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws/{drawId}/execute` | JWT + Policy(TenantUser) | N/A | N/A | 開獎執行。 |
@@ -1225,6 +1226,44 @@ curl "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/gaming/lotte
   }
 ]
 ```
+
+---
+
+#### [GET] /api/v1/tenants/{tenantId}/gaming/draws/selling/options - 可售票期數下拉選項
+**Auth:** None (AllowAnonymous)
+
+**用途**
+- 提供前端 DropdownList 使用的可售票期數選項清單，時間皆為 UTC。
+
+**Request**
+- Query: `gameCode` (string?)，不填則回傳所有可售票期數。
+- Query: `playTypeCode` (string?)，只回傳包含該玩法已啟用的期數。
+- Query: `take` (int?，預設 50，上限 200)
+
+- Example request
+```bash
+curl "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/gaming/draws/selling/options?gameCode=lottery539&playTypeCode=STRAIGHT&take=50"
+```
+
+**Response**
+- 200: `DrawSellingOptionDto[]`
+- Example response
+```json
+[
+  {
+    "value": "77777777-7777-7777-7777-777777777777",
+    "label": "lottery539 | 售票至 2024-01-01 12:00 (UTC) | 開獎 2024-01-01 13:00 (UTC)",
+    "salesCloseAtUtc": "2024-01-01T12:00:00Z",
+    "drawAtUtc": "2024-01-01T13:00:00Z"
+  }
+]
+```
+
+**排序規則**
+- `SalesCloseAtUtc` ASC，次排序 `DrawAtUtc` ASC。
+
+**備註**
+- 回傳時間為 UTC，前端可自行依 tenant timezone 顯示。
 
 ---
 
