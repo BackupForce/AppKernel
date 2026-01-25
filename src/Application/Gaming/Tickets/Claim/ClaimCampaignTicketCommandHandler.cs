@@ -116,7 +116,6 @@ internal sealed class ClaimCampaignTicketCommandHandler(
         Ticket ticket = Ticket.Create(
             tenantContext.TenantId,
             campaign.GameCode,
-            campaign.PlayTypeCode,
             member.Id,
             campaign.Id,
             null,

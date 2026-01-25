@@ -1,4 +1,5 @@
-﻿using Domain.Gaming.Shared;
+﻿using Domain.Gaming.Catalog;
+using Domain.Gaming.Shared;
 using SharedKernel;
 
 namespace Domain.Gaming.Tickets;
@@ -15,10 +16,12 @@ public sealed class TicketLine : Entity
         Guid id,
         Guid ticketId,
         int lineIndex,
+        PlayTypeCode playTypeCode,
         string numbers) : base(id)
     {
         TicketId = ticketId;
         LineIndex = lineIndex;
+        PlayTypeCode = playTypeCode;
         NumbersRaw = numbers;
     }
 
@@ -43,9 +46,14 @@ public sealed class TicketLine : Entity
     public string NumbersRaw { get; private set; } = string.Empty;
 
     /// <summary>
+    /// 玩法代碼，下注時決定並存於注數。
+    /// </summary>
+    public PlayTypeCode? PlayTypeCode { get; private set; }
+
+    /// <summary>
     /// 建立投注注數，驗證 TicketId 與 LineIndex 合法性。
     /// </summary>
-    public static Result<TicketLine> Create(Guid ticketId, int lineIndex, LotteryNumbers numbers)
+    public static Result<TicketLine> Create(Guid ticketId, int lineIndex, PlayTypeCode playTypeCode, LotteryNumbers numbers)
     {
         if (ticketId == Guid.Empty)
         {
@@ -57,7 +65,7 @@ public sealed class TicketLine : Entity
             return Result.Failure<TicketLine>(GamingErrors.TicketLineInvalid);
         }
 
-        var line = new TicketLine(Guid.NewGuid(), ticketId, lineIndex, numbers.ToStorageString());
+        var line = new TicketLine(Guid.NewGuid(), ticketId, lineIndex, playTypeCode, numbers.ToStorageString());
         return line;
     }
 

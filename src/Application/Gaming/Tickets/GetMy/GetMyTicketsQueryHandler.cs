@@ -24,7 +24,7 @@ internal sealed class GetMyTicketsQueryHandler(
         Guid TicketId,
         Guid? CampaignId,
         string GameCode,
-        string PlayTypeCode,
+        string? PlayTypeCode,
         TicketSubmissionStatus SubmissionStatus,
         DateTime IssuedAtUtc,
         DateTime? SubmittedAtUtc,
@@ -65,7 +65,8 @@ internal sealed class GetMyTicketsQueryHandler(
                 t.id AS TicketId,
                 t.campaign_id AS CampaignId,
                 t.game_code AS GameCode,
-                t.play_type_code AS PlayTypeCode,
+                -- TODO: add gaming.ticket_lines.play_type_code and backfill from tickets for historical records.
+                l.play_type_code AS PlayTypeCode,
                 t.submission_status AS SubmissionStatus,
                 t.issued_at_utc AS IssuedAtUtc,
                 t.submitted_at_utc AS SubmittedAtUtc,

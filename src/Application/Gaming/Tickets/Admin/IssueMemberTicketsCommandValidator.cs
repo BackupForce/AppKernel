@@ -14,10 +14,6 @@ internal sealed class IssueMemberTicketsCommandValidator : AbstractValidator<Iss
             .NotEmpty()
             .WithMessage("gameCode 不可為空白。");
 
-        RuleFor(command => command.PlayTypeCode)
-            .NotEmpty()
-            .WithMessage("playTypeCode 不可為空白。");
-
         RuleFor(command => command.DrawId)
             .NotEmpty()
             .WithMessage("drawId 不可為空白。");

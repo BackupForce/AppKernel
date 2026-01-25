@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Domain.Gaming.Catalog;
+using Microsoft.EntityFrameworkCore;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Domain.Gaming.Tickets;
@@ -15,6 +16,11 @@ internal sealed class TicketLineConfiguration : IEntityTypeConfiguration<TicketL
 
         builder.Property(line => line.TicketId).IsRequired();
         builder.Property(line => line.LineIndex).IsRequired();
+        builder.Property(line => line.PlayTypeCode)
+            .HasConversion(
+                code => code.HasValue ? code.Value.Value : null,
+                value => value is null ? null : new PlayTypeCode(value))
+            .HasMaxLength(32);
         builder.Property(line => line.NumbersRaw).HasMaxLength(64).IsRequired();
 
         builder.HasIndex(line => new { line.TicketId, line.LineIndex }).IsUnique();

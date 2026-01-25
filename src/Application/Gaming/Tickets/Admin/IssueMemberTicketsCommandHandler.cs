@@ -3,13 +3,11 @@ using System.Text;
 using System.Text.Json;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
-using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Time;
 using Domain.Gaming.Catalog;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
-using Domain.Gaming.Rules;
 using Domain.Gaming.Shared;
 using Domain.Gaming.Tickets;
 using Domain.Members;
@@ -26,8 +24,7 @@ internal sealed class IssueMemberTicketsCommandHandler(
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
-    IUserContext userContext,
-    IEntitlementChecker entitlementChecker) : ICommandHandler<IssueMemberTicketsCommand, IssueMemberTicketsResult>
+    IUserContext userContext) : ICommandHandler<IssueMemberTicketsCommand, IssueMemberTicketsResult>
 {
     private const string Operation = "issue_ticket";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -71,15 +68,8 @@ internal sealed class IssueMemberTicketsCommandHandler(
             return Result.Failure<IssueMemberTicketsResult>(gameCodeResult.Error);
         }
 
-        Result<PlayTypeCode> playTypeResult = PlayTypeCode.Create(request.PlayTypeCode);
-        if (playTypeResult.IsFailure)
-        {
-            return Result.Failure<IssueMemberTicketsResult>(playTypeResult.Error);
-        }
-
         DateTime now = dateTimeProvider.UtcNow;
         GameCode gameCode = gameCodeResult.Value;
-        PlayTypeCode playTypeCode = playTypeResult.Value;
 
         Draw? draw = await drawRepository.GetByIdAsync(tenantContext.TenantId, request.DrawId, cancellationToken);
         if (draw is null)
@@ -95,27 +85,6 @@ internal sealed class IssueMemberTicketsCommandHandler(
         if (draw.IsEffectivelyClosed(now))
         {
             return Result.Failure<IssueMemberTicketsResult>(GamingErrors.DrawNotOpen);
-        }
-
-        PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
-        if (!registry.GetAllowedPlayTypes(draw.GameCode).Contains(playTypeCode))
-        {
-            return Result.Failure<IssueMemberTicketsResult>(GamingErrors.PlayTypeNotAllowed);
-        }
-
-        if (!draw.EnabledPlayTypes.Contains(playTypeCode))
-        {
-            return Result.Failure<IssueMemberTicketsResult>(GamingErrors.TicketPlayTypeNotEnabled);
-        }
-
-        Result entitlementResult = await entitlementChecker.EnsurePlayEnabledAsync(
-            tenantContext.TenantId,
-            draw.GameCode,
-            playTypeCode,
-            cancellationToken);
-        if (entitlementResult.IsFailure)
-        {
-            return Result.Failure<IssueMemberTicketsResult>(entitlementResult.Error);
         }
 
         Member? member = await memberRepository.GetByIdAsync(tenantContext.TenantId, request.MemberId, cancellationToken);
@@ -136,7 +105,6 @@ internal sealed class IssueMemberTicketsCommandHandler(
             Ticket ticket = Ticket.Create(
                 tenantContext.TenantId,
                 draw.GameCode,
-                playTypeCode,
                 member.Id,
                 null,
                 null,
@@ -171,7 +139,6 @@ internal sealed class IssueMemberTicketsCommandHandler(
                 ticket.IssuedAtUtc,
                 ticket.DrawId ?? draw.Id,
                 ticket.GameCode.Value,
-                ticket.PlayTypeCode.Value,
                 ticket.IssuedByUserId ?? Guid.Empty,
                 ticket.IssuedReason,
                 ticket.IssuedNote))
@@ -202,7 +169,7 @@ internal sealed class IssueMemberTicketsCommandHandler(
 
     private static string ComputeIssueHash(IssueMemberTicketsCommand request)
     {
-        string raw = $"{request.MemberId:N}|{request.GameCode}|{request.PlayTypeCode}|{request.DrawId:N}|{request.Quantity}|{request.Reason}|{request.Note}";
+        string raw = $"{request.MemberId:N}|{request.GameCode}|{request.DrawId:N}|{request.Quantity}|{request.Reason}|{request.Note}";
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
         return Convert.ToHexString(hash);
     }

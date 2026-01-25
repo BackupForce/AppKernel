@@ -8,6 +8,7 @@ public sealed record PlaceTicketBetResult(
     BetPayloadDto Bet);
 
 public sealed record BetPayloadDto(
+    string PlayTypeCode,
     IReadOnlyCollection<int> Numbers,
     string? ClientReference,
     string? Note);
