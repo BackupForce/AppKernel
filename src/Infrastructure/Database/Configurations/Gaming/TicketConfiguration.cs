@@ -24,7 +24,7 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.Property(ticket => ticket.PlayTypeCode)
             .HasConversion(
                 code => code.HasValue ? code.Value.Value : null,
-                value => value is null ? null : new PlayTypeCode(value))
+                value => value == null ? null : new PlayTypeCode(value))
             .HasMaxLength(32);
         builder.Property(ticket => ticket.MemberId).IsRequired();
         builder.Property(ticket => ticket.CampaignId);

@@ -57,14 +57,13 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
             unitOfWork,
             dateTimeProvider,
             tenantContext,
-            userContext,
-            entitlementChecker);
+            userContext
+            );
 
         Result<IssueMemberTicketsResult> result = await handler.Handle(
             new IssueMemberTicketsCommand(
                 memberId,
                 GameCodes.Lottery539.Value,
-                PlayTypeCodes.Basic.Value,
                 draw.Id,
                 2,
                 "support",
@@ -90,7 +89,7 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
         IssueMemberTicketsResult cached = new(
             new[]
             {
-                new IssuedTicketDto(Guid.NewGuid(), "Issued", now, Guid.NewGuid(), "LOTTERY539", "BASIC", Guid.NewGuid(), "support", "note")
+                new IssuedTicketDto(Guid.NewGuid(), "Issued", now, Guid.NewGuid(), "LOTTERY539",  Guid.NewGuid(), "support", "note")
             });
 
         TicketIdempotencyRecord record = TicketIdempotencyRecord.Create(
@@ -110,7 +109,6 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         ITenantContext tenantContext = Substitute.For<ITenantContext>();
         IUserContext userContext = Substitute.For<IUserContext>();
-        IEntitlementChecker entitlementChecker = Substitute.For<IEntitlementChecker>();
 
         ticketIdempotencyRepository.GetByKeyAsync(tenantId, key, "issue_ticket", Arg.Any<CancellationToken>())
             .Returns(record);
@@ -125,14 +123,13 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
             unitOfWork,
             dateTimeProvider,
             tenantContext,
-            userContext,
-            entitlementChecker);
+            userContext
+            );
 
         Result<IssueMemberTicketsResult> result = await handler.Handle(
             new IssueMemberTicketsCommand(
                 memberId,
                 "LOTTERY539",
-                "BASIC",
                 drawId,
                 1,
                 "support",

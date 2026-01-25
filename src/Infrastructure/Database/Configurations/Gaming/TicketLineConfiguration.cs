@@ -19,7 +19,7 @@ internal sealed class TicketLineConfiguration : IEntityTypeConfiguration<TicketL
         builder.Property(line => line.PlayTypeCode)
             .HasConversion(
                 code => code.HasValue ? code.Value.Value : null,
-                value => value is null ? null : new PlayTypeCode(value))
+                value => value == null ? null : new PlayTypeCode(value))
             .HasMaxLength(32);
         builder.Property(line => line.NumbersRaw).HasMaxLength(64).IsRequired();
 
