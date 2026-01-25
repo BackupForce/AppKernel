@@ -153,7 +153,6 @@ internal sealed class PlaceTicketCommandHandler(
         Ticket ticket = Ticket.Create(
             tenantContext.TenantId,
             draw.GameCode,
-            playTypeCode,
             member.Id,
             null,
             template.Id,
@@ -179,7 +178,7 @@ internal sealed class PlaceTicketCommandHandler(
             return Result.Failure<Guid>(validateResult.Error);
         }
 
-        Result submitResult = ticket.SubmitNumbers(numbersResult.Value, now, userContext.UserId, null, null);
+        Result submitResult = ticket.SubmitNumbers(playTypeCode, numbersResult.Value, now, userContext.UserId, null, null);
         if (submitResult.IsFailure)
         {
             return Result.Failure<Guid>(submitResult.Error);

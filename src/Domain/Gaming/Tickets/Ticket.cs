@@ -18,7 +18,6 @@ public sealed class Ticket : Entity
         Guid id,
         Guid tenantId,
         GameCode gameCode,
-        PlayTypeCode playTypeCode,
         Guid memberId,
         Guid? campaignId,
         Guid? ticketTemplateId,
@@ -34,7 +33,7 @@ public sealed class Ticket : Entity
     {
         TenantId = tenantId;
         GameCode = gameCode;
-        PlayTypeCode = playTypeCode;
+        PlayTypeCode = null;
         MemberId = memberId;
         CampaignId = campaignId;
         TicketTemplateId = ticketTemplateId;
@@ -70,9 +69,9 @@ public sealed class Ticket : Entity
     public GameCode GameCode { get; private set; }
 
     /// <summary>
-    /// 玩法代碼（本票券所屬玩法）。
+    /// 玩法代碼（舊欄位，下注時改以 TicketLine 記錄）。
     /// </summary>
-    public PlayTypeCode PlayTypeCode { get; private set; }
+    public PlayTypeCode? PlayTypeCode { get; private set; }
 
     /// <summary>
     /// 購買者（會員）識別。
@@ -180,7 +179,6 @@ public sealed class Ticket : Entity
     public static Ticket Create(
         Guid tenantId,
         GameCode gameCode,
-        PlayTypeCode playTypeCode,
         Guid memberId,
         Guid? campaignId,
         Guid? ticketTemplateId,
@@ -198,7 +196,6 @@ public sealed class Ticket : Entity
             Guid.NewGuid(),
             tenantId,
             gameCode,
-            playTypeCode,
             memberId,
             campaignId,
             ticketTemplateId,
@@ -217,6 +214,7 @@ public sealed class Ticket : Entity
     /// 提交投注號碼，僅允許一次。
     /// </summary>
     public Result SubmitNumbers(
+        PlayTypeCode playTypeCode,
         LotteryNumbers numbers,
         DateTime utcNow,
         Guid? submittedByUserId,
@@ -233,7 +231,7 @@ public sealed class Ticket : Entity
             return Result.Failure(GamingErrors.TicketNumbersAlreadySubmitted);
         }
 
-        Result<TicketLine> lineResult = TicketLine.Create(Id, 0, numbers);
+        Result<TicketLine> lineResult = TicketLine.Create(Id, 0, playTypeCode, numbers);
         if (lineResult.IsFailure)
         {
             return Result.Failure(lineResult.Error);

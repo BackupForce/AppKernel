@@ -2,6 +2,7 @@
 using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
+using Domain.Gaming.Catalog;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Rules;
@@ -105,7 +106,13 @@ internal sealed class SettleDrawCommandHandler(
                 continue;
             }
 
-            IPlayRule rule = registry.GetRule(draw.GameCode, ticket.PlayTypeCode);
+            PlayTypeCode? playTypeCode = line.PlayTypeCode ?? ticket.PlayTypeCode;
+            if (!playTypeCode.HasValue)
+            {
+                return Result.Failure(GamingErrors.PlayTypeCodeRequired);
+            }
+
+            IPlayRule rule = registry.GetRule(draw.GameCode, playTypeCode.Value);
             PrizeTier? tier = rule.Evaluate(lineNumbers, winningNumbers);
             if (tier is not null)
             {
@@ -118,7 +125,7 @@ internal sealed class SettleDrawCommandHandler(
 
                 if (!exists)
                 {
-                    PrizeOption? option = draw.FindPrizeOption(ticket.PlayTypeCode, tier.Value);
+                    PrizeOption? option = draw.FindPrizeOption(playTypeCode.Value, tier.Value);
                     if (option is null)
                     {
                         return Result.Failure(GamingErrors.PrizePoolNotConfigured);

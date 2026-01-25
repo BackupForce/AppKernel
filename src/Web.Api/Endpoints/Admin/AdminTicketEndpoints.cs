@@ -42,7 +42,6 @@ public sealed class AdminTicketEndpoints : IEndpoint
                     IssueMemberTicketsCommand command = new IssueMemberTicketsCommand(
                         memberId,
                         request.GameCode,
-                        request.PlayTypeCode,
                         request.DrawId,
                         request.Quantity,
                         request.Reason,
@@ -72,6 +71,7 @@ public sealed class AdminTicketEndpoints : IEndpoint
                 {
                     PlaceTicketBetCommand command = new PlaceTicketBetCommand(
                         ticketId,
+                        request.PlayTypeCode,
                         request.Numbers,
                         request.ClientReference,
                         request.Note,

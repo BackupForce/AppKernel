@@ -155,7 +155,6 @@
 ```json
 {
   "gameCode": "LOTTERY539",
-  "playTypeCode": "BASIC",
   "drawId": "00000000-0000-0000-0000-000000000000",
   "quantity": 2,
   "reason": "客服補發",
@@ -174,7 +173,6 @@
       "issuedAtUtc": "2024-01-01T00:00:00Z",
       "drawId": "00000000-0000-0000-0000-000000000000",
       "gameCode": "LOTTERY539",
-      "playTypeCode": "BASIC",
       "issuedByStaffUserId": "22222222-2222-2222-2222-222222222222",
       "reason": "客服補發",
       "note": "VIP 會員"
@@ -184,7 +182,7 @@
 ```
 
 **Errors**
-- 400: `Gaming.PlayTypeNotAllowed` / `Gaming.TicketPlayTypeNotEnabled` / `Gaming.TicketIssueQuantityInvalid` / `Gaming.DrawNotOpen`
+- 400: `Gaming.TicketIssueQuantityInvalid` / `Gaming.DrawNotOpen`
 - 404: `Gaming.MemberNotFound` / `Gaming.DrawNotFound`
 - 409: `Gaming.TicketIdempotencyKeyConflict`
 
@@ -199,6 +197,7 @@
 **Request**
 ```json
 {
+  "playTypeCode": "BASIC",
   "numbers": [1, 2, 3, 4, 5],
   "clientReference": "客服單號-123",
   "note": "人工代客下注"
@@ -214,6 +213,7 @@
   "submittedAtUtc": "2024-01-01T00:00:00Z",
   "submittedByStaffUserId": "22222222-2222-2222-2222-222222222222",
   "bet": {
+    "playTypeCode": "BASIC",
     "numbers": [1, 2, 3, 4, 5],
     "clientReference": "客服單號-123",
     "note": "人工代客下注"
@@ -266,12 +266,13 @@
 ### POST `/api/v1/tenants/{tenantId}/gaming/tickets/{ticketId}/submit`
 - **授權**：Member
 - **請求體**
-  ```json
-  {
-    "numbers": [1, 2, 3, 4, 5]
-  }
-  ```
-- **描述**：提交票券號碼，僅允許一次。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L74-L93】【F:src/Application/Gaming/Tickets/Submit/SubmitTicketNumbersCommandHandler.cs†L17-L92】
+```json
+{
+  "playTypeCode": "BASIC",
+  "numbers": [1, 2, 3, 4, 5]
+}
+```
+- **描述**：提交票券號碼，僅允許一次。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L59-L74】【F:src/Application/Gaming/Tickets/Submit/SubmitTicketNumbersCommandHandler.cs†L26-L105】
 
 ### POST `/api/v1/tenants/{tenantId}/gaming/tickets/{ticketId}/draws/{drawId}/redeem`
 - **授權**：Member

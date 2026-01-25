@@ -22,9 +22,10 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .HasMaxLength(32)
             .IsRequired();
         builder.Property(ticket => ticket.PlayTypeCode)
-            .HasConversion(code => code.Value, value => new PlayTypeCode(value))
-            .HasMaxLength(32)
-            .IsRequired();
+            .HasConversion(
+                code => code.HasValue ? code.Value.Value : null,
+                value => value is null ? null : new PlayTypeCode(value))
+            .HasMaxLength(32);
         builder.Property(ticket => ticket.MemberId).IsRequired();
         builder.Property(ticket => ticket.CampaignId);
         builder.Property(ticket => ticket.TicketTemplateId);

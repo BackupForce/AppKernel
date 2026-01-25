@@ -7,6 +7,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Time;
+using Domain.Gaming.Catalog;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Rules;
@@ -62,6 +63,14 @@ internal sealed class PlaceTicketBetCommandHandler(
             }
         }
 
+        Result<PlayTypeCode> playTypeResult = PlayTypeCode.Create(request.PlayTypeCode);
+        if (playTypeResult.IsFailure)
+        {
+            return Result.Failure<PlaceTicketBetResult>(playTypeResult.Error);
+        }
+
+        PlayTypeCode playTypeCode = playTypeResult.Value;
+
         Ticket? ticket = await ticketRepository.GetByIdAsync(
             tenantContext.TenantId,
             request.TicketId,
@@ -83,10 +92,21 @@ internal sealed class PlaceTicketBetCommandHandler(
             return Result.Failure<PlaceTicketBetResult>(GamingErrors.DrawNotFound);
         }
 
+        PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
+        if (!registry.GetAllowedPlayTypes(draw.GameCode).Contains(playTypeCode))
+        {
+            return Result.Failure<PlaceTicketBetResult>(GamingErrors.PlayTypeNotAllowed);
+        }
+
+        if (!draw.EnabledPlayTypes.Contains(playTypeCode))
+        {
+            return Result.Failure<PlaceTicketBetResult>(GamingErrors.TicketPlayTypeNotEnabled);
+        }
+
         Result entitlementResult = await entitlementChecker.EnsurePlayEnabledAsync(
             tenantContext.TenantId,
             ticket.GameCode,
-            ticket.PlayTypeCode,
+            playTypeCode,
             cancellationToken);
         if (entitlementResult.IsFailure)
         {
@@ -106,8 +126,7 @@ internal sealed class PlaceTicketBetCommandHandler(
             return Result.Failure<PlaceTicketBetResult>(numbersResult.Error);
         }
 
-        PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
-        IPlayRule rule = registry.GetRule(ticket.GameCode, ticket.PlayTypeCode);
+        IPlayRule rule = registry.GetRule(ticket.GameCode, playTypeCode);
         Result validationResult = rule.ValidateBet(numbersResult.Value);
         if (validationResult.IsFailure)
         {
@@ -115,6 +134,7 @@ internal sealed class PlaceTicketBetCommandHandler(
         }
 
         Result submitResult = ticket.SubmitNumbers(
+            playTypeCode,
             numbersResult.Value,
             now,
             userContext.UserId,
@@ -150,7 +170,7 @@ internal sealed class PlaceTicketBetCommandHandler(
             TicketStatusMapper.ToAdminStatus(ticket.SubmissionStatus),
             ticket.SubmittedAtUtc ?? now,
             ticket.SubmittedByUserId ?? Guid.Empty,
-            new BetPayloadDto(numbersResult.Value.Numbers, request.ClientReference, request.Note));
+            new BetPayloadDto(playTypeCode.Value, numbersResult.Value.Numbers, request.ClientReference, request.Note));
 
         if (!string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -179,7 +199,10 @@ internal sealed class PlaceTicketBetCommandHandler(
     private static string ComputeBetHash(PlaceTicketBetCommand request)
     {
         string numbers = request.Numbers is null ? string.Empty : string.Join(',', request.Numbers);
-        string raw = $"{request.TicketId:N}|{numbers}|{request.ClientReference}|{request.Note}";
+        string playTypeCode = string.IsNullOrWhiteSpace(request.PlayTypeCode)
+            ? string.Empty
+            : PlayTypeCode.Normalize(request.PlayTypeCode);
+        string raw = $"{request.TicketId:N}|{playTypeCode}|{numbers}|{request.ClientReference}|{request.Note}";
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
         return Convert.ToHexString(hash);
     }

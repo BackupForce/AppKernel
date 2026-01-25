@@ -125,7 +125,6 @@ internal sealed class IssueTicketCommandHandler(
         Ticket ticket = Ticket.Create(
             tenantContext.TenantId,
             campaign.GameCode,
-            campaign.PlayTypeCode,
             member.Id,
             campaign.Id,
             template?.Id,

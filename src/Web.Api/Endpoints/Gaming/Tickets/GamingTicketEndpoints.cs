@@ -61,7 +61,7 @@ internal static class GamingTicketEndpoints
                 async (Guid ticketId, SubmitTicketNumbersRequest request, ISender sender, CancellationToken ct) =>
                 {
                     SubmitTicketNumbersCommand command =
-                        new(ticketId, request.Numbers);
+                        new(ticketId, request.PlayTypeCode, request.Numbers);
 
                     return await UseCaseInvoker.Send(
                         command,
