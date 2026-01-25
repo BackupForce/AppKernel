@@ -20,7 +20,6 @@ internal sealed class GetSellingDrawOptionsQueryHandler(
         GetSellingDrawOptionsQuery request,
         CancellationToken cancellationToken)
     {
-        GameCode? gameCode = null;
         string? gameCodeValue = null;
 
         if (!string.IsNullOrWhiteSpace(request.GameCode))
@@ -31,13 +30,14 @@ internal sealed class GetSellingDrawOptionsQueryHandler(
                 return Result.Failure<IReadOnlyList<DrawSellingOptionDto>>(gameCodeResult.Error);
             }
 
-            gameCode = gameCodeResult.Value;
+            GameCode gameCode = gameCodeResult.Value;
             gameCodeValue = gameCode.Value;
 
             Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
                 tenantContext.TenantId,
                 gameCode,
                 cancellationToken);
+
             if (entitlementResult.IsFailure)
             {
                 return Result.Failure<IReadOnlyList<DrawSellingOptionDto>>(entitlementResult.Error);
