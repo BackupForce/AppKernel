@@ -164,6 +164,7 @@
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws/{drawId}/prize-mappings` | JWT + Policy(TenantUser) | N/A | `DrawPrizeMappingDto[]` | 查詢獎項對應。 |
 | Gaming | PUT | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws/{drawId}/prize-mappings` | JWT + Policy(TenantUser) | `UpdateDrawPrizeMappingsRequest` | N/A | 更新獎項對應。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/lottery539/members/me/tickets` | JWT + Policy(Member) | `GetMyTicketsRequest`(query) | `TicketSummaryDto[]` | 會員票券查詢。 |
+| Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/members/me/tickets/available-for-bet` | JWT + Policy(Member) | `GetAvailableTicketsForBetRequest`(query) | `AvailableTicketsResponse` | 取得可下注票券清單（Dropdown 用）。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/lottery539/members/me/awards` | JWT + Policy(Member) | `GetMyAwardsRequest`(query) | `PrizeAwardDto[]` | 會員得獎查詢。 |
 | Gaming | POST | `/api/v1/tenants/{tenantId}/gaming/prizes/awards/{awardId}/redeem` | JWT + Policy(Member) | `RedeemPrizeAwardRequest` | `Guid` | 兌獎。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/prizes` | JWT + Policy(TenantUser) | N/A | `PrizeDto[]` | 獎品列表。 |
@@ -1536,6 +1537,42 @@ curl "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/gaming/lotte
   }
 ]
 ```
+
+---
+
+#### [GET] /api/v1/tenants/{tenantId}/gaming/members/me/tickets/available-for-bet - 取得可下注票券
+**Auth:** JWT + Policy `Member`
+
+**Request**
+- Query: `drawId` (Guid? optional), `limit` (int? optional, default 200)
+
+- Example request
+```bash
+curl "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/gaming/members/me/tickets/available-for-bet?drawId=77777777-7777-7777-7777-777777777777&limit=200" \
+  -H "Authorization: Bearer <jwt>"
+```
+
+**Response**
+- 200: `AvailableTicketsResponse`
+- Example response
+```json
+{
+  "items": [
+    {
+      "ticketId": "11111111-1111-1111-1111-111111111111",
+      "displayText": "Ticket 11111111111111111111111111111111 | LOTTERY539 | Close 2026-01-25T10:00:00.0000000Z",
+      "gameCode": "LOTTERY539",
+      "playTypeCode": null,
+      "drawId": "77777777-7777-7777-7777-777777777777",
+      "salesCloseAtUtc": "2026-01-25T10:00:00Z",
+      "expiresAtUtc": null
+    }
+  ]
+}
+```
+
+**Notes**
+- `salesCloseAtUtc` / `expiresAtUtc` 為 UTC，前端顯示需依租戶時區轉換。
 
 ---
 

@@ -1,6 +1,7 @@
 ﻿using Application.Abstractions.Authorization;
 using Application.Gaming.Awards.GetMy;
 using Application.Gaming.Dtos;
+using Application.Gaming.Tickets.AvailableForBet;
 using Application.Gaming.Tickets.GetMy;
 using MediatR;
 using Web.Api.Common;
@@ -41,5 +42,20 @@ internal static class GamingMemberEndpoints
             .RequireAuthorization(AuthorizationPolicyNames.Member)
             .Produces<IReadOnlyCollection<PrizeAwardDto>>(StatusCodes.Status200OK)
             .WithName("GetMyGameAwards");
+
+        group.MapGet(
+                "/members/me/tickets/available-for-bet",
+                async ([AsParameters] GetAvailableTicketsForBetRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    GetAvailableTicketsForBetQuery query = new GetAvailableTicketsForBetQuery(request.DrawId, request.Limit);
+                    return await UseCaseInvoker.Send<GetAvailableTicketsForBetQuery, AvailableTicketsResponse>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(AuthorizationPolicyNames.Member)
+            .Produces<AvailableTicketsResponse>(StatusCodes.Status200OK)
+            .WithName("GetAvailableTicketsForBet");
     }
 }
