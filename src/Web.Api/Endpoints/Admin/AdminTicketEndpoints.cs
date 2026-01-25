@@ -1,4 +1,5 @@
 using Application.Abstractions.Authorization;
+using Application.Gaming.Dtos;
 using Application.Gaming.Tickets.Admin;
 using Asp.Versioning;
 using Domain.Gaming.Shared;
@@ -87,6 +88,28 @@ public sealed class AdminTicketEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
             .WithName("AdminPlaceTicketBet");
+
+        group.MapGet(
+                "/members/{memberId:guid}/tickets/available-for-bet",
+                async (Guid memberId,
+                    [AsParameters] GetMemberAvailableTicketsForBetRequest request,
+                    ISender sender,
+                    CancellationToken ct) =>
+                {
+                    GetMemberAvailableTicketsForBetQuery query = new GetMemberAvailableTicketsForBetQuery(
+                        memberId,
+                        request.DrawId,
+                        request.Limit);
+                    return await UseCaseInvoker.Send<GetMemberAvailableTicketsForBetQuery, AvailableTicketsResponse>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Tickets.Read.Name)
+            .Produces<AvailableTicketsResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .WithName("AdminGetMemberAvailableTicketsForBet");
     }
 
     private static IResult ToBetResult(Result<PlaceTicketBetResult> result)

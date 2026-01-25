@@ -227,6 +227,39 @@
 - 409: `Gaming.TicketAlreadySubmitted` / `Gaming.TicketSubmissionClosed` / `Gaming.TicketIdempotencyKeyConflict`
 - 422: `Gaming.LotteryNumbersRequired` / `Gaming.LotteryNumbersCountInvalid` / `Gaming.LotteryNumbersOutOfRange` / `Gaming.LotteryNumbersDuplicated`
 
+---
+
+#### [GET] `/api/v1/admin/members/{memberId}/tickets/available-for-bet` - 後台查詢會員可下注票券
+**Auth:** JWT + Policy `TenantUser` + Permission `tickets.read`。【F:src/Web.Api/Endpoints/Admin/AdminTicketEndpoints.cs†L100-L125】【F:src/Domain/Security/Permission.cs†L205-L225】
+
+**Query**
+- `drawId` (optional): 只查某一期數可下注票券。
+- `limit` (optional): 預設 200，最大 500。
+
+**Response**
+- 200: `AvailableTicketsResponse`
+```json
+{
+  "items": [
+    {
+      "ticketId": "11111111-1111-1111-1111-111111111111",
+      "displayText": "Ticket 11111111111111111111111111111111 | LOTTERY539 | BASIC | Close 2024-01-01T00:00:00.0000000Z",
+      "gameCode": "LOTTERY539",
+      "playTypeCode": "BASIC",
+      "drawId": "77777777-7777-7777-7777-777777777777",
+      "salesCloseAtUtc": "2024-01-01T00:00:00Z",
+      "expiresAtUtc": null
+    }
+  ]
+}
+```
+
+**Errors**
+- 404: `Gaming.MemberNotFound`（member 不存在或不屬於 tenant）。
+
+**Notes**
+- 時間一律使用 UTC 回傳，前端依租戶時區顯示。
+
 ## Gaming - 票券
 
 - **路由前綴**：`/api/v1/tenants/{tenantId}/gaming`
