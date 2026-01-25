@@ -201,12 +201,14 @@ public sealed class Permission
         public static readonly Permission All = new(260, "tickets:*", "票券後台所有權限", PermissionScope.Tenant);
         public static readonly Permission Issue = new(261, "tickets.issue", "後台發放票券", PermissionScope.Tenant);
         public static readonly Permission PlaceBet = new(262, "tickets.placeBet", "後台代客下注", PermissionScope.Tenant);
+        public static readonly Permission Read = new(263, "tickets.read", "後台查詢票券", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {
             All,
             Issue,
-            PlaceBet
+            PlaceBet,
+            Read
         };
     }
 
