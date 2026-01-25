@@ -14,6 +14,10 @@ internal sealed class PlaceTicketBetCommandValidator : AbstractValidator<PlaceTi
             .NotEmpty()
             .WithMessage("numbers 不可為空白。");
 
+        RuleFor(command => command.PlayTypeCode)
+            .NotEmpty()
+            .WithMessage("playTypeCode 不可為空白。");
+
         RuleFor(command => command.ClientReference)
             .MaximumLength(128);
 

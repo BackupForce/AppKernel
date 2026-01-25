@@ -9,7 +9,7 @@ public sealed record TicketSummaryDto(
     Guid TicketId,
     Guid? CampaignId,
     string GameCode,
-    string PlayTypeCode,
+    string? PlayTypeCode,
     TicketSubmissionStatus SubmissionStatus,
     DateTime IssuedAtUtc,
     DateTime? SubmittedAtUtc,

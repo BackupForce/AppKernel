@@ -9,7 +9,6 @@ public sealed record IssuedTicketDto(
     DateTime IssuedAtUtc,
     Guid DrawId,
     string GameCode,
-    string PlayTypeCode,
     Guid IssuedByStaffUserId,
     string? Reason,
     string? Note);

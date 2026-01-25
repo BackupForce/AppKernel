@@ -3,6 +3,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Time;
+using Domain.Gaming.Catalog;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Rules;
@@ -40,28 +41,18 @@ internal sealed class SubmitTicketNumbersCommandHandler(
             return Result.Failure(GamingErrors.TicketAlreadySubmitted);
         }
 
-        Result entitlementResult = await entitlementChecker.EnsurePlayEnabledAsync(
-            tenantContext.TenantId,
-            ticket.GameCode,
-            ticket.PlayTypeCode,
-            cancellationToken);
-        if (entitlementResult.IsFailure)
+        Result<PlayTypeCode> playTypeResult = PlayTypeCode.Create(request.PlayTypeCode);
+        if (playTypeResult.IsFailure)
         {
-            return Result.Failure(entitlementResult.Error);
+            return Result.Failure(playTypeResult.Error);
         }
+
+        PlayTypeCode playTypeCode = playTypeResult.Value;
 
         Result<LotteryNumbers> numbersResult = LotteryNumbers.Create(request.Numbers);
         if (numbersResult.IsFailure)
         {
             return Result.Failure(numbersResult.Error);
-        }
-
-        PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
-        IPlayRule rule = registry.GetRule(ticket.GameCode, ticket.PlayTypeCode);
-        Result validationResult = rule.ValidateBet(numbersResult.Value);
-        if (validationResult.IsFailure)
-        {
-            return Result.Failure(validationResult.Error);
         }
 
         Guid? drawId = ticket.DrawId;
@@ -76,6 +67,34 @@ internal sealed class SubmitTicketNumbersCommandHandler(
             return Result.Failure(GamingErrors.DrawNotFound);
         }
 
+        PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
+        if (!registry.GetAllowedPlayTypes(primaryDraw.GameCode).Contains(playTypeCode))
+        {
+            return Result.Failure(GamingErrors.PlayTypeNotAllowed);
+        }
+
+        if (!primaryDraw.EnabledPlayTypes.Contains(playTypeCode))
+        {
+            return Result.Failure(GamingErrors.TicketPlayTypeNotEnabled);
+        }
+
+        Result entitlementResult = await entitlementChecker.EnsurePlayEnabledAsync(
+            tenantContext.TenantId,
+            ticket.GameCode,
+            playTypeCode,
+            cancellationToken);
+        if (entitlementResult.IsFailure)
+        {
+            return Result.Failure(entitlementResult.Error);
+        }
+
+        IPlayRule rule = registry.GetRule(ticket.GameCode, playTypeCode);
+        Result validationResult = rule.ValidateBet(numbersResult.Value);
+        if (validationResult.IsFailure)
+        {
+            return Result.Failure(validationResult.Error);
+        }
+
         DateTime now = dateTimeProvider.UtcNow;
         Result policyResult = TicketSubmissionPolicy.EnsureCanSubmit(ticket, primaryDraw, now);
         if (policyResult.IsFailure)
@@ -83,7 +102,7 @@ internal sealed class SubmitTicketNumbersCommandHandler(
             return Result.Failure(policyResult.Error);
         }
 
-        Result submitResult = ticket.SubmitNumbers(numbersResult.Value, now, userContext.UserId, null, null);
+        Result submitResult = ticket.SubmitNumbers(playTypeCode, numbersResult.Value, now, userContext.UserId, null, null);
         if (submitResult.IsFailure)
         {
             return Result.Failure(submitResult.Error);
