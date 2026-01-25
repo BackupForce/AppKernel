@@ -1,8 +1,11 @@
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Authorization;
 using Application.Gaming.Dtos;
+using Application.Gaming.Tickets.AvailableForBet;
 using Application.Gaming.Tickets.Admin;
 using Asp.Versioning;
 using Domain.Gaming.Shared;
+using Domain.Members;
 using Domain.Security;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -93,14 +96,23 @@ public sealed class AdminTicketEndpoints : IEndpoint
                 "/members/{memberId:guid}/tickets/available-for-bet",
                 async (Guid memberId,
                     [AsParameters] GetMemberAvailableTicketsForBetRequest request,
+                    IMemberRepository memberRepository,
+                    ITenantContext tenantContext,
                     ISender sender,
                     CancellationToken ct) =>
                 {
-                    GetMemberAvailableTicketsForBetQuery query = new GetMemberAvailableTicketsForBetQuery(
-                        memberId,
+                    Member? member = await memberRepository.GetByIdAsync(tenantContext.TenantId, memberId, ct);
+                    if (member is null)
+                    {
+                        return CustomResults.Problem(Result.Failure(GamingErrors.MemberNotFound));
+                    }
+
+                    GetAvailableTicketsForBetQuery query = new GetAvailableTicketsForBetQuery(
+                        tenantContext.TenantId,
+                        member.Id,
                         request.DrawId,
                         request.Limit);
-                    return await UseCaseInvoker.Send<GetMemberAvailableTicketsForBetQuery, AvailableTicketsResponse>(
+                    return await UseCaseInvoker.Send<GetAvailableTicketsForBetQuery, AvailableTicketsResponse>(
                         query,
                         sender,
                         value => Results.Ok(value),
