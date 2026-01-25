@@ -229,10 +229,15 @@
 
 ---
 
-#### [GET] `/api/v1/admin/members/{memberId}/tickets/available-for-bet` - 後台查詢會員可下注票券
-**Auth:** JWT + Policy `TenantUser` + Permission `tickets.read`。【F:src/Web.Api/Endpoints/Admin/AdminTicketEndpoints.cs†L100-L125】【F:src/Domain/Security/Permission.cs†L205-L225】
+#### [GET] 取得可下注票券（Member / Staff）
+**Member Endpoint:** `/api/v1/tenants/{tenantId}/gaming/members/me/tickets/available-for-bet`  
+**Staff Endpoint:** `/api/v1/tenants/{tenantId}/admin/members/{memberId}/tickets/available-for-bet`
 
-**Query**
+**Auth**
+- Member：JWT + Policy `Member`
+- Staff：JWT + Policy `TenantUser` + Permission `tickets.read`
+
+**Query（兩端點共用）**
 - `drawId` (optional): 只查某一期數可下注票券。
 - `limit` (optional): 預設 200，最大 500。
 
@@ -243,19 +248,26 @@
   "items": [
     {
       "ticketId": "11111111-1111-1111-1111-111111111111",
-      "displayText": "Ticket 11111111111111111111111111111111 | LOTTERY539 | BASIC | Close 2024-01-01T00:00:00.0000000Z",
+      "displayText": "Ticket 11111111111111111111111111111111 | LOTTERY539 | Close 2024-01-01T00:00:00.0000000Z",
       "gameCode": "LOTTERY539",
-      "playTypeCode": "BASIC",
       "drawId": "77777777-7777-7777-7777-777777777777",
       "salesCloseAtUtc": "2024-01-01T00:00:00Z",
-      "expiresAtUtc": null
+      "expiresAtUtc": null,
+      "availablePlayTypes": [
+        {
+          "playTypeCode": "BASIC",
+          "displayName": "BASIC"
+        }
+      ]
     }
   ]
 }
 ```
 
 **Errors**
-- 404: `Gaming.MemberNotFound`（member 不存在或不屬於 tenant）。
+- 401: 未登入
+- 403: Staff 權限不足
+- 404: `Gaming.MemberNotFound`（member 不存在或不屬於 tenant）
 
 **Notes**
 - 時間一律使用 UTC 回傳，前端依租戶時區顯示。

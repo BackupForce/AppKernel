@@ -19,15 +19,20 @@
 export interface AvailableTicketItemDto {
   ticketId: string;
   displayText: string;
-  gameCode?: string | null;
-  playTypeCode?: string | null;
+  gameCode: string;
   drawId?: string | null;
   salesCloseAtUtc?: string | null; // ISO string
   expiresAtUtc?: string | null;    // ISO string
+  availablePlayTypes: TicketPlayTypeDto[];
 }
 
 export interface AvailableTicketsResponse {
   items: AvailableTicketItemDto[];
+}
+
+export interface TicketPlayTypeDto {
+  playTypeCode: string;
+  displayName: string;
 }
 ```
 
@@ -51,6 +56,17 @@ export async function getAvailableTicketsForBet(params?: { drawId?: string; limi
 // usage (Dropdown)
 const items = await getAvailableTicketsForBet({ drawId });
 const options = items.map(x => ({ label: x.displayText, value: x.ticketId }));
+```
+
+## PlayType Dropdown 使用範例
+```ts
+function onTicketChange(ticketId: string) {
+  const ticket = items.find(x => x.ticketId === ticketId);
+  const playTypeOptions = (ticket?.availablePlayTypes ?? []).map(p => ({
+    label: p.displayName,
+    value: p.playTypeCode,
+  }));
+}
 ```
 
 ## 時區提醒（重要）

@@ -1,11 +1,16 @@
-﻿using Application.Abstractions.Authorization;
+﻿using Application.Abstractions.Authentication;
+using Application.Abstractions.Authorization;
 using Application.Gaming.Awards.GetMy;
 using Application.Gaming.Dtos;
 using Application.Gaming.Tickets.AvailableForBet;
 using Application.Gaming.Tickets.GetMy;
+using Domain.Gaming.Shared;
+using Domain.Members;
 using MediatR;
+using SharedKernel;
 using Web.Api.Common;
 using Web.Api.Endpoints.Gaming.Requests;
+using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Gaming.Members;
 
@@ -45,9 +50,27 @@ internal static class GamingMemberEndpoints
 
         group.MapGet(
                 "/members/me/tickets/available-for-bet",
-                async ([AsParameters] GetAvailableTicketsForBetRequest request, ISender sender, CancellationToken ct) =>
+                async ([AsParameters] GetAvailableTicketsForBetRequest request,
+                    IMemberRepository memberRepository,
+                    ITenantContext tenantContext,
+                    IUserContext userContext,
+                    ISender sender,
+                    CancellationToken ct) =>
                 {
-                    GetAvailableTicketsForBetQuery query = new GetAvailableTicketsForBetQuery(request.DrawId, request.Limit);
+                    Member? member = await memberRepository.GetByUserIdAsync(
+                        tenantContext.TenantId,
+                        userContext.UserId,
+                        ct);
+                    if (member is null)
+                    {
+                        return CustomResults.Problem(Result.Failure(GamingErrors.MemberNotFound));
+                    }
+
+                    GetAvailableTicketsForBetQuery query = new GetAvailableTicketsForBetQuery(
+                        tenantContext.TenantId,
+                        member.Id,
+                        request.DrawId,
+                        request.Limit);
                     return await UseCaseInvoker.Send<GetAvailableTicketsForBetQuery, AvailableTicketsResponse>(
                         query,
                         sender,

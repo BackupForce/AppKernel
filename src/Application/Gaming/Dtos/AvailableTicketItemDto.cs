@@ -3,8 +3,8 @@ namespace Application.Gaming.Dtos;
 public sealed record AvailableTicketItemDto(
     Guid TicketId,
     string DisplayText,
-    string? GameCode,
-    string? PlayTypeCode,
+    string GameCode,
     Guid? DrawId,
     DateTime? SalesCloseAtUtc,
-    DateTime? ExpiresAtUtc);
+    DateTime? ExpiresAtUtc,
+    IReadOnlyList<TicketPlayTypeDto> AvailablePlayTypes);

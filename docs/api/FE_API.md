@@ -1543,6 +1543,8 @@ curl "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/gaming/lotte
 #### [GET] /api/v1/tenants/{tenantId}/gaming/members/me/tickets/available-for-bet - 取得可下注票券
 **Auth:** JWT + Policy `Member`
 
+**Staff Endpoint:** `/api/v1/tenants/{tenantId}/admin/members/{memberId}/tickets/available-for-bet`（JWT + Policy `TenantUser` + Permission `tickets.read`）
+
 **Request**
 - Query: `drawId` (Guid? optional), `limit` (int? optional, default 200)
 
@@ -1562,10 +1564,15 @@ curl "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/gaming/membe
       "ticketId": "11111111-1111-1111-1111-111111111111",
       "displayText": "Ticket 11111111111111111111111111111111 | LOTTERY539 | Close 2026-01-25T10:00:00.0000000Z",
       "gameCode": "LOTTERY539",
-      "playTypeCode": null,
       "drawId": "77777777-7777-7777-7777-777777777777",
       "salesCloseAtUtc": "2026-01-25T10:00:00Z",
-      "expiresAtUtc": null
+      "expiresAtUtc": null,
+      "availablePlayTypes": [
+        {
+          "playTypeCode": "BASIC",
+          "displayName": "BASIC"
+        }
+      ]
     }
   ]
 }
