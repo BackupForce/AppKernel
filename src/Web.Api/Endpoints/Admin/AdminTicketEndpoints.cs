@@ -1,4 +1,5 @@
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Data;
 using Application.Abstractions.Authorization;
 using Application.Gaming.Dtos;
 using Application.Gaming.Tickets.AvailableForBet;
@@ -122,6 +123,25 @@ public sealed class AdminTicketEndpoints : IEndpoint
             .Produces<AvailableTicketsResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithName("AdminGetMemberAvailableTicketsForBet");
+
+        group.MapGet(
+                "/draws/{drawId:guid}/tickets",
+                async (Guid drawId,
+                    [AsParameters] GetDrawTicketsRequest request,
+                    ISender sender,
+                    CancellationToken ct) =>
+                {
+                    GetDrawTicketsQuery query = new GetDrawTicketsQuery(drawId, request.Page, request.PageSize);
+                    return await UseCaseInvoker.Send<GetDrawTicketsQuery, PagedResult<DrawTicketBetDto>>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Tickets.Read.Name)
+            .Produces<PagedResult<DrawTicketBetDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .WithName("AdminGetDrawTickets");
     }
 
     private static IResult ToBetResult(Result<PlaceTicketBetResult> result)

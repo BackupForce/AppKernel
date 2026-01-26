@@ -272,6 +272,48 @@
 **Notes**
 - 時間一律使用 UTC 回傳，前端依租戶時區顯示。
 
+---
+
+#### [GET] `/api/v1/tenants/{tenantId}/admin/draws/{drawId}/tickets` - 後台查詢期數下注票券
+**Auth:** JWT + Policy `TenantUser` + Permission `tickets.read`。【F:src/Web.Api/Endpoints/Admin/AdminTicketEndpoints.cs†L121-L141】【F:src/Domain/Security/Permission.cs†L205-L223】
+
+**Query**
+- `page` (optional): 預設 1。
+- `pageSize` (optional): 預設 20。
+
+**Response**
+- 200: `PagedResult<DrawTicketBetDto>`
+```json
+{
+  "items": [
+    {
+      "ticketId": "11111111-1111-1111-1111-111111111111",
+      "memberId": "22222222-2222-2222-2222-222222222222",
+      "memberNo": "M00001",
+      "displayName": "Alice",
+      "gameCode": "LOTTERY539",
+      "submissionStatus": "Submitted",
+      "issuedAtUtc": "2024-01-01T00:00:00Z",
+      "submittedAtUtc": "2024-01-01T00:00:00Z",
+      "participationStatus": "Active",
+      "lines": [
+        {
+          "lineIndex": 0,
+          "playTypeCode": "BASIC",
+          "numbers": "1,2,3,4,5"
+        }
+      ]
+    }
+  ],
+  "totalCount": 1,
+  "page": 1,
+  "pageSize": 20
+}
+```
+
+**Errors**
+- 404: `Gaming.DrawNotFound`
+
 ## Gaming - 票券
 
 - **路由前綴**：`/api/v1/tenants/{tenantId}/gaming`
