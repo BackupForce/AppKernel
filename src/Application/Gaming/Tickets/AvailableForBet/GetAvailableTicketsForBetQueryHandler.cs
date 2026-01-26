@@ -199,11 +199,10 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
 
         return string.Join(" | ", segments);
     }
-
     private static async Task<Dictionary<Guid, HashSet<string>>> LoadDrawPlayTypesAsync(
-        System.Data.IDbConnection connection,
-        Guid tenantId,
-        IReadOnlyCollection<Guid> drawIds)
+    System.Data.IDbConnection connection,
+    Guid tenantId,
+    HashSet<Guid> drawIds)
     {
         if (drawIds.Count == 0)
         {
@@ -211,13 +210,13 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
         }
 
         const string sql = """
-            SELECT
-                p.draw_id AS DrawId,
-                p.play_type_code AS PlayTypeCode
-            FROM gaming.draw_enabled_play_types p
-            WHERE p.tenant_id = @TenantId
-              AND p.draw_id = ANY(@DrawIds)
-            """;
+        SELECT
+            p.draw_id AS DrawId,
+            p.play_type_code AS PlayTypeCode
+        FROM gaming.draw_enabled_play_types p
+        WHERE p.tenant_id = @TenantId
+          AND p.draw_id = ANY(@DrawIds)
+        """;
 
         IEnumerable<DrawPlayTypeRow> rows = await connection.QueryAsync<DrawPlayTypeRow>(
             sql,
@@ -227,14 +226,22 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
                 DrawIds = drawIds.ToArray()
             });
 
-        Dictionary<Guid, HashSet<string>> map = drawIds.ToDictionary(
-            drawId => drawId,
-            _ => new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+        Dictionary<Guid, HashSet<string>> map = new(drawIds.Count);
+        foreach (Guid drawId in drawIds)
+        {
+            map[drawId] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
         foreach (DrawPlayTypeRow row in rows)
         {
-            map[row.DrawId].Add(row.PlayTypeCode);
+            if (drawIds.Contains(row.DrawId))
+            {
+                map[row.DrawId].Add(row.PlayTypeCode);
+            }
         }
 
         return map;
     }
+
+
 }
