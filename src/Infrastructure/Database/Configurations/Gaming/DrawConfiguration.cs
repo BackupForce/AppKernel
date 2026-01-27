@@ -20,6 +20,10 @@ internal sealed class DrawConfiguration : IEntityTypeConfiguration<Draw>
             .HasConversion(code => code.Value, value => new GameCode(value))
             .HasMaxLength(32)
             .IsRequired();
+        builder.Property(draw => draw.DrawCode)
+            .HasColumnName("draw_code")
+            .HasMaxLength(32)
+            .IsRequired();
         builder.Property(draw => draw.SalesOpenAt).IsRequired();
         builder.Property(draw => draw.SalesCloseAt).IsRequired();
         builder.Property(draw => draw.DrawAt).IsRequired();
@@ -45,5 +49,7 @@ internal sealed class DrawConfiguration : IEntityTypeConfiguration<Draw>
             .HasForeignKey(item => item.DrawId);
 
         builder.HasIndex(draw => new { draw.TenantId, draw.Status });
+        builder.HasIndex(draw => new { draw.TenantId, draw.GameCode, draw.DrawCode })
+            .IsUnique();
     }
 }

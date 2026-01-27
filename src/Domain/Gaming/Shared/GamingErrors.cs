@@ -35,6 +35,14 @@ public static class GamingErrors
         "Gaming.GameCodeRequired",
         "遊戲代碼不可為空白。");
 
+    public static readonly Error DrawCodeRequired = Error.Validation(
+        code: "Draw.DrawCodeRequired",
+        description: "Draw code is required.");
+
+    public static readonly Error DrawSequenceExceeded = Error.Validation(
+        "Draw.DrawSequenceExceeded",
+        "期數序號已超過上限。");
+
     public static readonly Error GameNotFound = Error.NotFound(
         "Gaming.GameNotFound",
         "找不到遊戲。");

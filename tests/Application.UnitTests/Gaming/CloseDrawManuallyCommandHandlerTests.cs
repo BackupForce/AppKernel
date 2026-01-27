@@ -25,6 +25,7 @@ public sealed class CloseDrawManuallyCommandHandlerTests
         Draw draw = Draw.Create(
             tenantId,
             GameCodes.Lottery539,
+            "539-2401001",
             now.AddHours(-1),
             now.AddHours(1),
             now.AddHours(2),
