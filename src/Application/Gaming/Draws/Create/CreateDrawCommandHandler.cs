@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Authentication;
+﻿using System.Globalization;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
@@ -18,6 +19,7 @@ namespace Application.Gaming.Draws.Create;
 /// </remarks>
 internal sealed class CreateDrawCommandHandler(
     IDrawRepository drawRepository,
+    IDrawSequenceRepository drawSequenceRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
@@ -60,9 +62,28 @@ internal sealed class CreateDrawCommandHandler(
         }
 
         PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
+        string prefix = request.SalesStartAt.ToString("yyMM", CultureInfo.InvariantCulture);
+        int sequence = await drawSequenceRepository.GetNextSequenceAsync(
+            tenantContext.TenantId,
+            gameCodeResult.Value,
+            prefix,
+            cancellationToken);
+        if (sequence > 999)
+        {
+            return Result.Failure<Guid>(GamingErrors.DrawSequenceExceeded);
+        }
+
+        string drawCode = string.Format(
+            CultureInfo.InvariantCulture,
+            "{0}-{1}{2}",
+            gameCodeResult.Value.Value,
+            prefix,
+            sequence.ToString("D3", CultureInfo.InvariantCulture));
+
         Result<Draw> drawResult = Draw.Create(
             tenantContext.TenantId,
             gameCodeResult.Value,
+            drawCode,
             request.SalesStartAt,
             request.SalesCloseAt,
             request.DrawAt,

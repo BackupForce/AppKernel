@@ -20,6 +20,7 @@ public sealed class Draw : Entity
         Guid id,
         Guid tenantId,
         GameCode gameCode,
+        string drawCode,
         DateTime salesStartAt,
         DateTime salesCloseAt,
         DateTime drawAt,
@@ -30,6 +31,7 @@ public sealed class Draw : Entity
     {
         TenantId = tenantId;
         GameCode = gameCode;
+        DrawCode = drawCode;
         SalesOpenAt = salesStartAt;
         SalesCloseAt = salesCloseAt;
         DrawAt = drawAt;
@@ -57,6 +59,11 @@ public sealed class Draw : Entity
     /// 售票開始時間（UTC），低於此時間不得購買。
     /// </summary>
     public DateTime SalesOpenAt { get; private set; }
+
+    /// <summary>
+    /// 人類可讀的期數代碼，例如：539-2601001。
+    /// </summary>
+    public string DrawCode { get; private set; }
 
     /// <summary>
     /// 售票起始時間別名（對應 SalesOpenAt），用於對外語意一致。
@@ -161,6 +168,7 @@ public sealed class Draw : Entity
     public static Result<Draw> Create(
         Guid tenantId,
         GameCode gameCode,
+        string drawCode,
         DateTime salesStartAt,
         DateTime salesCloseAt,
         DateTime drawAt,
@@ -179,6 +187,11 @@ public sealed class Draw : Entity
             return Result.Failure<Draw>(GamingErrors.GameCodeRequired);
         }
 
+        if (string.IsNullOrWhiteSpace(drawCode))
+        {
+            return Result.Failure<Draw>(GamingErrors.DrawCodeRequired);
+        }
+
         if (redeemValidDays.HasValue && redeemValidDays.Value <= 0)
         {
             return Result.Failure<Draw>(GamingErrors.DrawRedeemValidDaysInvalid);
@@ -193,6 +206,7 @@ public sealed class Draw : Entity
             Guid.NewGuid(),
             tenantId,
             gameCode,
+            drawCode,
             salesStartAt,
             salesCloseAt,
             drawAt,

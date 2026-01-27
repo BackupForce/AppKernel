@@ -97,6 +97,7 @@ public sealed class IssueTicketCommandHandlerTests
         return Draw.Create(
             tenantId,
             GameCodes.Lottery539,
+            "539-2401001",
             openAt,
             closeAt,
             drawAt,
