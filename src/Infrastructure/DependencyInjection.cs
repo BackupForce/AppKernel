@@ -86,6 +86,8 @@ public static class DependencyInjection
         // 中文註解：外部身份驗證由 Infrastructure 實作。
         services.AddScoped<ILineAuthService, LineIdentityVerifier>();
         services.AddScoped<IMemberNoGenerator, MemberNoGenerator>();
+        services.AddScoped<IDrawSequenceService, DrawSequenceService>();
+        services.AddScoped<IDrawCodeGenerator, DrawCodeGenerator>();
         services.AddScoped<ILottery539RngService, Lottery539RngService>();
         services.AddScoped<IServerSeedStore, ServerSeedStore>();
         services.AddScoped<IWalletLedgerService, WalletLedgerService>();
@@ -123,7 +125,6 @@ public static class DependencyInjection
         services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<IResourceNodeRepository, ResourceNodeRepository>();
         services.AddScoped<IDrawRepository, DrawRepository>();
-        services.AddScoped<IDrawSequenceRepository, DrawSequenceRepository>();
         services.AddScoped<IDrawAllowedTicketTemplateRepository, DrawAllowedTicketTemplateRepository>();
         services.AddScoped<ICampaignRepository, CampaignRepository>();
         services.AddScoped<ICampaignDrawRepository, CampaignDrawRepository>();

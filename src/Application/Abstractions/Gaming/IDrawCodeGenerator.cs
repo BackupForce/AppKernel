@@ -2,11 +2,12 @@ using Domain.Gaming.Catalog;
 
 namespace Application.Abstractions.Gaming;
 
-public interface IDrawSequenceRepository
+public interface IDrawCodeGenerator
 {
-    Task<int> GetNextSequenceAsync(
+    Task<string> IssueDrawCodeAsync(
         Guid tenantId,
         GameCode gameCode,
-        string prefix,
+        DateTime drawAtUtc,
+        DateTime nowUtc,
         CancellationToken cancellationToken);
 }

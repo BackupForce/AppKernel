@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
@@ -19,7 +18,7 @@ namespace Application.Gaming.Draws.Create;
 /// </remarks>
 internal sealed class CreateDrawCommandHandler(
     IDrawRepository drawRepository,
-    IDrawSequenceRepository drawSequenceRepository,
+    IDrawCodeGenerator drawCodeGenerator,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
@@ -62,28 +61,24 @@ internal sealed class CreateDrawCommandHandler(
         }
 
         PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
-        string prefix = request.SalesStartAt.ToString("yyMM", CultureInfo.InvariantCulture);
-        int sequence = await drawSequenceRepository.GetNextSequenceAsync(
+        string drawCode = await drawCodeGenerator.IssueDrawCodeAsync(
             tenantContext.TenantId,
             gameCodeResult.Value,
-            prefix,
+            request.DrawAt,
+            now,
             cancellationToken);
-        if (sequence > 999)
+        string? normalizedDrawCode = string.IsNullOrWhiteSpace(drawCode)
+            ? null
+            : drawCode.Trim();
+        if (normalizedDrawCode is null)
         {
-            return Result.Failure<Guid>(GamingErrors.DrawSequenceExceeded);
+            return Result.Failure<Guid>(GamingErrors.DrawCodeRequired);
         }
-
-        string drawCode = string.Format(
-            CultureInfo.InvariantCulture,
-            "{0}-{1}{2}",
-            gameCodeResult.Value.Value,
-            prefix,
-            sequence.ToString("D3", CultureInfo.InvariantCulture));
 
         Result<Draw> drawResult = Draw.Create(
             tenantContext.TenantId,
             gameCodeResult.Value,
-            drawCode,
+            normalizedDrawCode,
             request.SalesStartAt,
             request.SalesCloseAt,
             request.DrawAt,
