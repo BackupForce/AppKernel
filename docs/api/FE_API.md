@@ -1200,6 +1200,15 @@ curl -X POST "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/gami
 "77777777-7777-7777-7777-777777777777"
 ```
 
+**Notes**
+- `draw_code` 由後端自動產生，格式為 `yyyyMMdd-000000`，以 tenant + game 為序號遞增基準。
+- 若既有資料存在 `draw_code = ''`，請先執行一次性修正：
+```sql
+UPDATE gaming.draws
+SET draw_code = NULL
+WHERE draw_code = '';
+```
+
 ---
 
 #### [GET] /api/v1/tenants/{tenantId}/gaming/lottery539/draws - 期數列表
