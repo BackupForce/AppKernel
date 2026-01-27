@@ -79,7 +79,7 @@ internal sealed class GetDrawTicketsQueryHandler(
                 pt.ParticipationStatus,
                 l.line_index AS LineIndex,
                 l.play_type_code AS PlayTypeCode,
-                l.numbers AS Numbers
+                l.numbers_raw AS Numbers
             FROM paged_tickets pt
             JOIN members m ON m.id = pt.MemberId AND m.tenant_id = @TenantId
             LEFT JOIN gaming.ticket_lines l ON l.ticket_id = pt.TicketId
