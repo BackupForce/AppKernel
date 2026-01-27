@@ -7,6 +7,7 @@ using Domain.Gaming.Catalog;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Rules;
+using Domain.Gaming.Shared;
 using SharedKernel;
 
 namespace Application.Gaming.Draws.Create;

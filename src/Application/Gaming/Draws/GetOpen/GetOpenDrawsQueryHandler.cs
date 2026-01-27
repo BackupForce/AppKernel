@@ -39,6 +39,7 @@ internal sealed class GetOpenDrawsQueryHandler(
                 SELECT
                     d.id,
                     d.game_code,
+                    d.draw_code,
                     d.sales_open_at,
                     d.sales_close_at,
                     d.draw_at,
@@ -61,6 +62,7 @@ internal sealed class GetOpenDrawsQueryHandler(
             SELECT
                 id AS Id,
                 game_code AS GameCode,
+                draw_code AS DrawCode,
                 sales_open_at AS SalesStartAt,
                 sales_close_at AS SalesCloseAt,
                 draw_at AS DrawAt,
