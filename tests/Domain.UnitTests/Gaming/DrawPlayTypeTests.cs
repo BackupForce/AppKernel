@@ -70,6 +70,7 @@ public sealed class DrawPlayTypeTests
         Result<Draw> drawResult = Draw.Create(
             Guid.NewGuid(),
             GameCodes.Lottery539,
+            "539-2401001",
             now.AddHours(1),
             now.AddHours(2),
             now.AddHours(3),

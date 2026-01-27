@@ -147,6 +147,7 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
         return Draw.Create(
             tenantId,
             GameCodes.Lottery539,
+            "539-2401001",
             openAt,
             closeAt,
             closeAt.AddHours(1),
