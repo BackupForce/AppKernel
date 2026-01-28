@@ -38,6 +38,8 @@ internal sealed class DrawConfiguration : IEntityTypeConfiguration<Draw>
         builder.Property(draw => draw.ServerSeed).HasMaxLength(256);
         builder.Property(draw => draw.Algorithm).HasMaxLength(64);
         builder.Property(draw => draw.DerivedInput).HasMaxLength(128);
+        builder.Property(draw => draw.SourceTemplateId);
+        builder.Property(draw => draw.SourceTemplateVersion);
         builder.Property(draw => draw.CreatedAt).IsRequired();
         builder.Property(draw => draw.UpdatedAt).IsRequired();
 

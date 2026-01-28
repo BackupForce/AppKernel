@@ -7,7 +7,7 @@ namespace Application.Gaming.Draws.Create;
 /// </summary>
 public sealed record CreateDrawCommand(
     string GameCode,
-    IReadOnlyCollection<string> EnabledPlayTypes,
+    Guid TemplateId,
     DateTime SalesStartAt,
     DateTime SalesCloseAt,
     DateTime DrawAt,

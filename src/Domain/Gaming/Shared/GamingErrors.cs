@@ -31,9 +31,65 @@ public static class GamingErrors
         "Gaming.DrawNotFound",
         "找不到期數。");
 
+    public static readonly Error DrawTemplateNotFound = Error.NotFound(
+        "Gaming.DrawTemplateNotFound",
+        "找不到期數模板。");
+
     public static readonly Error GameCodeRequired = Error.Validation(
         "Gaming.GameCodeRequired",
         "遊戲代碼不可為空白。");
+
+    public static readonly Error DrawTemplateNameRequired = Error.Validation(
+        "Gaming.DrawTemplateNameRequired",
+        "期數模板名稱不可為空白。");
+
+    public static readonly Error DrawTemplateNameTooLong = Error.Validation(
+        "Gaming.DrawTemplateNameTooLong",
+        "期數模板名稱不可超過 64 字元。");
+
+    public static readonly Error DrawTemplateNameDuplicated = Error.Validation(
+        "Gaming.DrawTemplateNameDuplicated",
+        "期數模板名稱已存在。");
+
+    public static readonly Error DrawTemplateTenantRequired = Error.Validation(
+        "Gaming.DrawTemplateTenantRequired",
+        "期數模板租戶不可為空。");
+
+    public static readonly Error DrawTemplateInactive = Error.Validation(
+        "Gaming.DrawTemplateInactive",
+        "期數模板已停用。");
+
+    public static readonly Error DrawTemplateLocked = Error.Validation(
+        "Gaming.DrawTemplateLocked",
+        "期數模板已鎖定，無法刪除既有設定。");
+
+    public static readonly Error DrawTemplatePlayTypeDuplicated = Error.Validation(
+        "Gaming.DrawTemplatePlayTypeDuplicated",
+        "期數模板玩法重複。");
+
+    public static readonly Error DrawTemplatePlayTypeNotFound = Error.NotFound(
+        "Gaming.DrawTemplatePlayTypeNotFound",
+        "期數模板玩法不存在。");
+
+    public static readonly Error DrawTemplatePrizeTierNotFound = Error.NotFound(
+        "Gaming.DrawTemplatePrizeTierNotFound",
+        "期數模板獎級不存在。");
+
+    public static readonly Error DrawTemplateAllowedTicketTemplateDuplicated = Error.Validation(
+        "Gaming.DrawTemplateAllowedTicketTemplateDuplicated",
+        "期數模板允許票種重複。");
+
+    public static readonly Error DrawTemplateAllowedTicketTemplateNotFound = Error.NotFound(
+        "Gaming.DrawTemplateAllowedTicketTemplateNotFound",
+        "期數模板允許票種不存在。");
+
+    public static readonly Error DrawTemplateTicketTemplateRequired = Error.Validation(
+        "Gaming.DrawTemplateTicketTemplateRequired",
+        "期數模板允許票種不可為空。");
+
+    public static readonly Error DrawTemplateGameCodeMismatch = Error.Validation(
+        "Gaming.DrawTemplateGameCodeMismatch",
+        "期數模板遊戲類型不一致。");
 
     public static readonly Error DrawCodeRequired = Error.Validation(
         code: "Draw.DrawCodeRequired",

@@ -3,6 +3,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Domain.Gaming.Catalog;
+using Domain.Gaming.DrawTemplates;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Rules;
@@ -19,7 +20,9 @@ namespace Application.Gaming.Draws.Create;
 /// </remarks>
 internal sealed class CreateDrawCommandHandler(
     IDrawRepository drawRepository,
+    IDrawTemplateRepository drawTemplateRepository,
     IDrawCodeGenerator drawCodeGenerator,
+    IDrawAllowedTicketTemplateRepository drawAllowedTicketTemplateRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
@@ -30,6 +33,20 @@ internal sealed class CreateDrawCommandHandler(
     public async Task<Result<Guid>> Handle(CreateDrawCommand request, CancellationToken cancellationToken)
     {
         DateTime now = dateTimeProvider.UtcNow;
+
+        DrawTemplate? template = await drawTemplateRepository.GetByIdAsync(
+            tenantContext.TenantId,
+            request.TemplateId,
+            cancellationToken);
+        if (template is null)
+        {
+            return Result.Failure<Guid>(GamingErrors.DrawTemplateNotFound);
+        }
+
+        if (!template.IsActive)
+        {
+            return Result.Failure<Guid>(GamingErrors.DrawTemplateInactive);
+        }
 
         Result<GameCode> gameCodeResult = GameCode.Create(request.GameCode);
         if (gameCodeResult.IsFailure)
@@ -44,6 +61,24 @@ internal sealed class CreateDrawCommandHandler(
         if (entitlementResult.IsFailure)
         {
             return Result.Failure<Guid>(entitlementResult.Error);
+        }
+
+        if (template.GameCode != gameCodeResult.Value)
+        {
+            return Result.Failure<Guid>(GamingErrors.DrawTemplateGameCodeMismatch);
+        }
+
+        foreach (DrawTemplatePlayType playType in template.PlayTypes)
+        {
+            Result playEntitlementResult = await entitlementChecker.EnsurePlayEnabledAsync(
+                tenantContext.TenantId,
+                template.GameCode,
+                playType.PlayTypeCode,
+                cancellationToken);
+            if (playEntitlementResult.IsFailure)
+            {
+                return Result.Failure<Guid>(playEntitlementResult.Error);
+            }
         }
 
         PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
@@ -79,35 +114,10 @@ internal sealed class CreateDrawCommandHandler(
 
         Draw draw = drawResult.Value;
 
-        if (request.EnabledPlayTypes.Count > 0)
+        Result applyResult = draw.ApplyTemplate(template, registry, now);
+        if (applyResult.IsFailure)
         {
-            List<PlayTypeCode> playTypes = new List<PlayTypeCode>();
-            foreach (string playType in request.EnabledPlayTypes)
-            {
-                Result<PlayTypeCode> playTypeResult = PlayTypeCode.Create(playType);
-                if (playTypeResult.IsFailure)
-                {
-                    return Result.Failure<Guid>(playTypeResult.Error);
-                }
-
-                Result playEntitlementResult = await entitlementChecker.EnsurePlayEnabledAsync(
-                    tenantContext.TenantId,
-                    draw.GameCode,
-                    playTypeResult.Value,
-                    cancellationToken);
-                if (playEntitlementResult.IsFailure)
-                {
-                    return Result.Failure<Guid>(playEntitlementResult.Error);
-                }
-
-                playTypes.Add(playTypeResult.Value);
-            }
-
-            Result enableResult = draw.EnablePlayTypes(playTypes, registry);
-            if (enableResult.IsFailure)
-            {
-                return Result.Failure<Guid>(enableResult.Error);
-            }
+            return Result.Failure<Guid>(applyResult.Error);
         }
 
         if (draw.GetEffectiveStatus(now) == DrawStatus.SalesOpen)
@@ -118,6 +128,26 @@ internal sealed class CreateDrawCommandHandler(
             draw.OpenSales(serverSeedHash, now);
             TimeSpan ttl = request.DrawAt > now ? request.DrawAt - now + TimeSpan.FromDays(1) : TimeSpan.FromDays(1);
             await serverSeedStore.StoreAsync(draw.Id, serverSeed, ttl, cancellationToken);
+        }
+
+        if (template.AllowedTicketTemplates.Count > 0)
+        {
+            foreach (DrawTemplateAllowedTicketTemplate allowed in template.AllowedTicketTemplates)
+            {
+                DrawAllowedTicketTemplate item = DrawAllowedTicketTemplate.Create(
+                    tenantContext.TenantId,
+                    draw.Id,
+                    allowed.TicketTemplateId,
+                    now);
+                drawAllowedTicketTemplateRepository.Insert(item);
+            }
+        }
+
+        if (!template.IsLocked)
+        {
+            template.Lock();
+            template.Touch(now);
+            drawTemplateRepository.Update(template);
         }
 
         drawRepository.Insert(draw);

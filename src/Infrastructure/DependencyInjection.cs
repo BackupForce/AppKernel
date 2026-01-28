@@ -125,6 +125,7 @@ public static class DependencyInjection
         services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<IResourceNodeRepository, ResourceNodeRepository>();
         services.AddScoped<IDrawRepository, DrawRepository>();
+        services.AddScoped<IDrawTemplateRepository, DrawTemplateRepository>();
         services.AddScoped<IDrawAllowedTicketTemplateRepository, DrawAllowedTicketTemplateRepository>();
         services.AddScoped<ICampaignRepository, CampaignRepository>();
         services.AddScoped<ICampaignDrawRepository, CampaignDrawRepository>();

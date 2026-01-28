@@ -2,6 +2,7 @@
 using Application.Abstractions.Data;
 using Domain.Auth;
 using Domain.Gaming.Campaigns;
+using Domain.Gaming.DrawTemplates;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Entitlements;
 using Domain.Gaming.PrizeAwards;
@@ -30,6 +31,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<MemberAssetLedger> MemberAssetLedgers { get; set; }
     public DbSet<MemberActivityLog> MemberActivityLogs { get; set; }
     public DbSet<Draw> Draws { get; set; }
+    public DbSet<DrawTemplate> DrawTemplates { get; set; }
+    public DbSet<DrawTemplatePlayType> DrawTemplatePlayTypes { get; set; }
+    public DbSet<DrawTemplatePrizeTier> DrawTemplatePrizeTiers { get; set; }
+    public DbSet<DrawTemplateAllowedTicketTemplate> DrawTemplateAllowedTicketTemplates { get; set; }
     public DbSet<Campaign> Campaigns { get; set; }
     public DbSet<CampaignDraw> CampaignDraws { get; set; }
     public DbSet<DrawEnabledPlayType> DrawEnabledPlayTypes { get; set; }
