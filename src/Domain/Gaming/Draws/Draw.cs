@@ -24,7 +24,6 @@ public sealed class Draw : Entity
         DateTime salesStartAt,
         DateTime salesCloseAt,
         DateTime drawAt,
-        DrawStatus status,
         int? redeemValidDays,
         DateTime createdAt,
         DateTime updatedAt) : base(id)
@@ -35,7 +34,6 @@ public sealed class Draw : Entity
         SalesOpenAt = salesStartAt;
         SalesCloseAt = salesCloseAt;
         DrawAt = drawAt;
-        Status = status;
         RedeemValidDays = redeemValidDays;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
@@ -81,7 +79,10 @@ public sealed class Draw : Entity
     public DateTime DrawAt { get; private set; }
 
     /// <summary>
-    /// 期數狀態，遵循 Scheduled → SalesOpen → SalesClosed → Settled/Cancelled 的約束。
+    /// 期數狀態（相容用途）。
+    /// </summary>
+    /// <remarks>
+    /// 狀態請以 <see cref="GetEffectiveStatus"/> 推導，Status 僅供 EF 還原與相容用途。
     /// </summary>
     public DrawStatus Status { get; private set; }
 
@@ -125,6 +126,11 @@ public sealed class Draw : Entity
     /// 手動封盤原因，由後台輸入以利稽核。
     /// </summary>
     public string? ManualCloseReason { get; private set; }
+
+    /// <summary>
+    /// 實際結算時間（UTC）。
+    /// </summary>
+    public DateTime? SettledAt { get; private set; }
 
     /// <summary>
     /// 兌獎有效天數（若 PrizeRule 未指定，則以此為準）。
@@ -172,7 +178,6 @@ public sealed class Draw : Entity
         DateTime salesStartAt,
         DateTime salesCloseAt,
         DateTime drawAt,
-        DrawStatus initialStatus,
         int? redeemValidDays,
         DateTime utcNow,
         PlayRuleRegistry registry)
@@ -210,7 +215,6 @@ public sealed class Draw : Entity
             salesStartAt,
             salesCloseAt,
             drawAt,
-            initialStatus,
             redeemValidDays,
             utcNow,
             utcNow);
@@ -338,9 +342,10 @@ public sealed class Draw : Entity
     /// </summary>
     public void OpenSales(string serverSeedHash, DateTime utcNow)
     {
-        if (Status == DrawStatus.Scheduled)
+        DrawStatus status = GetEffectiveStatus(utcNow);
+        if (status != DrawStatus.Scheduled && status != DrawStatus.SalesOpen)
         {
-            Status = DrawStatus.SalesOpen;
+            return;
         }
 
         if (string.IsNullOrWhiteSpace(ServerSeedHash))
@@ -356,11 +361,12 @@ public sealed class Draw : Entity
     /// </summary>
     public void CloseSales(DateTime utcNow)
     {
-        if (Status == DrawStatus.SalesOpen)
+        if (utcNow < SalesOpenAt)
         {
-            Status = DrawStatus.SalesClosed;
-            UpdatedAt = utcNow;
+            return;
         }
+
+        UpdatedAt = utcNow;
     }
 
     /// <summary>
@@ -380,7 +386,7 @@ public sealed class Draw : Entity
         ServerSeed = serverSeed;
         Algorithm = algorithm;
         DerivedInput = derivedInput;
-        Status = DrawStatus.Settled;
+        SettledAt = utcNow;
         IsManuallyClosed = false;
         ManualCloseAt = null;
         ManualCloseReason = null;
@@ -414,17 +420,7 @@ public sealed class Draw : Entity
     /// </summary>
     public bool IsWithinSalesWindow(DateTime utcNow)
     {
-        if (utcNow < SalesOpenAt || utcNow >= SalesCloseAt)
-        {
-            return false;
-        }
-
-        if (IsManuallyClosed)
-        {
-            return false;
-        }
-
-        return true;
+        return GetEffectiveStatus(utcNow) == DrawStatus.SalesOpen;
     }
 
     /// <summary>
@@ -432,7 +428,44 @@ public sealed class Draw : Entity
     /// </summary>
     public bool IsEffectivelyClosed(DateTime utcNow)
     {
-        return IsManuallyClosed || utcNow >= SalesCloseAt;
+        DrawStatus status = GetEffectiveStatus(utcNow);
+        return status == DrawStatus.SalesClosed || status == DrawStatus.Settled;
+    }
+
+    /// <summary>
+    /// 判斷是否在純時間的售票視窗內（不含手動封盤判斷）。
+    /// </summary>
+    public bool IsWithinSalesTimeRange(DateTime utcNow)
+    {
+        return utcNow >= SalesOpenAt && utcNow < SalesCloseAt;
+    }
+
+    /// <summary>
+    /// 依照時間與手動封盤旗標推導期數狀態。
+    /// </summary>
+    public DrawStatus GetEffectiveStatus(DateTime utcNow)
+    {
+        if (SettledAt.HasValue)
+        {
+            return DrawStatus.Settled;
+        }
+
+        if (IsManuallyClosed)
+        {
+            return DrawStatus.SalesClosed;
+        }
+
+        if (utcNow < SalesOpenAt)
+        {
+            return DrawStatus.Scheduled;
+        }
+
+        if (utcNow >= SalesOpenAt && utcNow < SalesCloseAt)
+        {
+            return DrawStatus.SalesOpen;
+        }
+
+        return DrawStatus.SalesClosed;
     }
 
     /// <summary>

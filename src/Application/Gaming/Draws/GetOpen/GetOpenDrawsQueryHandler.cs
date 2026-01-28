@@ -47,12 +47,11 @@ internal sealed class GetOpenDrawsQueryHandler(
                     d.is_manually_closed,
                     CASE
                         WHEN d.status = 4 THEN 'Cancelled'
+                        WHEN d.settled_at IS NOT NULL THEN 'Settled'
                         WHEN d.is_manually_closed = TRUE THEN 'SalesClosed'
+                        WHEN @Now < d.sales_open_at THEN 'Scheduled'
                         WHEN @Now >= d.sales_open_at AND @Now < d.sales_close_at THEN 'SalesOpen'
-                        WHEN d.status = 0 THEN 'Scheduled'
-                        WHEN d.status = 2 THEN 'SalesClosed'
-                        WHEN d.status = 3 THEN 'Settled'
-                        ELSE 'Scheduled'
+                        ELSE 'SalesClosed'
                     END AS effective_status
                 FROM gaming.draws d
                 WHERE d.tenant_id = @TenantId

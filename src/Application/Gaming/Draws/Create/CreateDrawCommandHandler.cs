@@ -30,21 +30,6 @@ internal sealed class CreateDrawCommandHandler(
     public async Task<Result<Guid>> Handle(CreateDrawCommand request, CancellationToken cancellationToken)
     {
         DateTime now = dateTimeProvider.UtcNow;
-        DrawStatus initialStatus = DrawStatus.Scheduled;
-
-        // 根據目前時間推導初始狀態，避免新建立即處於不一致狀態。
-        if (now >= request.SalesStartAt && now < request.SalesCloseAt)
-        {
-            initialStatus = DrawStatus.SalesOpen;
-        }
-        else if (now >= request.SalesCloseAt && now < request.DrawAt)
-        {
-            initialStatus = DrawStatus.SalesClosed;
-        }
-        else if (now >= request.DrawAt)
-        {
-            initialStatus = DrawStatus.Settled;
-        }
 
         Result<GameCode> gameCodeResult = GameCode.Create(request.GameCode);
         if (gameCodeResult.IsFailure)
@@ -83,7 +68,6 @@ internal sealed class CreateDrawCommandHandler(
             request.SalesStartAt,
             request.SalesCloseAt,
             request.DrawAt,
-            initialStatus,
             request.RedeemValidDays,
             now,
             registry);
@@ -126,7 +110,7 @@ internal sealed class CreateDrawCommandHandler(
             }
         }
 
-        if (initialStatus == DrawStatus.SalesOpen)
+        if (draw.GetEffectiveStatus(now) == DrawStatus.SalesOpen)
         {
             // 若建立時已在銷售期，先寫入 commit hash 以支持後續驗證。
             string serverSeed = rngService.CreateServerSeed();
