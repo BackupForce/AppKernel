@@ -38,12 +38,13 @@ internal sealed class CloseDrawManuallyCommandHandler(
             return Result.Failure(entitlementResult.Error);
         }
 
-        if (draw.Status == DrawStatus.Settled || !string.IsNullOrWhiteSpace(draw.WinningNumbersRaw))
+        DateTime now = dateTimeProvider.UtcNow;
+        DrawStatus status = draw.GetEffectiveStatus(now);
+        if (status == DrawStatus.Settled || !string.IsNullOrWhiteSpace(draw.WinningNumbersRaw))
         {
             return Result.Failure(GamingErrors.DrawAlreadyExecuted);
         }
 
-        DateTime now = dateTimeProvider.UtcNow;
         draw.CloseManually(request.Reason, now);
         drawRepository.Update(draw);
 

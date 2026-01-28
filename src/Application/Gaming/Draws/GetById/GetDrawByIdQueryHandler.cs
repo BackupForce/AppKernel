@@ -13,6 +13,7 @@ namespace Application.Gaming.Draws.GetById;
 internal sealed class GetDrawByIdQueryHandler(
     IDbConnectionFactory dbConnectionFactory,
     ITenantContext tenantContext,
+    IDateTimeProvider dateTimeProvider,
     IEntitlementChecker entitlementChecker) : IQueryHandler<GetDrawByIdQuery, DrawDetailDto>
 {
     public async Task<Result<DrawDetailDto>> Handle(GetDrawByIdQuery request, CancellationToken cancellationToken)
@@ -25,12 +26,12 @@ internal sealed class GetDrawByIdQueryHandler(
                 d.sales_close_at AS SalesCloseAt,
                 d.draw_at AS DrawAt,
                 CASE
-                    WHEN d.status = 0 THEN 'Scheduled'
-                    WHEN d.status = 1 THEN 'SalesOpen'
-                    WHEN d.status = 2 THEN 'SalesClosed'
-                    WHEN d.status = 3 THEN 'Settled'
                     WHEN d.status = 4 THEN 'Cancelled'
-                    ELSE 'Scheduled'
+                    WHEN d.settled_at IS NOT NULL THEN 'Settled'
+                    WHEN d.is_manually_closed = TRUE THEN 'SalesClosed'
+                    WHEN @Now < d.sales_open_at THEN 'Scheduled'
+                    WHEN @Now >= d.sales_open_at AND @Now < d.sales_close_at THEN 'SalesOpen'
+                    ELSE 'SalesClosed'
                 END AS Status,
                 d.is_manually_closed AS IsManuallyClosed,
                 d.manual_close_at AS ManualCloseAt,
@@ -49,7 +50,7 @@ internal sealed class GetDrawByIdQueryHandler(
 
         DrawDetailDto? draw = await connection.QueryFirstOrDefaultAsync<DrawDetailDto>(
             sql,
-            new { tenantContext.TenantId, request.DrawId });
+            new { tenantContext.TenantId, request.DrawId, Now = dateTimeProvider.UtcNow });
 
         if (draw is null)
         {

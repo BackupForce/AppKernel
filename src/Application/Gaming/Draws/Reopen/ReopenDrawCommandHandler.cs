@@ -36,13 +36,14 @@ internal sealed class ReopenDrawCommandHandler(
             return Result.Failure(entitlementResult.Error);
         }
 
-        if (draw.Status == DrawStatus.Settled || !string.IsNullOrWhiteSpace(draw.WinningNumbersRaw))
+        DateTime now = dateTimeProvider.UtcNow;
+        DrawStatus status = draw.GetEffectiveStatus(now);
+        if (status == DrawStatus.Settled || !string.IsNullOrWhiteSpace(draw.WinningNumbersRaw))
         {
             return Result.Failure(GamingErrors.DrawAlreadyExecuted);
         }
 
-        DateTime now = dateTimeProvider.UtcNow;
-        if (now < draw.SalesOpenAt || now >= draw.SalesCloseAt)
+        if (!draw.IsWithinSalesTimeRange(now))
         {
             // 中文註解：解封仍需在可下注時間內，避免解封後仍無法下注造成混亂。
             return Result.Failure(GamingErrors.DrawReopenWindowInvalid);

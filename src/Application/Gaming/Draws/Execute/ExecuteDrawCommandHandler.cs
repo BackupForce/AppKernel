@@ -43,12 +43,13 @@ internal sealed class ExecuteDrawCommandHandler(
             return Result.Failure(entitlementResult.Error);
         }
 
-        if (draw.Status == DrawStatus.Settled)
+        DateTime now = dateTimeProvider.UtcNow;
+        DrawStatus status = draw.GetEffectiveStatus(now);
+        if (status == DrawStatus.Settled)
         {
             return Result.Failure(GamingErrors.DrawAlreadySettled);
         }
 
-        DateTime now = dateTimeProvider.UtcNow;
         if (now < draw.DrawAt)
         {
             return Result.Failure(GamingErrors.DrawNotReadyToExecute);
