@@ -314,6 +314,53 @@
 **Errors**
 - 404: `Gaming.DrawNotFound`
 
+---
+
+#### [GET] `/api/v1/tenants/{tenantId}/admin/tickets` - 後台票券查詢（可篩選）
+**Auth:** JWT + Policy `TenantUser` + Permission `tickets.read`。【F:src/Web.Api/Endpoints/Admin/AdminTicketEndpoints.cs†L121-L219】【F:src/Domain/Security/Permission.cs†L205-L223】
+
+**Query**
+- `drawId` (optional): 期數識別。
+- `status` (optional): `NotSubmitted` / `Submitted` / `Cancelled`。
+- `memberId` (optional): 會員識別（Guid）。
+- `memberNo` (optional): 會員編號。
+- `issuedFromUtc` / `issuedToUtc` (optional): 發放時間區間（UTC）。
+- `submittedFromUtc` / `submittedToUtc` (optional): 提交時間區間（UTC）。
+- `createdFromUtc` / `createdToUtc` (optional): 建立時間區間（UTC）。
+- `page` (optional): 預設 1。
+- `pageSize` (optional): 預設 20。
+
+**Response**
+- 200: `PagedResult<AdminTicketListItemDto>`
+```json
+{
+  "items": [
+    {
+      "ticketId": "11111111-1111-1111-1111-111111111111",
+      "memberId": "22222222-2222-2222-2222-222222222222",
+      "memberNo": "M00001",
+      "gameCode": "LOTTERY539",
+      "drawId": "00000000-0000-0000-0000-000000000000",
+      "submissionStatus": "Submitted",
+      "issuedAtUtc": "2024-01-01T00:00:00Z",
+      "submittedAtUtc": "2024-01-01T00:00:00Z",
+      "cancelledAtUtc": null,
+      "issuedByType": "Backoffice",
+      "issuedByUserId": "33333333-3333-3333-3333-333333333333",
+      "submittedByUserId": "44444444-4444-4444-4444-444444444444",
+      "lineCount": 2,
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "totalCount": 1,
+  "page": 1,
+  "pageSize": 20
+}
+```
+
+**Errors**
+- 400: 參數格式錯誤（含 status/日期區間/分頁範圍）
+
 ## Gaming - 票券
 
 - **路由前綴**：`/api/v1/tenants/{tenantId}/gaming`

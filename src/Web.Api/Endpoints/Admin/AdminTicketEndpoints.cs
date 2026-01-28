@@ -6,6 +6,7 @@ using Application.Gaming.Tickets.AvailableForBet;
 using Application.Gaming.Tickets.Admin;
 using Asp.Versioning;
 using Domain.Gaming.Shared;
+using Domain.Gaming.Tickets;
 using Domain.Members;
 using Domain.Security;
 using MediatR;
@@ -123,6 +124,82 @@ public sealed class AdminTicketEndpoints : IEndpoint
             .Produces<AvailableTicketsResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithName("AdminGetMemberAvailableTicketsForBet");
+
+        group.MapGet(
+                "/tickets",
+                async ([AsParameters] GetAdminTicketsRequest request,
+                    ITenantContext tenantContext,
+                    ISender sender,
+                    CancellationToken ct) =>
+                {
+                    if (request.Page < 1)
+                    {
+                        return Results.BadRequest("Page must be greater than or equal to 1.");
+                    }
+
+                    if (request.PageSize < 1 || request.PageSize > 200)
+                    {
+                        return Results.BadRequest("PageSize must be between 1 and 200.");
+                    }
+
+                    if (request.IssuedFromUtc.HasValue
+                        && request.IssuedToUtc.HasValue
+                        && request.IssuedFromUtc > request.IssuedToUtc)
+                    {
+                        return Results.BadRequest("IssuedFromUtc must be earlier than or equal to IssuedToUtc.");
+                    }
+
+                    if (request.SubmittedFromUtc.HasValue
+                        && request.SubmittedToUtc.HasValue
+                        && request.SubmittedFromUtc > request.SubmittedToUtc)
+                    {
+                        return Results.BadRequest("SubmittedFromUtc must be earlier than or equal to SubmittedToUtc.");
+                    }
+
+                    if (request.CreatedFromUtc.HasValue
+                        && request.CreatedToUtc.HasValue
+                        && request.CreatedFromUtc > request.CreatedToUtc)
+                    {
+                        return Results.BadRequest("CreatedFromUtc must be earlier than or equal to CreatedToUtc.");
+                    }
+
+                    TicketSubmissionStatus? submissionStatus = null;
+                    if (!string.IsNullOrWhiteSpace(request.Status))
+                    {
+                        if (!Enum.TryParse(request.Status, true, out TicketSubmissionStatus parsedStatus)
+                            || parsedStatus is TicketSubmissionStatus.Expired)
+                        {
+                            return Results.BadRequest("Status must be NotSubmitted, Submitted, or Cancelled.");
+                        }
+
+                        submissionStatus = parsedStatus;
+                    }
+
+                    GetAdminTicketsQuery query = new GetAdminTicketsQuery(
+                        tenantContext.TenantId,
+                        request.DrawId,
+                        submissionStatus,
+                        request.MemberId,
+                        request.MemberNo,
+                        request.IssuedFromUtc,
+                        request.IssuedToUtc,
+                        request.SubmittedFromUtc,
+                        request.SubmittedToUtc,
+                        request.CreatedFromUtc,
+                        request.CreatedToUtc,
+                        request.Page,
+                        request.PageSize);
+
+                    return await UseCaseInvoker.Send<GetAdminTicketsQuery, PagedResult<AdminTicketListItemDto>>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Tickets.Read.Name)
+            .Produces<PagedResult<AdminTicketListItemDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("AdminGetTickets");
 
         group.MapGet(
                 "/draws/{drawId:guid}/tickets",
