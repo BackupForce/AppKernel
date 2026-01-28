@@ -392,6 +392,7 @@ public sealed class Draw : Entity
     /// </summary>
     public void CloseManually(string? reason, DateTime utcNow)
     {
+        Status = DrawStatus.SalesClosed;
         IsManuallyClosed = true;
         ManualCloseAt = utcNow;
         ManualCloseReason = reason;
@@ -403,6 +404,7 @@ public sealed class Draw : Entity
     /// </summary>
     public void Reopen(DateTime utcNow)
     {
+        Status = DrawStatus.SalesOpen;
         IsManuallyClosed = false;
         ManualCloseAt = null;
         ManualCloseReason = null;

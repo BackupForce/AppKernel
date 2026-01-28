@@ -6,6 +6,7 @@ namespace Application.Gaming.Dtos;
 public sealed record DrawSummaryDto(
     Guid Id,
     string GameCode,
+    string DrawCode,
     DateTime SalesStartAt,
     DateTime SalesCloseAt,
     DateTime DrawAt,

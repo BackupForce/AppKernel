@@ -1,5 +1,7 @@
 ﻿using System.Data;
 using Application.Abstractions.Data;
+using Domain.Auth;
+using Domain.Gaming.Campaigns;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Entitlements;
 using Domain.Gaming.PrizeAwards;
@@ -7,14 +9,13 @@ using Domain.Gaming.Prizes;
 using Domain.Gaming.RedeemRecords;
 using Domain.Gaming.Tickets;
 using Domain.Gaming.TicketTemplates;
-using Domain.Auth;
 using Domain.Members;
 using Domain.Security;
 using Domain.Tenants;
 using Domain.Users;
+using Infrastructure.Gaming;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Domain.Gaming.Campaigns;
 
 namespace Infrastructure.Database;
 
@@ -53,6 +54,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<LoginBinding> LoginBindings { get; set; }
     public DbSet<AuthSession> AuthSessions { get; set; }
     public DbSet<RefreshTokenRecord> RefreshTokenRecords { get; set; }
+    public DbSet<DrawSequence> DrawSequences { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
