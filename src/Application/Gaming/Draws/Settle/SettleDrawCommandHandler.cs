@@ -45,7 +45,9 @@ internal sealed class SettleDrawCommandHandler(
             return Result.Failure(entitlementResult.Error);
         }
 
-        if (draw.Status != DrawStatus.Settled)
+        DateTime now = dateTimeProvider.UtcNow;
+        DrawStatus status = draw.GetEffectiveStatus(now);
+        if (status != DrawStatus.Settled)
         {
             return Result.Failure(GamingErrors.DrawNotSettled);
         }
@@ -62,8 +64,6 @@ internal sealed class SettleDrawCommandHandler(
         {
             return Result.Failure(prizePoolResult.Error);
         }
-
-        DateTime now = dateTimeProvider.UtcNow;
 
         IReadOnlyCollection<TicketDraw> ticketDraws = await ticketDrawRepository.GetByDrawIdAsync(
             tenantContext.TenantId,

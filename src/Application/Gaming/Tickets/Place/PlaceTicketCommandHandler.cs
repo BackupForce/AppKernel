@@ -71,13 +71,14 @@ internal sealed class PlaceTicketCommandHandler(
         IPlayRule rule = registry.GetRule(draw.GameCode, playTypeCode);
 
         DateTime now = dateTimeProvider.UtcNow;
+        DrawStatus status = draw.GetEffectiveStatus(now);
 
         if (now >= draw.SalesCloseAt)
         {
             draw.CloseSales(now);
         }
 
-        if (draw.Status == DrawStatus.Scheduled && now >= draw.SalesOpenAt && now < draw.SalesCloseAt)
+        if (status == DrawStatus.SalesOpen && string.IsNullOrWhiteSpace(draw.ServerSeedHash))
         {
             // 首次進入販售狀態時建立 commit hash，為後續開獎公平性做準備。
             string serverSeed = rngService.CreateServerSeed();
@@ -92,7 +93,7 @@ internal sealed class PlaceTicketCommandHandler(
             return Result.Failure<Guid>(GamingErrors.DrawManuallyClosed);
         }
 
-        if (!draw.IsWithinSalesWindow(now) || draw.Status != DrawStatus.SalesOpen)
+        if (status != DrawStatus.SalesOpen)
         {
             return Result.Failure<Guid>(GamingErrors.DrawNotOpen);
         }
