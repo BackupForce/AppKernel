@@ -29,7 +29,6 @@ public sealed class CloseDrawManuallyCommandHandlerTests
             now.AddHours(-1),
             now.AddHours(1),
             now.AddHours(2),
-            DrawStatus.SalesOpen,
             null,
             now,
             PlayRuleRegistry.CreateDefault()).Value;

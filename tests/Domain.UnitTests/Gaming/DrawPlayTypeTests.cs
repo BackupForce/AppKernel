@@ -74,7 +74,6 @@ public sealed class DrawPlayTypeTests
             now.AddHours(1),
             now.AddHours(2),
             now.AddHours(3),
-            DrawStatus.Scheduled,
             null,
             now,
             registry);

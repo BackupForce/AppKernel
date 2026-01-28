@@ -151,7 +151,6 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
             openAt,
             closeAt,
             closeAt.AddHours(1),
-            DrawStatus.SalesOpen,
             null,
             DateTime.UtcNow,
             PlayRuleRegistry.CreateDefault()).Value;

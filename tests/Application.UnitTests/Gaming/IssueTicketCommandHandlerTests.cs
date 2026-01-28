@@ -101,7 +101,6 @@ public sealed class IssueTicketCommandHandlerTests
             openAt,
             closeAt,
             drawAt,
-            DrawStatus.SalesOpen,
             null,
             DateTime.UtcNow,
             PlayRuleRegistry.CreateDefault()).Value;
