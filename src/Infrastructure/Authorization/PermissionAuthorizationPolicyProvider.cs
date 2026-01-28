@@ -1,34 +1,36 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Authorization;
 
-internal sealed class PermissionAuthorizationPolicyProvider : DefaultAuthorizationPolicyProvider
+internal sealed class PermissionAuthorizationPolicyProvider
+    : DefaultAuthorizationPolicyProvider
 {
-    private readonly AuthorizationOptions _authorizationOptions;
+    private static readonly ConcurrentDictionary<string, AuthorizationPolicy> PolicyCache = new();
 
     public PermissionAuthorizationPolicyProvider(IOptions<AuthorizationOptions> options)
         : base(options)
     {
-        _authorizationOptions = options.Value;
     }
 
     public override async Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {
-        AuthorizationPolicy? policy = await base.GetPolicyAsync(policyName);
-
-        if (policy is not null)
+        // 先交給內建 provider（只讀，thread-safe）
+        AuthorizationPolicy? basePolicy = await base.GetPolicyAsync(policyName);
+        if (basePolicy is not null)
         {
-            return policy;
+            return basePolicy;
         }
 
-        // 動態建立以 permissions claim 為核心的授權 Policy
-        AuthorizationPolicy permissionPolicy = new AuthorizationPolicyBuilder()
-            .AddRequirements(new PermissionRequirement(policyName))
-            .Build();
+        // 動態 permission policy（不寫入 AuthorizationOptions）
+        AuthorizationPolicy policy = PolicyCache.GetOrAdd(
+            policyName,
+            static name =>
+                new AuthorizationPolicyBuilder()
+                    .AddRequirements(new PermissionRequirement(name))
+                    .Build());
 
-        _authorizationOptions.AddPolicy(policyName, permissionPolicy);
-
-        return permissionPolicy;
+        return policy;
     }
 }

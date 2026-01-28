@@ -91,8 +91,8 @@ internal sealed class GetDrawTemplateDetailQueryHandler(
             templateSql,
             new
             {
-                TenantId = tenantContext.TenantId,
-                TemplateId = request.TemplateId
+                tenantContext.TenantId,
+                request.TemplateId
             });
 
         if (template is null)
@@ -104,24 +104,24 @@ internal sealed class GetDrawTemplateDetailQueryHandler(
             playTypesSql,
             new
             {
-                TenantId = tenantContext.TenantId,
-                TemplateId = request.TemplateId
+                tenantContext.TenantId,
+                request.TemplateId
             });
 
         IEnumerable<DrawTemplatePrizeTierRow> tierRows = await connection.QueryAsync<DrawTemplatePrizeTierRow>(
             tiersSql,
             new
             {
-                TenantId = tenantContext.TenantId,
-                TemplateId = request.TemplateId
+                tenantContext.TenantId,
+                request.TemplateId
             });
 
         IEnumerable<DrawTemplateAllowedTicketRow> allowedRows = await connection.QueryAsync<DrawTemplateAllowedTicketRow>(
             allowedSql,
             new
             {
-                TenantId = tenantContext.TenantId,
-                TemplateId = request.TemplateId
+                tenantContext.TenantId,
+                request.TemplateId
             });
 
         Dictionary<string, List<DrawTemplatePrizeTierDto>> tierMap = new(StringComparer.OrdinalIgnoreCase);

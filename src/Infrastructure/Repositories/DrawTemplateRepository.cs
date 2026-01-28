@@ -1,3 +1,4 @@
+using Domain.Gaming.Catalog;
 using Domain.Gaming.DrawTemplates;
 using Domain.Gaming.Repositories;
 using Infrastructure.Database;
@@ -18,18 +19,20 @@ internal sealed class DrawTemplateRepository(ApplicationDbContext context) : IDr
                 cancellationToken);
     }
 
+
     public async Task<DrawTemplate?> GetByNameAsync(
         Guid tenantId,
-        string gameCode,
+        GameCode gameCode,
         string name,
         CancellationToken cancellationToken = default)
     {
         return await context.DrawTemplates
-            .FirstOrDefaultAsync(
-                template => template.TenantId == tenantId
-                            && template.GameCode.Value == gameCode
-                            && template.Name == name,
-                cancellationToken);
+        .AsNoTracking()
+        .FirstOrDefaultAsync(
+        template => template.TenantId == tenantId
+        && template.GameCode == gameCode
+        && template.Name == name,
+        cancellationToken);
     }
 
     public async Task<bool> HasDrawsAsync(Guid tenantId, Guid templateId, CancellationToken cancellationToken = default)

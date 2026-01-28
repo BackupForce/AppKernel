@@ -39,7 +39,7 @@ internal sealed class CreateDrawTemplateCommandHandler(
 
         DrawTemplate? existing = await drawTemplateRepository.GetByNameAsync(
             tenantContext.TenantId,
-            gameCodeResult.Value.Value,
+            gameCodeResult.Value,
             request.Name.Trim(),
             cancellationToken);
         if (existing is not null)

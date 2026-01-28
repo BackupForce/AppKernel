@@ -15,7 +15,7 @@ internal sealed class ActivateDrawTemplateCommandHandler(
 {
     public async Task<Result> Handle(ActivateDrawTemplateCommand request, CancellationToken cancellationToken)
     {
-        var template = await drawTemplateRepository.GetByIdAsync(
+        Domain.Gaming.DrawTemplates.DrawTemplate? template = await drawTemplateRepository.GetByIdAsync(
             tenantContext.TenantId,
             request.TemplateId,
             cancellationToken);

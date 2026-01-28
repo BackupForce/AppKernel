@@ -51,7 +51,7 @@ internal sealed class GetDrawTemplatesQueryHandler(
             sql,
             new
             {
-                TenantId = tenantContext.TenantId,
+                tenantContext.TenantId,
                 GameCode = normalizedGameCode,
                 request.IsActive
             });

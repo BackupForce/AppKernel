@@ -50,7 +50,7 @@ internal sealed class ExecuteDrawCommandHandler(
             return Result.Failure(GamingErrors.DrawAlreadySettled);
         }
 
-        if (now < draw.DrawAt)
+        if (!draw.IsManuallyClosed && now < draw.DrawAt)
         {
             return Result.Failure(GamingErrors.DrawNotReadyToExecute);
         }

@@ -462,13 +462,20 @@ public sealed class Draw : Entity
     /// <summary>
     /// 手動解封，恢復自動販售判斷。
     /// </summary>
-    public void Reopen(DateTime utcNow)
+    public Result Reopen(DateTime utcNow)
     {
+        if (SettledAt.HasValue)
+        {
+            return Result.Failure(GamingErrors.DrawAlreadySettled);
+        }
+
         Status = DrawStatus.SalesOpen;
         IsManuallyClosed = false;
         ManualCloseAt = null;
         ManualCloseReason = null;
         UpdatedAt = utcNow;
+
+        return Result.Success();
     }
 
     /// <summary>

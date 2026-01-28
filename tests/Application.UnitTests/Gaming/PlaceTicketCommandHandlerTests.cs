@@ -11,6 +11,7 @@ using Domain.Gaming.TicketTemplates;
 using Domain.Members;
 using FluentAssertions;
 using NSubstitute;
+using SharedKernel;
 
 namespace Application.UnitTests.Gaming;
 

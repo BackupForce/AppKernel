@@ -1,3 +1,4 @@
+using Domain.Gaming.Catalog;
 using Domain.Gaming.DrawTemplates;
 
 namespace Domain.Gaming.Repositories;
@@ -11,7 +12,7 @@ public interface IDrawTemplateRepository
 
     Task<DrawTemplate?> GetByNameAsync(
         Guid tenantId,
-        string gameCode,
+        GameCode gameCode,
         string name,
         CancellationToken cancellationToken = default);
 

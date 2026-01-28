@@ -45,7 +45,7 @@ internal sealed class UpdateDrawTemplateCommandHandler(
         {
             DrawTemplate? existing = await drawTemplateRepository.GetByNameAsync(
                 tenantContext.TenantId,
-                template.GameCode.Value,
+                template.GameCode,
                 request.Name.Trim(),
                 cancellationToken);
             if (existing is not null && existing.Id != template.Id)
