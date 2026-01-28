@@ -151,6 +151,12 @@
 | Members | GET | `/api/v1/members/{id}/activity` | JWT + Policy(TenantUser) + Permission `MEMBER_AUDIT:READ` | `MemberActivityRequest`(query) | `PagedResult<MemberActivityLogDto>` | 操作歷程。 |
 | Reports | GET | `/api/v1/tenants/{tenantId}/reports/daily` | JWT + Policy(TenantUser) | Query: `date` | `DailyReportResponse` | 依租戶時區計算。 |
 | Gaming | POST | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws` | JWT + Policy(TenantUser) | `CreateDrawRequest` | `Guid` | 建立期數。 |
+| Admin Gaming | POST | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | `CreateDrawTemplateRequest` | `Guid` | 建立期數模板。 |
+| Admin Gaming | PUT | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | `UpdateDrawTemplateRequest` | N/A | 更新期數模板。 |
+| Admin Gaming | POST | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}/activate` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | N/A | N/A | 啟用期數模板。 |
+| Admin Gaming | POST | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}/deactivate` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | N/A | N/A | 停用期數模板。 |
+| Admin Gaming | GET | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | `GetDrawTemplatesRequest`(query) | `DrawTemplateSummaryDto[]` | 期數模板列表。 |
+| Admin Gaming | GET | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | N/A | `DrawTemplateDetailDto` | 期數模板詳情。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws` | None | `GetDrawsRequest`(query) | `DrawSummaryDto[]` | 取得期數列表（允許匿名）。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/draws/selling/options` | None | `GetSellingDrawOptionsRequest`(query) | `DrawSellingOptionDto[]` | 可售票期數下拉選項。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws/{drawId}` | None | N/A | `DrawDetailDto` | 取得期數詳情（允許匿名）。 |
@@ -1180,6 +1186,7 @@ curl "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/reports/dail
 - Body `CreateDrawRequest`
   | name | type | required | description |
   |---|---|---|---|
+  | templateId | guid | ✅ | 期數模板識別。 |
   | salesStartAt | datetime | ✅ | 開賣時間。 |
   | salesCloseAt | datetime | ✅ | 截止時間。 |
   | drawAt | datetime | ✅ | 開獎時間。 |
@@ -1190,7 +1197,7 @@ curl "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/reports/dail
 curl -X POST "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/gaming/lottery539/draws" \
   -H "Authorization: Bearer <jwt>" \
   -H "Content-Type: application/json" \
-  -d '{"salesStartAt":"2024-01-01T00:00:00Z","salesCloseAt":"2024-01-01T12:00:00Z","drawAt":"2024-01-01T13:00:00Z","redeemValidDays":30}'
+  -d '{"templateId":"99999999-9999-9999-9999-999999999999","salesStartAt":"2024-01-01T00:00:00Z","salesCloseAt":"2024-01-01T12:00:00Z","drawAt":"2024-01-01T13:00:00Z","redeemValidDays":30}'
 ```
 
 **Response**
@@ -1208,6 +1215,111 @@ UPDATE gaming.draws
 SET draw_code = NULL
 WHERE draw_code = '';
 ```
+
+---
+
+### Admin Gaming - Draw Templates
+
+> 路由皆位於 `/api/v1/tenants/{tenantId}/admin/gaming/...`，需 JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`。
+
+#### [POST] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates - 建立期數模板
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+
+**Request**
+- Body `CreateDrawTemplateRequest`
+  | name | type | required | description |
+  |---|---|---|---|
+  | gameCode | string | ✅ | 遊戲代碼。 |
+  | name | string | ✅ | 模板名稱。 |
+  | isActive | bool | ✅ | 是否啟用。 |
+  | playTypes | array | ✅ | 啟用玩法與獎項。 |
+  | allowedTicketTemplateIds | Guid[] | ✅ | 允許票種模板列表。 |
+
+- Example request
+```bash
+curl -X POST "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/admin/gaming/draw-templates" \
+  -H "Authorization: Bearer <jwt>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gameCode": "LOTTERY539",
+    "name": "標準模板",
+    "isActive": true,
+    "playTypes": [
+      {
+        "playTypeCode": "BASIC",
+        "prizeTiers": [
+          {
+            "tier": "T1",
+            "option": {
+              "prizeId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+              "name": "頭獎",
+              "cost": 1000,
+              "redeemValidDays": 30,
+              "description": "頭獎獎項"
+            }
+          }
+        ]
+      }
+    ],
+    "allowedTicketTemplateIds": [
+      "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+    ]
+  }'
+```
+
+**Response**
+- 200: `Guid`（templateId）。
+
+---
+
+#### [PUT] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId} - 更新期數模板
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+
+**Request**
+- Body `UpdateDrawTemplateRequest`
+  | name | type | required | description |
+  |---|---|---|---|
+  | name | string | ✅ | 模板名稱。 |
+  | playTypes | array | ✅ | 啟用玩法與獎項。 |
+  | allowedTicketTemplateIds | Guid[] | ✅ | 允許票種模板列表。 |
+
+**Response**
+- 200: `OK`
+
+---
+
+#### [POST] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}/activate - 啟用期數模板
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+
+**Response**
+- 200: `OK`
+
+---
+
+#### [POST] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}/deactivate - 停用期數模板
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+
+**Response**
+- 200: `OK`
+
+---
+
+#### [GET] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates - 期數模板列表
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+
+**Request**
+- Query: `gameCode` (string?), `isActive` (bool?)
+
+**Response**
+- 200: `DrawTemplateSummaryDto[]`
+
+---
+
+#### [GET] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId} - 期數模板詳情
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+
+**Response**
+- 200: `DrawTemplateDetailDto`
 
 ---
 

@@ -5,7 +5,7 @@ namespace Web.Api.Endpoints.Gaming.Requests;
 /// </summary>
 public sealed record CreateDrawRequest(
     string GameCode,
-    IReadOnlyCollection<string> EnabledPlayTypes,
+    Guid TemplateId,
     DateTime SalesStartAt,
     DateTime SalesCloseAt,
     DateTime DrawAt,

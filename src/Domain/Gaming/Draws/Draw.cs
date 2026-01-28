@@ -1,4 +1,5 @@
 ﻿using Domain.Gaming.Catalog;
+using Domain.Gaming.DrawTemplates;
 using Domain.Gaming.Rules;
 using Domain.Gaming.Shared;
 using SharedKernel;
@@ -148,6 +149,16 @@ public sealed class Draw : Entity
     public DateTime UpdatedAt { get; private set; }
 
     /// <summary>
+    /// 來源模板識別（僅供稽核）。
+    /// </summary>
+    public Guid? SourceTemplateId { get; private set; }
+
+    /// <summary>
+    /// 來源模板版本（僅供稽核）。
+    /// </summary>
+    public int? SourceTemplateVersion { get; private set; }
+
+    /// <summary>
     /// 本期啟用的玩法列表（只讀）。
     /// </summary>
     public IReadOnlyCollection<PlayTypeCode> EnabledPlayTypes =>
@@ -249,6 +260,49 @@ public sealed class Draw : Entity
         }
 
         EnsurePrizePoolSlotsInitialized(registry);
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// 套用期數模板內容，將模板玩法與獎項複製到期數。
+    /// </summary>
+    public Result ApplyTemplate(
+        DrawTemplate template,
+        PlayRuleRegistry registry,
+        DateTime utcNow)
+    {
+        if (template.GameCode != GameCode)
+        {
+            return Result.Failure(GamingErrors.DrawTemplateGameCodeMismatch);
+        }
+
+        List<PlayTypeCode> playTypes = template.PlayTypes
+            .Select(item => item.PlayTypeCode)
+            .ToList();
+
+        Result enableResult = EnablePlayTypes(playTypes, registry);
+        if (enableResult.IsFailure)
+        {
+            return enableResult;
+        }
+
+        foreach (DrawTemplatePrizeTier tier in template.PrizeTiers)
+        {
+            Result configureResult = ConfigurePrizeOption(
+                tier.PlayTypeCode,
+                tier.Tier,
+                tier.Option,
+                registry);
+            if (configureResult.IsFailure)
+            {
+                return configureResult;
+            }
+        }
+
+        SourceTemplateId = template.Id;
+        SourceTemplateVersion = template.Version;
+        UpdatedAt = utcNow;
 
         return Result.Success();
     }

@@ -21,6 +21,7 @@ internal sealed class PlaceTicketBetCommandHandler(
     IDrawRepository drawRepository,
     ITicketRepository ticketRepository,
     ITicketIdempotencyRepository ticketIdempotencyRepository,
+    IDrawAllowedTicketTemplateRepository drawAllowedTicketTemplateRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
@@ -90,6 +91,26 @@ internal sealed class PlaceTicketBetCommandHandler(
         if (draw is null)
         {
             return Result.Failure<PlaceTicketBetResult>(GamingErrors.DrawNotFound);
+        }
+
+        if (ticket.TicketTemplateId.HasValue)
+        {
+            IReadOnlyCollection<DrawAllowedTicketTemplate> allowedTemplates =
+                await drawAllowedTicketTemplateRepository.GetByDrawIdAsync(
+                    tenantContext.TenantId,
+                    draw.Id,
+                    cancellationToken);
+
+            if (allowedTemplates.Count == 0)
+            {
+                return Result.Failure<PlaceTicketBetResult>(GamingErrors.TicketTemplateNotAllowed);
+            }
+
+            bool isAllowed = allowedTemplates.Any(item => item.TicketTemplateId == ticket.TicketTemplateId.Value);
+            if (!isAllowed)
+            {
+                return Result.Failure<PlaceTicketBetResult>(GamingErrors.TicketTemplateNotAllowed);
+            }
         }
 
         PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();

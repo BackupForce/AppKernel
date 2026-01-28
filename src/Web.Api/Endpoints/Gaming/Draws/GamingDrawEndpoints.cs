@@ -40,7 +40,7 @@ internal static class GamingDrawEndpoints
 
                      CreateDrawCommand command = new CreateDrawCommand(
                          resolvedGameCode,
-                         request.EnabledPlayTypes,
+                         request.TemplateId,
                          request.SalesStartAt,
                          request.SalesCloseAt,
                          request.DrawAt,
