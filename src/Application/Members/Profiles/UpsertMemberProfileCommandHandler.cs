@@ -11,19 +11,19 @@ internal sealed class UpsertMemberProfileCommandHandler(
     IMemberProfileRepository memberProfileRepository,
     IUnitOfWork unitOfWork,
     ITenantContext tenantContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<UpsertMemberProfileCommand>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<UpsertMemberProfileCommand, MemberProfileDto>
 {
-    public async Task<Result> Handle(UpsertMemberProfileCommand request, CancellationToken cancellationToken)
+    public async Task<Result<MemberProfileDto>> Handle(UpsertMemberProfileCommand request, CancellationToken cancellationToken)
     {
         Member? member = await memberRepository.GetByIdAsync(tenantContext.TenantId, request.MemberId, cancellationToken);
         if (member is null)
         {
-            return Result.Failure(MemberErrors.MemberNotFound);
+            return Result.Failure<MemberProfileDto>(MemberErrors.MemberNotFound);
         }
 
         if (!Enum.IsDefined(request.Gender))
         {
-            return Result.Failure(MemberErrors.InvalidGender);
+            return Result.Failure<MemberProfileDto>(MemberErrors.InvalidGender);
         }
 
         MemberProfile? profile = await memberProfileRepository.GetByMemberIdAsync(
@@ -55,6 +55,12 @@ internal sealed class UpsertMemberProfileCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+        return new MemberProfileDto(
+            profile.MemberId,
+            profile.RealName,
+            profile.Gender,
+            profile.PhoneNumber,
+            profile.PhoneVerified,
+            profile.UpdatedAtUtc);
     }
 }

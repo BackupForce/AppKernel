@@ -1,4 +1,6 @@
-﻿namespace Application.Members.Dtos;
+﻿using Application.Members.Profiles;
+
+namespace Application.Members.Dtos;
 
 public sealed record MemberDetailDto(
     Guid Id,
@@ -7,4 +9,6 @@ public sealed record MemberDetailDto(
     string DisplayName,
     short Status,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    MemberProfileDto? Profile,
+    IReadOnlyList<LoginBindingDto> LoginBindings);

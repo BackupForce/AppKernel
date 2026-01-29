@@ -10,8 +10,11 @@ internal sealed class MemberProfileConfiguration : IEntityTypeConfiguration<Memb
     {
         builder.ToTable("member_profiles", Schemas.Default);
 
-        builder.HasKey(profile => profile.MemberId);
-        builder.Ignore(profile => profile.Id);
+        builder.HasKey(profile => profile.Id);
+
+        builder.Property(profile => profile.Id)
+            .HasColumnName("id")
+            .IsRequired();
 
         builder.Property(profile => profile.MemberId)
             .HasColumnName("member_id")
@@ -37,6 +40,10 @@ internal sealed class MemberProfileConfiguration : IEntityTypeConfiguration<Memb
         builder.Property(profile => profile.UpdatedAtUtc)
             .HasColumnName("updated_at_utc")
             .IsRequired();
+
+        builder.HasIndex(profile => profile.MemberId)
+            .IsUnique()
+            .HasDatabaseName("ux_member_profiles_member_id");
 
         builder.HasOne<Member>()
             .WithOne()
