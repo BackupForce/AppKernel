@@ -72,19 +72,12 @@ internal sealed class LineLiffLoginCommandHandler(
             ? null
             : verifyResult.DisplayName.Trim();
 
-        Uri? pictureUrl = null;
-        if (!string.IsNullOrWhiteSpace(verifyResult.PictureUrl)
-            && Uri.TryCreate(verifyResult.PictureUrl, UriKind.Absolute, out Uri? parsedPictureUrl))
-        {
-            pictureUrl = parsedPictureUrl;
-        }
-
         LineLoginPersistenceResult persistenceResult = await lineLoginPersistenceService.PersistAsync(
             tenantId,
             lineUserId,
             displayName,
             profileDisplayName,
-            pictureUrl,
+            verifyResult.PictureUrl,
             command.Email,
             command.UserAgent,
             command.Ip,

@@ -29,7 +29,7 @@ public class LineLiffLoginCommandHandlerTests
         SetupTenantContext(tenantId);
 
         string verifierDisplayName = "Verifier Name";
-        string verifierPictureUrl = "https://example.com/pic.png";
+        Uri verifierPictureUrl = new Uri("https://example.com/pic.png");
 
         _lineAuthService.VerifyAccessTokenAsync("token", Arg.Any<CancellationToken>())
             .Returns(new ExternalIdentityResult(true, "line-user", null, null, verifierDisplayName, verifierPictureUrl));
@@ -46,7 +46,7 @@ public class LineLiffLoginCommandHandlerTests
                 "line-user",
                 verifierDisplayName,
                 verifierDisplayName,
-                Arg.Is<Uri?>(uri => uri == new Uri(verifierPictureUrl)),
+                Arg.Is<Uri?>(uri => uri == verifierPictureUrl),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -95,7 +95,7 @@ public class LineLiffLoginCommandHandlerTests
         SetupTenantContext(tenantId);
 
         string verifierDisplayName = "Verifier Name";
-        string verifierPictureUrl = "https://example.com/pic.png";
+        Uri verifierPictureUrl = new Uri( "https://example.com/pic.png");
 
         _lineAuthService.VerifyAccessTokenAsync("token", Arg.Any<CancellationToken>())
             .Returns(new ExternalIdentityResult(true, "line-user", null, null, verifierDisplayName, verifierPictureUrl));
@@ -112,7 +112,7 @@ public class LineLiffLoginCommandHandlerTests
                 "line-user",
                 verifierDisplayName,
                 verifierDisplayName,
-                Arg.Is<Uri?>(uri => uri == new Uri(verifierPictureUrl)),
+                Arg.Is<Uri?>(uri => uri == verifierPictureUrl),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),

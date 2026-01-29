@@ -14,4 +14,4 @@ public sealed record ExternalIdentityResult(
     string? ErrorCode,
     string? ErrorMessage,
     string? DisplayName = null,
-    string? PictureUrl = null);
+    Uri? PictureUrl = null);

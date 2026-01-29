@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application.Abstractions.Identity;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -59,8 +60,16 @@ public sealed class LineIdentityVerifier(
             return new ExternalIdentityResult(false, null, "invalid_profile", "LINE profile response missing userId.");
         }
 
+        Uri? pictureUri = null;
+
+        if (!string.IsNullOrWhiteSpace(profile.PictureUrl) &&
+        Uri.TryCreate(profile.PictureUrl, UriKind.Absolute, out Uri? parsed))
+        {
+            pictureUri = parsed;
+        }
+
         // LINE User ID = userId（Profile API）=> 作為 Member 唯一鍵
-        return new ExternalIdentityResult(true, profile.UserId, null, null, profile.DisplayName, profile.PictureUrl);
+        return new ExternalIdentityResult(true, profile.UserId, null, null, profile.DisplayName, pictureUri);
     }
 
     private static Uri BuildVerifyAccessTokenUri(Uri baseEndpoint, string accessToken)
