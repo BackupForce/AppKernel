@@ -73,6 +73,8 @@ internal sealed class LineLiffLoginCommandHandler(
             tenantId,
             lineUserId,
             displayName,
+            command.PictureUrl,
+            command.Email,
             command.UserAgent,
             command.Ip,
             command.DeviceId,

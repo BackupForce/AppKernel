@@ -28,6 +28,22 @@ public static class MemberErrors
         "Member.MemberUserNotUnique",
         "User 已經與其他會員綁定。");
 
+    public static readonly Error MemberProfileNotFound = Error.NotFound(
+        "Member.ProfileNotFound",
+        "找不到會員個資。");
+
+    public static readonly Error MemberAddressNotFound = Error.NotFound(
+        "Member.AddressNotFound",
+        "找不到會員地址。");
+
+    public static readonly Error MemberAddressFieldRequired = Error.Validation(
+        "Member.AddressFieldRequired",
+        "地址資訊不可為空白。");
+
+    public static readonly Error InvalidGender = Error.Validation(
+        "Member.GenderInvalid",
+        "性別欄位無效。");
+
     public static readonly Error MemberSuspended = Error.Validation(
         "Member.Suspended",
         "會員已被停權。");

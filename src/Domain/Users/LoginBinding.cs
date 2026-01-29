@@ -11,7 +11,10 @@ public sealed class LoginBinding : Entity
         LoginProvider provider,
         string providerKey,
         string normalizedProviderKey,
-        DateTime createdAtUtc)
+        DateTime createdAtUtc,
+        string? displayName,
+        string? pictureUrl,
+        string? email)
         : base(id)
     {
         UserId = userId;
@@ -20,6 +23,9 @@ public sealed class LoginBinding : Entity
         ProviderKey = providerKey;
         NormalizedProviderKey = normalizedProviderKey;
         CreatedAtUtc = createdAtUtc;
+        DisplayName = displayName;
+        PictureUrl = pictureUrl;
+        Email = email;
     }
 
     private LoginBinding()
@@ -37,6 +43,12 @@ public sealed class LoginBinding : Entity
     public string NormalizedProviderKey { get; private set; } = string.Empty;
 
     public DateTime CreatedAtUtc { get; private set; }
+
+    public string? DisplayName { get; private set; }
+
+    public string? PictureUrl { get; private set; }
+
+    public string? Email { get; private set; }
 
     public User? User { get; set; }
 
@@ -60,7 +72,10 @@ public sealed class LoginBinding : Entity
             provider,
             providerKey.Trim(),
             normalized,
-            utcNow));
+            utcNow,
+            null,
+            null,
+            null));
     }
 
     public static string Normalize(LoginProvider provider, string providerKey)
@@ -78,5 +93,12 @@ public sealed class LoginBinding : Entity
     public void UpdateTenantId(Guid? tenantId)
     {
         TenantId = tenantId;
+    }
+
+    public void SyncProfile(string? displayName, string? pictureUrl, string? email)
+    {
+        DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
+        PictureUrl = string.IsNullOrWhiteSpace(pictureUrl) ? null : pictureUrl.Trim();
+        Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
     }
 }

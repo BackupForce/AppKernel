@@ -30,6 +30,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<MemberAssetBalance> MemberAssetBalances { get; set; }
     public DbSet<MemberAssetLedger> MemberAssetLedgers { get; set; }
     public DbSet<MemberActivityLog> MemberActivityLogs { get; set; }
+    public DbSet<MemberProfile> MemberProfiles { get; set; }
+    public DbSet<MemberAddress> MemberAddresses { get; set; }
     public DbSet<Draw> Draws { get; set; }
     public DbSet<DrawTemplate> DrawTemplates { get; set; }
     public DbSet<DrawTemplatePlayType> DrawTemplatePlayTypes { get; set; }

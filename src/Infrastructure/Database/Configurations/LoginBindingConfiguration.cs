@@ -36,6 +36,15 @@ internal sealed class LoginBindingConfiguration : IEntityTypeConfiguration<Login
             .HasColumnName("created_at_utc")
             .IsRequired();
 
+        builder.Property(binding => binding.DisplayName)
+            .HasColumnName("display_name");
+
+        builder.Property(binding => binding.PictureUrl)
+            .HasColumnName("picture_url");
+
+        builder.Property(binding => binding.Email)
+            .HasColumnName("email");
+
         builder.HasIndex(binding => new { binding.TenantId, binding.Provider, binding.NormalizedProviderKey })
             .IsUnique()
             .HasDatabaseName("ux_login_bindings_tenant_provider_key")

@@ -120,6 +120,8 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserLoginBindingReader, UserLoginBindingReader>();
         services.AddScoped<IMemberRepository, MemberRepository>();
+        services.AddScoped<IMemberProfileRepository, MemberProfileRepository>();
+        services.AddScoped<IMemberAddressRepository, MemberAddressRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IGroupRepository, GroupRepository>();

@@ -26,6 +26,8 @@ public class LineLiffLogin : IEndpoint
             LineLiffLoginCommand command = new LineLiffLoginCommand(
                 request.AccessToken,
                 request.DisplayName,
+                request.PictureUrl,
+                request.Email,
                 request.DeviceId,
                 userAgent,
                 ip);
