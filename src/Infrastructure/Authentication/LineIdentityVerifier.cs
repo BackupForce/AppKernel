@@ -60,7 +60,7 @@ public sealed class LineIdentityVerifier(
         }
 
         // LINE User ID = userId（Profile API）=> 作為 Member 唯一鍵
-        return new ExternalIdentityResult(true, profile.UserId, null, null);
+        return new ExternalIdentityResult(true, profile.UserId, null, null, profile.DisplayName, profile.PictureUrl);
     }
 
     private static Uri BuildVerifyAccessTokenUri(Uri baseEndpoint, string accessToken)

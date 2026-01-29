@@ -9,7 +9,8 @@ public interface ILineLoginPersistenceService
     Task<LineLoginPersistenceResult> PersistAsync(
         Guid tenantId,
         string lineUserId,
-        string displayName,
+        string memberDisplayName,
+        string? profileDisplayName,
         Uri? pictureUrl,
         string? email,
         string? userAgent,

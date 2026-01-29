@@ -97,16 +97,19 @@ public sealed class LoginBinding : Entity
 
     public void SyncProfile(string? displayName, Uri? pictureUrl, string? email)
     {
-        DisplayName = string.IsNullOrWhiteSpace(displayName)
-        ? null
-        : displayName.Trim();
+        if (!string.IsNullOrWhiteSpace(displayName))
+        {
+            DisplayName = displayName.Trim();
+        }
 
+        if (pictureUrl is not null)
+        {
+            PictureUrl = pictureUrl;
+        }
 
-        PictureUrl = pictureUrl;
-
-
-        Email = string.IsNullOrWhiteSpace(email)
-        ? null
-        : email.Trim();
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            Email = email.Trim();
+        }
     }
 }

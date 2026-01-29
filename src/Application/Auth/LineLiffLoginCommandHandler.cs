@@ -65,15 +65,26 @@ internal sealed class LineLiffLoginCommandHandler(
             return Result.Failure<LineLoginResponse>(AuthErrors.LineLoginUserTypeInvalid);
         }
 
-        string displayName = string.IsNullOrWhiteSpace(command.DisplayName)
+        string displayName = string.IsNullOrWhiteSpace(verifyResult.DisplayName)
             ? DefaultMemberDisplayName
-            : command.DisplayName.Trim();
+            : verifyResult.DisplayName.Trim();
+        string? profileDisplayName = string.IsNullOrWhiteSpace(verifyResult.DisplayName)
+            ? null
+            : verifyResult.DisplayName.Trim();
+
+        Uri? pictureUrl = null;
+        if (!string.IsNullOrWhiteSpace(verifyResult.PictureUrl)
+            && Uri.TryCreate(verifyResult.PictureUrl, UriKind.Absolute, out Uri? parsedPictureUrl))
+        {
+            pictureUrl = parsedPictureUrl;
+        }
 
         LineLoginPersistenceResult persistenceResult = await lineLoginPersistenceService.PersistAsync(
             tenantId,
             lineUserId,
             displayName,
-            command.PictureUrl,
+            profileDisplayName,
+            pictureUrl,
             command.Email,
             command.UserAgent,
             command.Ip,
