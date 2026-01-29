@@ -18,5 +18,5 @@ public sealed record AdminTicketListItemDto(
     IssuedByType IssuedByType,
     Guid? IssuedByUserId,
     Guid? SubmittedByUserId,
-    int LineCount,
+    long LineCount,
     DateTime CreatedAt);
