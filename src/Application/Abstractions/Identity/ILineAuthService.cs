@@ -12,4 +12,6 @@ public sealed record ExternalIdentityResult(
     bool IsValid,
     string? LineUserId,
     string? ErrorCode,
-    string? ErrorMessage);
+    string? ErrorMessage,
+    string? DisplayName = null,
+    string? PictureUrl = null);

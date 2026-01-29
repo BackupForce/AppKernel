@@ -28,8 +28,11 @@ public class LineLiffLoginCommandHandlerTests
         Guid tenantId = Guid.NewGuid();
         SetupTenantContext(tenantId);
 
+        string verifierDisplayName = "Verifier Name";
+        string verifierPictureUrl = "https://example.com/pic.png";
+
         _lineAuthService.VerifyAccessTokenAsync("token", Arg.Any<CancellationToken>())
-            .Returns(new ExternalIdentityResult(true, "line-user", null, null));
+            .Returns(new ExternalIdentityResult(true, "line-user", null, null, verifierDisplayName, verifierPictureUrl));
 
         _loginBindingReader.FindUserByLoginAsync(tenantId, LoginProvider.Line, "line-user", Arg.Any<CancellationToken>())
             .Returns((User?)null);
@@ -41,8 +44,9 @@ public class LineLiffLoginCommandHandlerTests
         _lineLoginPersistenceService.PersistAsync(
                 tenantId,
                 "line-user",
-                "Line",
-                null,
+                verifierDisplayName,
+                verifierDisplayName,
+                Arg.Is<Uri?>(uri => uri == new Uri(verifierPictureUrl)),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -75,7 +79,7 @@ public class LineLiffLoginCommandHandlerTests
             Substitute.For<Microsoft.Extensions.Logging.ILogger<LineLiffLoginCommandHandler>>());
 
         Result<LineLoginResponse> result = await handler.Handle(
-            new LineLiffLoginCommand("token", null, null, null, null, null, null),
+            new LineLiffLoginCommand("token", "Command Name", new Uri("https://command.example/pic.png"), null, null, null, null),
             default);
 
         result.IsSuccess.Should().BeTrue();
@@ -90,8 +94,11 @@ public class LineLiffLoginCommandHandlerTests
         Guid tenantId = Guid.NewGuid();
         SetupTenantContext(tenantId);
 
+        string verifierDisplayName = "Verifier Name";
+        string verifierPictureUrl = "https://example.com/pic.png";
+
         _lineAuthService.VerifyAccessTokenAsync("token", Arg.Any<CancellationToken>())
-            .Returns(new ExternalIdentityResult(true, "line-user", null, null));
+            .Returns(new ExternalIdentityResult(true, "line-user", null, null, verifierDisplayName, verifierPictureUrl));
 
         User existingUser = User.Create(Email.Create("line-user@test.com").Value, new Name("Line"), "hash", false, UserType.Member, tenantId);
         _loginBindingReader.FindUserByLoginAsync(tenantId, LoginProvider.Line, "line-user", Arg.Any<CancellationToken>())
@@ -103,8 +110,9 @@ public class LineLiffLoginCommandHandlerTests
         _lineLoginPersistenceService.PersistAsync(
                 tenantId,
                 "line-user",
-                "Line",
-                null,
+                verifierDisplayName,
+                verifierDisplayName,
+                Arg.Is<Uri?>(uri => uri == new Uri(verifierPictureUrl)),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -135,7 +143,7 @@ public class LineLiffLoginCommandHandlerTests
             Substitute.For<Microsoft.Extensions.Logging.ILogger<LineLiffLoginCommandHandler>>());
 
         Result<LineLoginResponse> result = await handler.Handle(
-            new LineLiffLoginCommand("token", null, null, null, null, null, null),
+            new LineLiffLoginCommand("token", "Command Name", new Uri("https://command.example/pic.png"), null, null, null, null),
             default);
 
         result.IsSuccess.Should().BeTrue();

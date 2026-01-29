@@ -32,7 +32,8 @@ internal sealed class LineLoginPersistenceService(
     public async Task<LineLoginPersistenceResult> PersistAsync(
         Guid tenantId,
         string lineUserId,
-        string displayName,
+        string memberDisplayName,
+        string? profileDisplayName,
         Uri? pictureUrl,
         string? email,
         string? userAgent,
@@ -55,7 +56,7 @@ internal sealed class LineLoginPersistenceService(
             MemberLoginCreation creation = await CreateMemberUserAsync(
                 tenantId,
                 lineUserId,
-                displayName,
+                memberDisplayName,
                 cancellationToken);
             user = creation.User;
             member = creation.Member;
@@ -67,7 +68,7 @@ internal sealed class LineLoginPersistenceService(
             member = await memberRepository.GetByUserIdAsync(tenantId, user.Id, cancellationToken);
             if (member is null)
             {
-                member = await CreateMemberForExistingUserAsync(tenantId, user.Id, displayName, cancellationToken);
+                member = await CreateMemberForExistingUserAsync(tenantId, user.Id, memberDisplayName, cancellationToken);
                 isNewMember = true;
             }
         }
@@ -75,7 +76,7 @@ internal sealed class LineLoginPersistenceService(
         await SyncLoginBindingProfileAsync(
             tenantId,
             lineUserId,
-            displayName,
+            profileDisplayName,
             pictureUrl,
             email,
             cancellationToken);

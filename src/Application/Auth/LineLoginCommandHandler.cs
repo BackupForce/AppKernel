@@ -54,6 +54,7 @@ internal sealed class LineLoginCommandHandler(
             DefaultMemberDisplayName,
             null,
             null,
+            null,
             command.UserAgent,
             command.Ip,
             command.DeviceId,
