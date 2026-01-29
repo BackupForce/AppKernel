@@ -134,6 +134,11 @@ public sealed class Draw : Entity
     public DateTime? DrawnAt { get; private set; }
 
     /// <summary>
+    /// 派彩/結算完成時間（UTC）。
+    /// </summary>
+    public DateTime? SettledAtUtc { get; private set; }
+
+    /// <summary>
     /// 兌獎有效天數（若 PrizeRule 未指定，則以此為準）。
     /// </summary>
     public int? RedeemValidDays { get; private set; }
@@ -492,7 +497,7 @@ public sealed class Draw : Entity
     public bool IsEffectivelyClosed(DateTime utcNow)
     {
         DrawStatus status = GetEffectiveStatus(utcNow);
-        return status == DrawStatus.SalesClosed || status == DrawStatus.Drawn;
+        return status == DrawStatus.SalesClosed || status == DrawStatus.Drawn || status == DrawStatus.Settled;
     }
 
     /// <summary>
@@ -508,6 +513,16 @@ public sealed class Draw : Entity
     /// </summary>
     public DrawStatus GetEffectiveStatus(DateTime utcNow)
     {
+        if (Status == DrawStatus.Cancelled)
+        {
+            return DrawStatus.Cancelled;
+        }
+
+        if (SettledAtUtc.HasValue)
+        {
+            return DrawStatus.Settled;
+        }
+
         if (DrawnAt.HasValue || !string.IsNullOrWhiteSpace(WinningNumbersRaw))
         {
             return DrawStatus.Drawn;
@@ -529,6 +544,30 @@ public sealed class Draw : Entity
         }
 
         return DrawStatus.SalesClosed;
+    }
+
+    /// <summary>
+    /// 標記結算完成，代表派彩流程已全部完成。
+    /// </summary>
+    public void MarkSettled(DateTime nowUtc)
+    {
+        if (Status == DrawStatus.Cancelled)
+        {
+            throw new InvalidOperationException("Cancelled draw cannot be settled.");
+        }
+
+        if (!DrawnAt.HasValue && string.IsNullOrWhiteSpace(WinningNumbersRaw))
+        {
+            throw new InvalidOperationException("Draw must be drawn before settlement.");
+        }
+
+        if (SettledAtUtc.HasValue)
+        {
+            return;
+        }
+
+        SettledAtUtc = nowUtc;
+        UpdatedAt = nowUtc;
     }
 
     /// <summary>

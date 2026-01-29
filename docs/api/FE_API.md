@@ -102,7 +102,7 @@
 - `MemberPointLedgerType`: `Earn(0)`, `Spend(1)`, `AdjustAdd(2)`, `AdjustSub(3)`, `Refund(4)`。【F:src/Domain/Members/MemberPointLedgerType.cs†L1-L10】
 - `GameType`: `Lottery539(1)`。【F:src/Domain/Gaming/GameType.cs†L1-L13】
 - `TicketTemplateType`: `Standard(0)`, `Promo(1)`, `Free(2)`, `Vip(3)`, `Event(4)`。【F:src/Domain/Gaming/TicketTemplateType.cs†L1-L12】
-- `DrawStatus`: `Scheduled(0)`, `SalesOpen(1)`, `SalesClosed(2)`, `Drawn(3)`, `Cancelled(4)`。【F:src/Domain/Gaming/DrawStatus.cs†L1-L26】
+- `DrawStatus`: `Scheduled(0)`, `SalesOpen(1)`, `SalesClosed(2)`, `Drawn(3)`, `Cancelled(4)`, `Settled(5)`。【F:src/Domain/Gaming/Draws/DrawStatus.cs†L1-L32】
 - `AwardStatus`: `Awarded(0)`, `Redeemed(1)`, `Expired(2)`, `Cancelled(3)`。【F:src/Domain/Gaming/AwardStatus.cs†L1-L22】
 - `PermissionScope`: `Platform(0)`, `Tenant(1)`, `Self(2)`。【F:src/Domain/Security/PermissionScope.cs†L1-L12】
 - `Decision`: `Allow(0)`, `Deny(1)`。【F:src/Domain/Security/Decision.cs†L1-L6】

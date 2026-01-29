@@ -73,7 +73,7 @@ internal sealed class SettleDrawCommandHandler(
         // GetEffectiveStatus(now) 代表狀態可能會受時間影響（例如封盤/可售等）
         DrawStatus status = draw.GetEffectiveStatus(now);
 
-        if (status != DrawStatus.Drawn)
+        if (status != DrawStatus.Drawn && status != DrawStatus.Settled)
         {
             // 尚未開獎/尚未到可開獎狀態 => 不允許結算
             // 注意：錯誤名稱 DrawNotSettled 其實語意較像 "DrawNotDrawnYet"
@@ -122,6 +122,9 @@ internal sealed class SettleDrawCommandHandler(
         // 沒有人參與這期 => 直接成功返回
         if (ticketDraws.Count == 0)
         {
+            draw.MarkSettled(now);
+            drawRepository.Update(draw);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }
 
@@ -277,6 +280,8 @@ internal sealed class SettleDrawCommandHandler(
         // =========================================================
         // 11) 一次性提交交易（Unit of Work）
         // =========================================================
+        draw.MarkSettled(now);
+        drawRepository.Update(draw);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
