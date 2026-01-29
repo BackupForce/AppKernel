@@ -24,6 +24,7 @@ public sealed record DrawTemplatePrizeOptionRequest(
     Guid? PrizeId,
     string Name,
     decimal Cost,
+    decimal PayoutAmount,
     int? RedeemValidDays,
     string? Description);
 

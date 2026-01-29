@@ -53,6 +53,7 @@ internal sealed class UpdateDrawPrizePoolCommandHandler(
             Result<PrizeOption> optionResult = PrizeOption.Create(
                 item.Option.Name,
                 item.Option.Cost,
+                item.Option.PayoutAmount,
                 item.Option.RedeemValidDays,
                 item.Option.Description,
                 item.Option.PrizeId);

@@ -102,7 +102,7 @@
 - `MemberPointLedgerType`: `Earn(0)`, `Spend(1)`, `AdjustAdd(2)`, `AdjustSub(3)`, `Refund(4)`。【F:src/Domain/Members/MemberPointLedgerType.cs†L1-L10】
 - `GameType`: `Lottery539(1)`。【F:src/Domain/Gaming/GameType.cs†L1-L13】
 - `TicketTemplateType`: `Standard(0)`, `Promo(1)`, `Free(2)`, `Vip(3)`, `Event(4)`。【F:src/Domain/Gaming/TicketTemplateType.cs†L1-L12】
-- `DrawStatus`: `Scheduled(0)`, `SalesOpen(1)`, `SalesClosed(2)`, `Settled(3)`, `Cancelled(4)`。【F:src/Domain/Gaming/DrawStatus.cs†L1-L26】
+- `DrawStatus`: `Scheduled(0)`, `SalesOpen(1)`, `SalesClosed(2)`, `Drawn(3)`, `Cancelled(4)`。【F:src/Domain/Gaming/DrawStatus.cs†L1-L26】
 - `AwardStatus`: `Awarded(0)`, `Redeemed(1)`, `Expired(2)`, `Cancelled(3)`。【F:src/Domain/Gaming/AwardStatus.cs†L1-L22】
 - `PermissionScope`: `Platform(0)`, `Tenant(1)`, `Self(2)`。【F:src/Domain/Security/PermissionScope.cs†L1-L12】
 - `Decision`: `Allow(0)`, `Deny(1)`。【F:src/Domain/Security/Decision.cs†L1-L6】
@@ -1234,6 +1234,7 @@ WHERE draw_code = '';
   | isActive | bool | ✅ | 是否啟用。 |
   | playTypes | array | ✅ | 啟用玩法與獎項。 |
   | allowedTicketTemplateIds | Guid[] | ✅ | 允許票種模板列表。 |
+  - `prizeTiers.option` 需包含派彩金額 `payoutAmount`（非成本）。【F:src/Web.Api/Endpoints/Admin/Requests/DrawTemplateRequests.cs†L1-L31】
 
 - Example request
 ```bash
@@ -1254,6 +1255,7 @@ curl -X POST "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/admi
               "prizeId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
               "name": "頭獎",
               "cost": 1000,
+              "payoutAmount": 5000,
               "redeemValidDays": 30,
               "description": "頭獎獎項"
             }
@@ -1282,6 +1284,7 @@ curl -X POST "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/admi
   | name | string | ✅ | 模板名稱。 |
   | playTypes | array | ✅ | 啟用玩法與獎項。 |
   | allowedTicketTemplateIds | Guid[] | ✅ | 允許票種模板列表。 |
+  - `prizeTiers.option` 需包含派彩金額 `payoutAmount`（非成本）。【F:src/Web.Api/Endpoints/Admin/Requests/DrawTemplateRequests.cs†L1-L31】
 
 **Response**
 - 200: `OK`

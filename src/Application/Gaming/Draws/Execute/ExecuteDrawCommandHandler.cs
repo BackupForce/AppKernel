@@ -45,7 +45,7 @@ internal sealed class ExecuteDrawCommandHandler(
 
         DateTime now = dateTimeProvider.UtcNow;
         DrawStatus status = draw.GetEffectiveStatus(now);
-        if (status == DrawStatus.Settled)
+        if (status == DrawStatus.Drawn)
         {
             return Result.Failure(GamingErrors.DrawAlreadySettled);
         }

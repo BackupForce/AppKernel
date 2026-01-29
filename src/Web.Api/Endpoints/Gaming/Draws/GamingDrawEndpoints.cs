@@ -237,6 +237,7 @@ internal static class GamingDrawEndpoints
                                 item.Option.PrizeId,
                                 item.Option.Name,
                                 item.Option.Cost,
+                                item.Option.PayoutAmount,
                                 item.Option.RedeemValidDays,
                                 item.Option.Description))).ToList());
                     return await UseCaseInvoker.Send<UpdateDrawPrizePoolCommand, DrawPrizePoolDto>(

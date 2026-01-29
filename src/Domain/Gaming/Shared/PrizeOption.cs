@@ -7,17 +7,24 @@ namespace Domain.Gaming.Shared;
 /// </summary>
 public sealed record PrizeOption
 {
-    private PrizeOption(Guid? prizeId, string name, decimal cost, int? redeemValidDays, string? description)
+    private PrizeOption(
+        Guid? prizeId,
+        string name,
+        decimal cost,
+        decimal payoutAmount,
+        int? redeemValidDays,
+        string? description)
     {
         PrizeId = prizeId;
         Name = name;
         Cost = cost;
+        PayoutAmount = payoutAmount;
         RedeemValidDays = redeemValidDays;
         Description = description;
     }
 
     private PrizeOption()
-        : this(null, string.Empty, 0m, null, null)
+        : this(null, string.Empty, 0m, 0m, null, null)
     {
     }
 
@@ -37,6 +44,11 @@ public sealed record PrizeOption
     public decimal Cost { get; }
 
     /// <summary>
+    /// 獎項派彩金額快照。
+    /// </summary>
+    public decimal PayoutAmount { get; }
+
+    /// <summary>
     /// 兌獎有效天數快照（可覆蓋 Draw 設定）。
     /// </summary>
     public int? RedeemValidDays { get; }
@@ -52,6 +64,7 @@ public sealed record PrizeOption
     public static Result<PrizeOption> Create(
         string name,
         decimal cost,
+        decimal payoutAmount,
         int? redeemValidDays,
         string? description,
         Guid? prizeId = null)
@@ -66,11 +79,16 @@ public sealed record PrizeOption
             return Result.Failure<PrizeOption>(GamingErrors.PrizeCostInvalid);
         }
 
+        if (payoutAmount < 0)
+        {
+            return Result.Failure<PrizeOption>(GamingErrors.PrizePayoutInvalid);
+        }
+
         if (redeemValidDays.HasValue && redeemValidDays.Value <= 0)
         {
             return Result.Failure<PrizeOption>(GamingErrors.PrizeRedeemValidDaysInvalid);
         }
 
-        return new PrizeOption(prizeId, name.Trim(), cost, redeemValidDays, description?.Trim());
+        return new PrizeOption(prizeId, name.Trim(), cost, payoutAmount, redeemValidDays, description?.Trim());
     }
 }

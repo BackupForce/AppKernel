@@ -34,6 +34,7 @@ internal sealed class DrawTemplatePrizeTierConfiguration : IEntityTypeConfigurat
                 option.Property(o => o.PrizeId).HasColumnName("prize_id_snapshot");
                 option.Property(o => o.Name).HasColumnName("prize_name_snapshot").HasMaxLength(128).IsRequired();
                 option.Property(o => o.Cost).HasColumnName("prize_cost_snapshot").HasColumnType("decimal(18,2)").IsRequired();
+                option.Property(o => o.PayoutAmount).HasColumnName("prize_payout_snapshot").HasColumnType("decimal(18,2)").IsRequired();
                 option.Property(o => o.RedeemValidDays).HasColumnName("prize_redeem_valid_days_snapshot");
                 option.Property(o => o.Description).HasColumnName("prize_description_snapshot").HasMaxLength(256);
             });

@@ -20,7 +20,7 @@ public enum DrawStatus
     /// <summary>
     /// 已開獎並寫入中獎號碼與 proof。
     /// </summary>
-    Settled = 3,
+    Drawn = 3,
     /// <summary>
     /// 期數取消，通常是異常或營運決策。
     /// </summary>
