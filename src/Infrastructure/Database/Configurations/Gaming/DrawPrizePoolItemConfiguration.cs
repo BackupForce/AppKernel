@@ -18,6 +18,12 @@ internal sealed class DrawPrizePoolItemConfiguration : IEntityTypeConfiguration<
 
         builder.Property(item => item.TenantId).IsRequired();
         builder.Property(item => item.DrawId).IsRequired();
+
+        builder.HasOne<Draw>()
+            .WithMany()
+            .HasForeignKey(item => item.DrawId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.Property(item => item.PlayTypeCode)
             .HasConversion(code => code.Value, value => new PlayTypeCode(value))
             .HasMaxLength(32)

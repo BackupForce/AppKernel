@@ -4,6 +4,7 @@ using Domain.Gaming.Draws;
 using Domain.Gaming.Rules;
 using Domain.Gaming.Shared;
 using FluentAssertions;
+using SharedKernel;
 
 namespace Domain.UnitTests.Gaming;
 
