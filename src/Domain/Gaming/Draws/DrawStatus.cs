@@ -24,5 +24,9 @@ public enum DrawStatus
     /// <summary>
     /// 期數取消，通常是異常或營運決策。
     /// </summary>
-    Cancelled = 4
+    Cancelled = 4,
+    /// <summary>
+    /// 派彩/結算已完成。
+    /// </summary>
+    Settled = 5
 }
