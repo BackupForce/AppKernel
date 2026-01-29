@@ -27,7 +27,7 @@ public sealed class DrawPlayTypeTests
     {
         PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
         Draw draw = CreateDraw(registry);
-        PrizeOption option = PrizeOption.Create("T4獎", 100m, null, "測試").Value;
+        PrizeOption option = PrizeOption.Create("T4獎", 100m, 100m, null, "測試").Value;
 
         Result result = draw.ConfigurePrizeOption(PlayTypeCodes.Basic, new PrizeTier("T4"), option, registry);
 
@@ -41,7 +41,7 @@ public sealed class DrawPlayTypeTests
         PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
         Draw draw = CreateDraw(registry);
         draw.EnablePlayTypes(new[] { PlayTypeCodes.Basic }, registry);
-        PrizeOption option = PrizeOption.Create("未知獎", 50m, null, null).Value;
+        PrizeOption option = PrizeOption.Create("未知獎", 50m, 50m, null, null).Value;
 
         Result result = draw.ConfigurePrizeOption(PlayTypeCodes.Basic, new PrizeTier("T99"), option, registry);
 
@@ -55,7 +55,7 @@ public sealed class DrawPlayTypeTests
         PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
         Draw draw = CreateDraw(registry);
         draw.EnablePlayTypes(new[] { PlayTypeCodes.Basic }, registry);
-        PrizeOption option = PrizeOption.Create("頭獎", 5000m, null, null).Value;
+        PrizeOption option = PrizeOption.Create("頭獎", 5000m, 5000m, null, null).Value;
         draw.ConfigurePrizeOption(PlayTypeCodes.Basic, new PrizeTier("T1"), option, registry);
 
         Result result = draw.EnsurePrizePoolCompleteForSettlement(registry);

@@ -162,7 +162,7 @@ public sealed class CreateDrawCommandHandlerTests
             now).Value;
 
         template.AddPlayType(PlayTypeCodes.Basic);
-        PrizeOption option = PrizeOption.Create("Template Prize", 10m, null, "snapshot").Value;
+        PrizeOption option = PrizeOption.Create("Template Prize", 10m, 10m, null, "snapshot").Value;
         template.UpsertPrizeTier(PlayTypeCodes.Basic, new PrizeTier("T1"), option);
         template.AddAllowedTicketTemplate(ticketTemplateId, now);
         return template;
