@@ -77,7 +77,7 @@ public sealed class CreateDrawCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         inserted.Should().NotBeNull();
         inserted!.EnabledPlayTypes.Should().ContainSingle().Which.Should().Be(PlayTypeCodes.Basic);
-        DrawPrizePoolItem? prizeItem = inserted.PrizePool
+        DrawPrizePoolItem? prizeItem = inserted.PrizePoolItems
             .FirstOrDefault(item => item.PlayTypeCode == PlayTypeCodes.Basic && item.Tier == new PrizeTier("T1"));
         prizeItem.Should().NotBeNull();
         prizeItem!.Option!.Name.Should().Be("Template Prize");

@@ -66,7 +66,7 @@ public sealed class DefaultTenantSeeder : IDataSeeder
 
         if (tenant is null)
         {
-            tenant = Tenant.Create(Guid.NewGuid(), code, name);
+            tenant = Tenant.Create(Guid.NewGuid(), code, name, "Asia/Taipei");
             await _db.Tenants.AddAsync(tenant);
             await _db.SaveChangesAsync();
 

@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260125030409_mdfyTicketA")]
-    partial class mdfyTicketA
+    [Migration("20260129060610_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -231,6 +231,169 @@ namespace Infrastructure.Migrations
                     b.ToTable("campaign_draws", "gaming");
                 });
 
+            modelBuilder.Entity("Domain.Gaming.DrawTemplates.DrawTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("GameCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("game_code");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_locked");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_draw_templates");
+
+                    b.HasIndex("TenantId", "GameCode", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_draw_templates_tenant_id_game_code_name");
+
+                    b.ToTable("draw_templates", "gaming");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.DrawTemplates.DrawTemplateAllowedTicketTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid>("TicketTemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ticket_template_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_draw_template_allowed_ticket_templates");
+
+                    b.HasIndex("TemplateId")
+                        .HasDatabaseName("ix_draw_template_allowed_ticket_templates_template_id");
+
+                    b.HasIndex("TenantId", "TemplateId", "TicketTemplateId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_draw_template_allowed_ticket_templates_tenant_id_template_i");
+
+                    b.ToTable("draw_template_allowed_ticket_templates", "gaming");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.DrawTemplates.DrawTemplatePlayType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("PlayTypeCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("play_type_code");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_draw_template_play_types");
+
+                    b.HasIndex("TemplateId")
+                        .HasDatabaseName("ix_draw_template_play_types_template_id");
+
+                    b.HasIndex("TenantId", "TemplateId", "PlayTypeCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_draw_template_play_types_tenant_id_template_id_play_type_co");
+
+                    b.ToTable("draw_template_play_types", "gaming");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.DrawTemplates.DrawTemplatePrizeTier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("PlayTypeCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("play_type_code");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("tier");
+
+                    b.HasKey("Id")
+                        .HasName("pk_draw_template_prize_tiers");
+
+                    b.HasIndex("TemplateId")
+                        .HasDatabaseName("ix_draw_template_prize_tiers_template_id");
+
+                    b.HasIndex("TenantId", "TemplateId", "PlayTypeCode", "Tier")
+                        .IsUnique()
+                        .HasDatabaseName("ix_draw_template_prize_tiers_tenant_id_template_id_play_type_c");
+
+                    b.ToTable("draw_template_prize_tiers", "gaming");
+                });
+
             modelBuilder.Entity("Domain.Gaming.Draws.Draw", b =>
                 {
                     b.Property<Guid>("Id")
@@ -255,6 +418,16 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("DrawAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("draw_at");
+
+                    b.Property<string>("DrawCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("draw_code");
+
+                    b.Property<DateTime?>("DrawnAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("settled_at");
 
                     b.Property<string>("GameCode")
                         .IsRequired()
@@ -297,6 +470,18 @@ namespace Infrastructure.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("server_seed_hash");
 
+                    b.Property<DateTime?>("SettledAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("settled_at_utc");
+
+                    b.Property<Guid?>("SourceTemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_template_id");
+
+                    b.Property<int?>("SourceTemplateVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("source_template_version");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer")
                         .HasColumnName("status");
@@ -319,6 +504,10 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("TenantId", "Status")
                         .HasDatabaseName("ix_draws_tenant_id_status");
+
+                    b.HasIndex("TenantId", "GameCode", "DrawCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_draws_tenant_id_game_code_draw_code");
 
                     b.ToTable("draws", "gaming");
                 });
@@ -401,10 +590,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("draw_id");
 
-                    b.Property<Guid?>("DrawId1")
-                        .HasColumnType("uuid")
-                        .HasColumnName("draw_id1");
-
                     b.Property<string>("PlayTypeCode")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -426,9 +611,6 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("DrawId")
                         .HasDatabaseName("ix_draw_prize_pool_items_draw_id");
-
-                    b.HasIndex("DrawId1")
-                        .HasDatabaseName("ix_draw_prize_pool_items_draw_id1");
 
                     b.HasIndex("TenantId", "DrawId", "PlayTypeCode", "Tier")
                         .IsUnique()
@@ -1745,6 +1927,34 @@ namespace Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Infrastructure.Gaming.DrawSequence", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("GameCode")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("game_code");
+
+                    b.Property<long>("NextValue")
+                        .HasColumnType("bigint")
+                        .HasColumnName("next_value");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("TenantId", "GameCode")
+                        .HasName("pk_draw_sequences");
+
+                    b.ToTable("draw_sequences", "gaming", t =>
+                        {
+                            t.HasCheckConstraint("ck_draw_sequences_next_value", "next_value >= 1");
+                        });
+                });
+
             modelBuilder.Entity("Infrastructure.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1821,6 +2031,81 @@ namespace Infrastructure.Migrations
                         .HasConstraintName("fk_campaign_draws_campaigns_campaign_id");
                 });
 
+            modelBuilder.Entity("Domain.Gaming.DrawTemplates.DrawTemplateAllowedTicketTemplate", b =>
+                {
+                    b.HasOne("Domain.Gaming.DrawTemplates.DrawTemplate", null)
+                        .WithMany("AllowedTicketTemplates")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_draw_template_allowed_ticket_templates_draw_templates_templ");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.DrawTemplates.DrawTemplatePlayType", b =>
+                {
+                    b.HasOne("Domain.Gaming.DrawTemplates.DrawTemplate", null)
+                        .WithMany("PlayTypes")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_draw_template_play_types_draw_templates_template_id");
+                });
+
+            modelBuilder.Entity("Domain.Gaming.DrawTemplates.DrawTemplatePrizeTier", b =>
+                {
+                    b.HasOne("Domain.Gaming.DrawTemplates.DrawTemplate", null)
+                        .WithMany("PrizeTiers")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_draw_template_prize_tiers_draw_templates_template_id");
+
+                    b.OwnsOne("Domain.Gaming.Shared.PrizeOption", "Option", b1 =>
+                        {
+                            b1.Property<Guid>("DrawTemplatePrizeTierId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<decimal>("Cost")
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("prize_cost_snapshot");
+
+                            b1.Property<string>("Description")
+                                .HasMaxLength(256)
+                                .HasColumnType("character varying(256)")
+                                .HasColumnName("prize_description_snapshot");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(128)
+                                .HasColumnType("character varying(128)")
+                                .HasColumnName("prize_name_snapshot");
+
+                            b1.Property<decimal>("PayoutAmount")
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("prize_payout_snapshot");
+
+                            b1.Property<Guid?>("PrizeId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("prize_id_snapshot");
+
+                            b1.Property<int?>("RedeemValidDays")
+                                .HasColumnType("integer")
+                                .HasColumnName("prize_redeem_valid_days_snapshot");
+
+                            b1.HasKey("DrawTemplatePrizeTierId");
+
+                            b1.ToTable("draw_template_prize_tiers", "gaming");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DrawTemplatePrizeTierId")
+                                .HasConstraintName("fk_draw_template_prize_tiers_draw_template_prize_tiers_id");
+                        });
+
+                    b.Navigation("Option")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Domain.Gaming.Draws.DrawEnabledPlayType", b =>
                 {
                     b.HasOne("Domain.Gaming.Draws.Draw", null)
@@ -1839,11 +2124,6 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_draw_prize_pool_items_draws_draw_id");
-
-                    b.HasOne("Domain.Gaming.Draws.Draw", null)
-                        .WithMany("PrizePool")
-                        .HasForeignKey("DrawId1")
-                        .HasConstraintName("fk_draw_prize_pool_items_draws_draw_id1");
 
                     b.OwnsOne("Domain.Gaming.Shared.PrizeOption", "Option", b1 =>
                         {
@@ -1865,6 +2145,10 @@ namespace Infrastructure.Migrations
                                 .HasMaxLength(128)
                                 .HasColumnType("character varying(128)")
                                 .HasColumnName("prize_name_snapshot");
+
+                            b1.Property<decimal>("PayoutAmount")
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("prize_payout_snapshot");
 
                             b1.Property<Guid?>("PrizeId")
                                 .HasColumnType("uuid")
@@ -2063,11 +2347,18 @@ namespace Infrastructure.Migrations
                     b.Navigation("Draws");
                 });
 
+            modelBuilder.Entity("Domain.Gaming.DrawTemplates.DrawTemplate", b =>
+                {
+                    b.Navigation("AllowedTicketTemplates");
+
+                    b.Navigation("PlayTypes");
+
+                    b.Navigation("PrizeTiers");
+                });
+
             modelBuilder.Entity("Domain.Gaming.Draws.Draw", b =>
                 {
                     b.Navigation("EnabledPlayTypeItems");
-
-                    b.Navigation("PrizePool");
 
                     b.Navigation("PrizePoolItems");
                 });

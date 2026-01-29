@@ -40,7 +40,7 @@ internal sealed class ValidateDrawPrizePoolQueryHandler(
             IPlayRule rule = registry.GetRule(draw.GameCode, playType);
             foreach (PrizeTier tier in rule.GetTiers())
             {
-                DrawPrizePoolItem? slot = draw.PrizePool.FirstOrDefault(item => item.PlayTypeCode == playType && item.Tier == tier);
+                DrawPrizePoolItem? slot = draw.PrizePoolItems.FirstOrDefault(item => item.PlayTypeCode == playType && item.Tier == tier);
                 if (slot is null || slot.Option is null)
                 {
                     missing.Add(new MissingPrizePoolSlotDto(playType.Value, tier.Value));

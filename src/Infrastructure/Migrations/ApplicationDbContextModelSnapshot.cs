@@ -587,10 +587,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("draw_id");
 
-                    b.Property<Guid?>("DrawId1")
-                        .HasColumnType("uuid")
-                        .HasColumnName("draw_id1");
-
                     b.Property<string>("PlayTypeCode")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -612,9 +608,6 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("DrawId")
                         .HasDatabaseName("ix_draw_prize_pool_items_draw_id");
-
-                    b.HasIndex("DrawId1")
-                        .HasDatabaseName("ix_draw_prize_pool_items_draw_id1");
 
                     b.HasIndex("TenantId", "DrawId", "PlayTypeCode", "Tier")
                         .IsUnique()
@@ -2129,11 +2122,6 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_draw_prize_pool_items_draws_draw_id");
 
-                    b.HasOne("Domain.Gaming.Draws.Draw", null)
-                        .WithMany("PrizePool")
-                        .HasForeignKey("DrawId1")
-                        .HasConstraintName("fk_draw_prize_pool_items_draws_draw_id1");
-
                     b.OwnsOne("Domain.Gaming.Shared.PrizeOption", "Option", b1 =>
                         {
                             b1.Property<Guid>("DrawPrizePoolItemId")
@@ -2368,8 +2356,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Gaming.Draws.Draw", b =>
                 {
                     b.Navigation("EnabledPlayTypeItems");
-
-                    b.Navigation("PrizePool");
 
                     b.Navigation("PrizePoolItems");
                 });

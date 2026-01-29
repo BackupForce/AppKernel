@@ -7,7 +7,7 @@ internal static class DrawPrizePoolMapper
 {
     internal static DrawPrizePoolDto ToDto(Draw draw)
     {
-        IReadOnlyCollection<DrawPrizePoolItemDto> items = draw.PrizePool
+        IReadOnlyCollection<DrawPrizePoolItemDto> items = draw.PrizePoolItems
             .Select(item => new DrawPrizePoolItemDto(
                 item.PlayTypeCode.Value,
                 item.Tier.Value,

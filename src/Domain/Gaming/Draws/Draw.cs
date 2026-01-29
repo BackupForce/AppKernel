@@ -177,11 +177,6 @@ public sealed class Draw : Entity
     /// <summary>
     /// 本期獎項配置（玩法 + 獎級）。
     /// </summary>
-    public IReadOnlyCollection<DrawPrizePoolItem> PrizePool => _prizePool;
-
-    /// <summary>
-    /// 供 EF 追蹤的獎項配置清單。
-    /// </summary>
     public IReadOnlyCollection<DrawPrizePoolItem> PrizePoolItems => _prizePool;
 
     /// <summary>
