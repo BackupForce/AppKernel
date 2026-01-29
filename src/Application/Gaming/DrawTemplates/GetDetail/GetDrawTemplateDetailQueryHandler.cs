@@ -31,6 +31,7 @@ internal sealed class GetDrawTemplateDetailQueryHandler(
         Guid? PrizeId,
         string PrizeName,
         decimal PrizeCost,
+        decimal PrizePayout,
         int? PrizeRedeemValidDays,
         string? PrizeDescription);
 
@@ -70,6 +71,7 @@ internal sealed class GetDrawTemplateDetailQueryHandler(
                 t.prize_id_snapshot AS PrizeId,
                 t.prize_name_snapshot AS PrizeName,
                 t.prize_cost_snapshot AS PrizeCost,
+                t.prize_payout_snapshot AS PrizePayout,
                 t.prize_redeem_valid_days_snapshot AS PrizeRedeemValidDays,
                 t.prize_description_snapshot AS PrizeDescription
             FROM gaming.draw_template_prize_tiers t
@@ -139,6 +141,7 @@ internal sealed class GetDrawTemplateDetailQueryHandler(
                     row.PrizeId,
                     row.PrizeName,
                     row.PrizeCost,
+                    row.PrizePayout,
                     row.PrizeRedeemValidDays,
                     row.PrizeDescription)));
         }

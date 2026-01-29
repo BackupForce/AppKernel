@@ -24,6 +24,7 @@ internal static class DrawPrizePoolMapper
             option.PrizeId,
             option.Name,
             option.Cost,
+            option.PayoutAmount,
             option.RedeemValidDays,
             option.Description);
     }

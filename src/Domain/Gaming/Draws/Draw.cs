@@ -129,9 +129,9 @@ public sealed class Draw : Entity
     public string? ManualCloseReason { get; private set; }
 
     /// <summary>
-    /// 實際結算時間（UTC）。
+    /// 實際開獎時間（UTC）。
     /// </summary>
-    public DateTime? SettledAt { get; private set; }
+    public DateTime? DrawnAt { get; private set; }
 
     /// <summary>
     /// 兌獎有效天數（若 PrizeRule 未指定，則以此為準）。
@@ -424,7 +424,7 @@ public sealed class Draw : Entity
     }
 
     /// <summary>
-    /// 執行開獎並寫入 proof，狀態轉為 Settled。
+    /// 執行開獎並寫入中獎號碼與 proof。
     /// </summary>
     /// <remarks>
     /// proof 包含 ServerSeed、Algorithm 與 DerivedInput，讓外部可重算中獎號碼。
@@ -440,7 +440,7 @@ public sealed class Draw : Entity
         ServerSeed = serverSeed;
         Algorithm = algorithm;
         DerivedInput = derivedInput;
-        SettledAt = utcNow;
+        DrawnAt = utcNow;
         IsManuallyClosed = false;
         ManualCloseAt = null;
         ManualCloseReason = null;
@@ -464,7 +464,7 @@ public sealed class Draw : Entity
     /// </summary>
     public Result Reopen(DateTime utcNow)
     {
-        if (SettledAt.HasValue)
+        if (DrawnAt.HasValue)
         {
             return Result.Failure(GamingErrors.DrawAlreadySettled);
         }
@@ -492,7 +492,7 @@ public sealed class Draw : Entity
     public bool IsEffectivelyClosed(DateTime utcNow)
     {
         DrawStatus status = GetEffectiveStatus(utcNow);
-        return status == DrawStatus.SalesClosed || status == DrawStatus.Settled;
+        return status == DrawStatus.SalesClosed || status == DrawStatus.Drawn;
     }
 
     /// <summary>
@@ -508,9 +508,9 @@ public sealed class Draw : Entity
     /// </summary>
     public DrawStatus GetEffectiveStatus(DateTime utcNow)
     {
-        if (SettledAt.HasValue)
+        if (DrawnAt.HasValue || !string.IsNullOrWhiteSpace(WinningNumbersRaw))
         {
-            return DrawStatus.Settled;
+            return DrawStatus.Drawn;
         }
 
         if (IsManuallyClosed)

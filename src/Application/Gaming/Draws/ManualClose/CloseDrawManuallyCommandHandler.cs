@@ -40,7 +40,7 @@ internal sealed class CloseDrawManuallyCommandHandler(
 
         DateTime now = dateTimeProvider.UtcNow;
         DrawStatus status = draw.GetEffectiveStatus(now);
-        if (status == DrawStatus.Settled || !string.IsNullOrWhiteSpace(draw.WinningNumbersRaw))
+        if (status == DrawStatus.Drawn || !string.IsNullOrWhiteSpace(draw.WinningNumbersRaw))
         {
             return Result.Failure(GamingErrors.DrawAlreadyExecuted);
         }

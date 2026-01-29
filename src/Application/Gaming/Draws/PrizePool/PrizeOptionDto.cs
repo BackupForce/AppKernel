@@ -4,5 +4,6 @@ public sealed record PrizeOptionDto(
     Guid? PrizeId,
     string Name,
     decimal Cost,
+    decimal PayoutAmount,
     int? RedeemValidDays,
     string? Description);

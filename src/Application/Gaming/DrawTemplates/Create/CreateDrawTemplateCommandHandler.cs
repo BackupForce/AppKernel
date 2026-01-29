@@ -111,6 +111,7 @@ internal sealed class CreateDrawTemplateCommandHandler(
                 Result<PrizeOption> optionResult = PrizeOption.Create(
                     tierInput.Option.Name,
                     tierInput.Option.Cost,
+                    tierInput.Option.PayoutAmount,
                     tierInput.Option.RedeemValidDays,
                     tierInput.Option.Description,
                     tierInput.Option.PrizeId);

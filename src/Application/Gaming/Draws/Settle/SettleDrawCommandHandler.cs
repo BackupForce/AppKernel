@@ -47,7 +47,7 @@ internal sealed class SettleDrawCommandHandler(
 
         DateTime now = dateTimeProvider.UtcNow;
         DrawStatus status = draw.GetEffectiveStatus(now);
-        if (status != DrawStatus.Settled)
+        if (status != DrawStatus.Drawn)
         {
             return Result.Failure(GamingErrors.DrawNotSettled);
         }
@@ -82,18 +82,41 @@ internal sealed class SettleDrawCommandHandler(
             ticketIds,
             cancellationToken);
         Dictionary<Guid, Ticket> ticketMap = tickets.ToDictionary(ticket => ticket.Id, ticket => ticket);
+        IReadOnlyCollection<TicketLineResult> existingResults = await ticketLineResultRepository.GetByDrawAndTicketsAsync(
+            tenantContext.TenantId,
+            draw.Id,
+            ticketIds,
+            cancellationToken);
+        HashSet<(Guid TicketId, int LineIndex)> existingKeys = existingResults
+            .Select(result => (result.TicketId, result.LineIndex))
+            .ToHashSet();
 
         foreach (TicketDraw ticketDraw in ticketDraws)
         {
             if (!ticketMap.TryGetValue(ticketDraw.TicketId, out Ticket? ticket))
             {
+                ticketDraw.MarkInvalid(now);
+                ticketDrawRepository.Update(ticketDraw);
                 continue;
             }
 
-            TicketLine? line = ticket.Lines.FirstOrDefault(item => item.LineIndex == 0);
+            if (ticket.SubmissionStatus != TicketSubmissionStatus.Submitted)
+            {
+                ticketDraw.MarkInvalid(now);
+                ticketDrawRepository.Update(ticketDraw);
+                continue;
+            }
+
+            if (ticket.Lines.Count > 1)
+            {
+                // 目前僅支援單注結算，避免多注資料被誤當成單注處理。
+                return Result.Failure(GamingErrors.TicketLinesExceedLimit);
+            }
+
+            TicketLine? line = ticket.Lines.FirstOrDefault();
             if (line is null)
             {
-                ticketDraw.MarkSettled(now);
+                ticketDraw.MarkInvalid(now);
                 ticketDrawRepository.Update(ticketDraw);
                 continue;
             }
@@ -101,7 +124,7 @@ internal sealed class SettleDrawCommandHandler(
             LotteryNumbers? lineNumbers = line.ParseNumbers();
             if (lineNumbers is null)
             {
-                ticketDraw.MarkSettled(now);
+                ticketDraw.MarkInvalid(now);
                 ticketDrawRepository.Update(ticketDraw);
                 continue;
             }
@@ -109,21 +132,16 @@ internal sealed class SettleDrawCommandHandler(
             PlayTypeCode? playTypeCode = line.PlayTypeCode ?? ticket.PlayTypeCode;
             if (!playTypeCode.HasValue)
             {
-                return Result.Failure(GamingErrors.PlayTypeCodeRequired);
+                ticketDraw.MarkInvalid(now);
+                ticketDrawRepository.Update(ticketDraw);
+                continue;
             }
 
             IPlayRule rule = registry.GetRule(draw.GameCode, playTypeCode.Value);
             PrizeTier? tier = rule.Evaluate(lineNumbers, winningNumbers);
             if (tier is not null)
             {
-                bool exists = await ticketLineResultRepository.ExistsAsync(
-                    tenantContext.TenantId,
-                    ticket.Id,
-                    draw.Id,
-                    line.LineIndex,
-                    cancellationToken);
-
-                if (!exists)
+                if (!existingKeys.Contains((ticket.Id, line.LineIndex)))
                 {
                     PrizeOption? option = draw.FindPrizeOption(playTypeCode.Value, tier.Value);
                     if (option is null)
@@ -137,10 +155,11 @@ internal sealed class SettleDrawCommandHandler(
                         draw.Id,
                         line.LineIndex,
                         tier.Value,
-                        option.Cost,
+                        option.PayoutAmount,
                         now);
 
                     ticketLineResultRepository.Insert(result);
+                    existingKeys.Add((ticket.Id, line.LineIndex));
                 }
             }
 

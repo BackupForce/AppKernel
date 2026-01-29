@@ -22,6 +22,25 @@ internal sealed class TicketLineResultRepository(ApplicationDbContext context) :
             cancellationToken);
     }
 
+    public async Task<IReadOnlyCollection<TicketLineResult>> GetByDrawAndTicketsAsync(
+        Guid tenantId,
+        Guid drawId,
+        IReadOnlyCollection<Guid> ticketIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (ticketIds.Count == 0)
+        {
+            return Array.Empty<TicketLineResult>();
+        }
+
+        return await context.TicketLineResults
+            .AsNoTracking()
+            .Where(result => result.TenantId == tenantId
+                && result.DrawId == drawId
+                && ticketIds.Contains(result.TicketId))
+            .ToListAsync(cancellationToken);
+    }
+
     public void Insert(TicketLineResult result)
     {
         context.TicketLineResults.Add(result);

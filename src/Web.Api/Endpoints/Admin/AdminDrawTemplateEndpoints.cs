@@ -42,6 +42,7 @@ public sealed class AdminDrawTemplateEndpoints : IEndpoint
                                     tier.Option.PrizeId,
                                     tier.Option.Name,
                                     tier.Option.Cost,
+                                    tier.Option.PayoutAmount,
                                     tier.Option.RedeemValidDays,
                                     tier.Option.Description))).ToList())).ToList(),
                         request.AllowedTicketTemplateIds);
@@ -71,6 +72,7 @@ public sealed class AdminDrawTemplateEndpoints : IEndpoint
                                     tier.Option.PrizeId,
                                     tier.Option.Name,
                                     tier.Option.Cost,
+                                    tier.Option.PayoutAmount,
                                     tier.Option.RedeemValidDays,
                                     tier.Option.Description))).ToList())).ToList(),
                         request.AllowedTicketTemplateIds);
