@@ -129,7 +129,7 @@ public static class GamingErrors
 
     public static readonly Error DrawNotSettled = Error.Validation(
         "Gaming.DrawNotSettled",
-        "期數尚未開獎。");
+        "Draw 尚未開獎，無法結算。");
 
     public static readonly Error DrawRedeemValidDaysInvalid = Error.Validation(
         "Gaming.DrawRedeemValidDaysInvalid",
@@ -150,6 +150,10 @@ public static class GamingErrors
     public static readonly Error PrizeCostInvalid = Error.Validation(
         "Gaming.PrizeCostInvalid",
         "獎品成本不正確。");
+
+    public static readonly Error PrizePayoutInvalid = Error.Validation(
+        "Gaming.PrizePayoutInvalid",
+        "獎項派彩金額不正確。");
 
     public static readonly Error PrizeRedeemValidDaysInvalid = Error.Validation(
         "Gaming.PrizeRedeemValidDaysInvalid",

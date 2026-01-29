@@ -47,7 +47,7 @@ internal sealed class GetOpenDrawsQueryHandler(
                     d.is_manually_closed,
                     CASE
                         WHEN d.status = 4 THEN 'Cancelled'
-                        WHEN d.settled_at IS NOT NULL THEN 'Settled'
+                        WHEN d.settled_at IS NOT NULL THEN 'Drawn'
                         WHEN d.is_manually_closed = TRUE THEN 'SalesClosed'
                         WHEN @Now < d.sales_open_at THEN 'Scheduled'
                         WHEN @Now >= d.sales_open_at AND @Now < d.sales_close_at THEN 'SalesOpen'
