@@ -184,7 +184,7 @@ internal sealed class TicketBetSubmissionService(
             ticket.SubmittedAtUtc ?? nowUtc,
             ticket.SubmittedByUserId ?? Guid.Empty,
             playTypeResult.Value.Value,
-            numbersResult.Value.Numbers,
+            numbersResult.Value.Numbers.ToArray(),
             clientReference,
             note);
     }

@@ -18,7 +18,7 @@ internal sealed class SubmitTicketNumbersCommandHandler(
             tenantContext.TenantId,
             request.TicketId,
             request.PlayTypeCode,
-            request.Numbers,
+            request.Numbers.ToArray(),
             userContext.UserId,
             dateTimeProvider.UtcNow,
             null,

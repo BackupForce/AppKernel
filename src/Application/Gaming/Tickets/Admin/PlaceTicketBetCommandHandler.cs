@@ -6,7 +6,10 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Time;
 using Application.Gaming.Tickets.Submission;
+using Domain.Gaming.Catalog;
 using Domain.Gaming.Repositories;
+using Domain.Gaming.Shared;
+using Domain.Gaming.Tickets;
 using SharedKernel;
 
 namespace Application.Gaming.Tickets.Admin;
@@ -59,7 +62,7 @@ internal sealed class PlaceTicketBetCommandHandler(
             tenantContext.TenantId,
             request.TicketId,
             request.PlayTypeCode,
-            request.Numbers,
+            request.Numbers.ToArray(),
             userContext.UserId,
             dateTimeProvider.UtcNow,
             request.ClientReference,
