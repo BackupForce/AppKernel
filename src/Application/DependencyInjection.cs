@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Behaviors;
 using Application.Abstractions.Time;
+using Application.Gaming.Tickets.Submission;
 using Application.Time;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.AddSingleton<Authorization.PermissionUiCatalogProvider>();
         services.AddSingleton<Authorization.PermissionSelectionNormalizer>();
         services.AddSingleton<IUtcRangeCalculator, UtcRangeCalculator>();
+        services.AddScoped<ITicketBetSubmissionService, TicketBetSubmissionService>();
 
         return services;
     }
