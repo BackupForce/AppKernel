@@ -5,6 +5,7 @@ using Domain.Members;
 using Domain.Security;
 using Domain.Users;
 using Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
 
@@ -32,6 +33,8 @@ internal sealed class LineLoginPersistenceService(
         Guid tenantId,
         string lineUserId,
         string displayName,
+        string? pictureUrl,
+        string? email,
         string? userAgent,
         string? ip,
         string? deviceId,
@@ -68,6 +71,14 @@ internal sealed class LineLoginPersistenceService(
                 isNewMember = true;
             }
         }
+
+        await SyncLoginBindingProfileAsync(
+            tenantId,
+            lineUserId,
+            displayName,
+            pictureUrl,
+            email,
+            cancellationToken);
 
         LineLoginPersistenceResult result = await CreateSessionAsync(
             tenantId,
@@ -154,6 +165,24 @@ internal sealed class LineLoginPersistenceService(
         }
 
         return new LineLoginPersistenceResult(user, member, session, refreshTokenPlain, utcNow);
+    }
+
+    private async Task SyncLoginBindingProfileAsync(
+        Guid tenantId,
+        string lineUserId,
+        string? displayName,
+        string? pictureUrl,
+        string? email,
+        CancellationToken cancellationToken)
+    {
+        string normalizedLineUserId = LoginBinding.Normalize(LoginProvider.Line, lineUserId);
+        LoginBinding? binding = await dbContext.LoginBindings.FirstOrDefaultAsync(
+            b => b.TenantId == tenantId
+                && b.Provider == LoginProvider.Line
+                && b.NormalizedProviderKey == normalizedLineUserId,
+            cancellationToken);
+
+        binding?.SyncProfile(displayName, pictureUrl, email);
     }
 
     private async Task<MemberLoginCreation> CreateMemberUserAsync(
