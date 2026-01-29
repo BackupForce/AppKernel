@@ -41,18 +41,24 @@ public sealed class AdminMemberProfileEndpoints : IEndpoint
                 "/members/{memberId:guid}/profile",
                 async (Guid memberId, UpsertMemberProfileRequest request, ISender sender, CancellationToken ct) =>
                 {
+                    string? realName = string.IsNullOrWhiteSpace(request.RealName) ? null : request.RealName.Trim();
+                    string? phoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
                     Gender gender = (Gender)request.Gender;
                     UpsertMemberProfileCommand command = new UpsertMemberProfileCommand(
                         memberId,
-                        request.RealName,
+                        realName,
                         gender,
-                        request.PhoneNumber,
+                        phoneNumber,
                         request.PhoneVerified);
 
-                    return await UseCaseInvoker.Send(command, sender, ct);
+                    return await UseCaseInvoker.Send<UpsertMemberProfileCommand, MemberProfileDto>(
+                        command,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
                 })
             .RequireAuthorization(Permission.Members.Update.Name)
-            .Produces(StatusCodes.Status200OK)
+            .Produces<MemberProfileDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithName("AdminUpsertMemberProfile");
