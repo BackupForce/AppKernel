@@ -1,3 +1,4 @@
+using Application.Abstractions.Authorization;
 using Application.Members.Addresses;
 using Asp.Versioning;
 using Domain.Security;

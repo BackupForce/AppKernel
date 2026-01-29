@@ -10,7 +10,7 @@ public interface ILineLoginPersistenceService
         Guid tenantId,
         string lineUserId,
         string displayName,
-        string? pictureUrl,
+        Uri? pictureUrl,
         string? email,
         string? userAgent,
         string? ip,

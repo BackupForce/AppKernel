@@ -21,7 +21,7 @@ internal sealed class UpsertMemberProfileCommandHandler(
             return Result.Failure(MemberErrors.MemberNotFound);
         }
 
-        if (!Enum.IsDefined(typeof(Gender), request.Gender))
+        if (!Enum.IsDefined(request.Gender))
         {
             return Result.Failure(MemberErrors.InvalidGender);
         }

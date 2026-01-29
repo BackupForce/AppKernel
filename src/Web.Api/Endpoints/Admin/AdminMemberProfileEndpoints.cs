@@ -1,3 +1,4 @@
+using Application.Abstractions.Authorization;
 using Application.Members.Profiles;
 using Asp.Versioning;
 using Domain.Members;

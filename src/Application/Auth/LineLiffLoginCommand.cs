@@ -5,7 +5,7 @@ namespace Application.Auth;
 public sealed record LineLiffLoginCommand(
     string AccessToken,
     string? DisplayName,
-    string? PictureUrl,
+    Uri? PictureUrl,
     string? Email,
     string? DeviceId,
     string? UserAgent,

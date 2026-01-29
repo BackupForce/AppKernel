@@ -23,10 +23,19 @@ public class LineLiffLogin : IEndpoint
             string? userAgent = httpContext.Request.Headers.UserAgent.ToString();
             string? ip = httpContext.Connection.RemoteIpAddress?.ToString();
 
+            Uri? pictureUri = null;
+
+
+            if (!string.IsNullOrWhiteSpace(request.PictureUrl) &&
+            Uri.TryCreate(request.PictureUrl, UriKind.Absolute, out Uri? parsed))
+            {
+                pictureUri = parsed;
+            }
+
             LineLiffLoginCommand command = new LineLiffLoginCommand(
                 request.AccessToken,
                 request.DisplayName,
-                request.PictureUrl,
+                pictureUri,
                 request.Email,
                 request.DeviceId,
                 userAgent,

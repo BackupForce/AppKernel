@@ -13,7 +13,7 @@ public sealed class LoginBinding : Entity
         string normalizedProviderKey,
         DateTime createdAtUtc,
         string? displayName,
-        string? pictureUrl,
+        Uri? pictureUrl,
         string? email)
         : base(id)
     {
@@ -46,7 +46,7 @@ public sealed class LoginBinding : Entity
 
     public string? DisplayName { get; private set; }
 
-    public string? PictureUrl { get; private set; }
+    public Uri? PictureUrl { get; private set; }
 
     public string? Email { get; private set; }
 
@@ -95,10 +95,18 @@ public sealed class LoginBinding : Entity
         TenantId = tenantId;
     }
 
-    public void SyncProfile(string? displayName, string? pictureUrl, string? email)
+    public void SyncProfile(string? displayName, Uri? pictureUrl, string? email)
     {
-        DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
-        PictureUrl = string.IsNullOrWhiteSpace(pictureUrl) ? null : pictureUrl.Trim();
-        Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+        DisplayName = string.IsNullOrWhiteSpace(displayName)
+        ? null
+        : displayName.Trim();
+
+
+        PictureUrl = pictureUrl;
+
+
+        Email = string.IsNullOrWhiteSpace(email)
+        ? null
+        : email.Trim();
     }
 }

@@ -33,7 +33,7 @@ internal sealed class LineLoginPersistenceService(
         Guid tenantId,
         string lineUserId,
         string displayName,
-        string? pictureUrl,
+        Uri? pictureUrl,
         string? email,
         string? userAgent,
         string? ip,
@@ -171,7 +171,7 @@ internal sealed class LineLoginPersistenceService(
         Guid tenantId,
         string lineUserId,
         string? displayName,
-        string? pictureUrl,
+        Uri? pictureUrl,
         string? email,
         CancellationToken cancellationToken)
     {

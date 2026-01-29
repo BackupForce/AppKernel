@@ -39,8 +39,11 @@ internal sealed class LoginBindingConfiguration : IEntityTypeConfiguration<Login
         builder.Property(binding => binding.DisplayName)
             .HasColumnName("display_name");
 
-        builder.Property(binding => binding.PictureUrl)
-            .HasColumnName("picture_url");
+        builder.Property(x => x.PictureUrl)
+            .HasConversion(
+            uri => uri == null ? null : uri.ToString(),
+            value => value == null ? null : new Uri(value, UriKind.Absolute))
+            .HasMaxLength(2048);
 
         builder.Property(binding => binding.Email)
             .HasColumnName("email");

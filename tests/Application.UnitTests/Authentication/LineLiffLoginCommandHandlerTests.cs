@@ -42,6 +42,8 @@ public class LineLiffLoginCommandHandlerTests
                 tenantId,
                 "line-user",
                 "Line",
+                null,
+                Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -73,7 +75,7 @@ public class LineLiffLoginCommandHandlerTests
             Substitute.For<Microsoft.Extensions.Logging.ILogger<LineLiffLoginCommandHandler>>());
 
         Result<LineLoginResponse> result = await handler.Handle(
-            new LineLiffLoginCommand("token", null, null, null, null),
+            new LineLiffLoginCommand("token", null, null, null, null, null, null),
             default);
 
         result.IsSuccess.Should().BeTrue();
@@ -102,6 +104,8 @@ public class LineLiffLoginCommandHandlerTests
                 tenantId,
                 "line-user",
                 "Line",
+                null,
+                Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -131,7 +135,7 @@ public class LineLiffLoginCommandHandlerTests
             Substitute.For<Microsoft.Extensions.Logging.ILogger<LineLiffLoginCommandHandler>>());
 
         Result<LineLoginResponse> result = await handler.Handle(
-            new LineLiffLoginCommand("token", null, null, null, null),
+            new LineLiffLoginCommand("token", null, null, null, null, null, null),
             default);
 
         result.IsSuccess.Should().BeTrue();
@@ -159,7 +163,7 @@ public class LineLiffLoginCommandHandlerTests
             Substitute.For<Microsoft.Extensions.Logging.ILogger<LineLiffLoginCommandHandler>>());
 
         Result<LineLoginResponse> result = await handler.Handle(
-            new LineLiffLoginCommand("token", null, null, null, null),
+            new LineLiffLoginCommand("token", null, null, null, null, null, null),
             default);
 
         result.IsFailure.Should().BeTrue();
