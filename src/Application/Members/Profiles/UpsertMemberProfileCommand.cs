@@ -8,4 +8,4 @@ public sealed record UpsertMemberProfileCommand(
     string? RealName,
     Gender Gender,
     string? PhoneNumber,
-    bool PhoneVerified) : ICommand;
+    bool PhoneVerified) : ICommand<MemberProfileDto>;
