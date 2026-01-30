@@ -3,6 +3,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Time;
 using Application.Gaming.Tickets.Admin;
+using Application.Gaming.Tickets.Services;
 using Domain.Gaming.Catalog;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
@@ -48,12 +49,13 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
         tenantContext.TenantId.Returns(tenantId);
         userContext.UserId.Returns(Guid.NewGuid());
 
+        TicketIssuanceService ticketIssuanceService = new(ticketRepository, ticketDrawRepository);
+
         IssueMemberTicketsCommandHandler handler = new(
             drawRepository,
-            ticketRepository,
-            ticketDrawRepository,
             ticketIdempotencyRepository,
             memberRepository,
+            ticketIssuanceService,
             unitOfWork,
             dateTimeProvider,
             tenantContext,
@@ -114,12 +116,13 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
             .Returns(record);
         tenantContext.TenantId.Returns(tenantId);
 
+        TicketIssuanceService ticketIssuanceService = new(ticketRepository, ticketDrawRepository);
+
         IssueMemberTicketsCommandHandler handler = new(
             drawRepository,
-            ticketRepository,
-            ticketDrawRepository,
             ticketIdempotencyRepository,
             memberRepository,
+            ticketIssuanceService,
             unitOfWork,
             dateTimeProvider,
             tenantContext,

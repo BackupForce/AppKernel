@@ -5,6 +5,7 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Time;
+using Application.Gaming.Tickets.Services;
 using Domain.Gaming.Catalog;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
@@ -17,10 +18,9 @@ namespace Application.Gaming.Tickets.Admin;
 
 internal sealed class IssueMemberTicketsCommandHandler(
     IDrawRepository drawRepository,
-    ITicketRepository ticketRepository,
-    ITicketDrawRepository ticketDrawRepository,
     ITicketIdempotencyRepository ticketIdempotencyRepository,
     IMemberRepository memberRepository,
+    TicketIssuanceService ticketIssuanceService,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
@@ -98,39 +98,30 @@ internal sealed class IssueMemberTicketsCommandHandler(
             return Result.Failure<IssueMemberTicketsResult>(GamingErrors.TicketIssueQuantityInvalid);
         }
 
-        List<Ticket> tickets = new();
-        List<TicketDraw> ticketDraws = new();
-        for (int index = 0; index < request.Quantity; index++)
-        {
-            Ticket ticket = Ticket.Create(
-                tenantContext.TenantId,
-                draw.GameCode,
-                member.Id,
-                null,
-                null,
-                draw.Id,
-                null,
-                null,
-                now,
-                IssuedByType.Backoffice,
-                userContext.UserId,
-                request.Reason,
-                request.Note,
-                now);
+        TicketIssuanceRequest issuanceRequest = new(
+            tenantContext.TenantId,
+            draw.GameCode,
+            member.Id,
+            null,
+            null,
+            draw.Id,
+            new[] { draw.Id },
+            IssuedByType.Backoffice,
+            userContext.UserId,
+            request.Reason,
+            request.Note,
+            now);
 
-            tickets.Add(ticket);
-            ticketDraws.Add(TicketDraw.Create(tenantContext.TenantId, ticket.Id, draw.Id, now));
+        Result<IReadOnlyCollection<Ticket>> issuanceResult = await ticketIssuanceService.IssueBulkSameDrawAsync(
+            issuanceRequest,
+            request.Quantity,
+            cancellationToken);
+        if (issuanceResult.IsFailure)
+        {
+            return Result.Failure<IssueMemberTicketsResult>(issuanceResult.Error);
         }
 
-        foreach (Ticket ticket in tickets)
-        {
-            ticketRepository.Insert(ticket);
-        }
-
-        foreach (TicketDraw ticketDraw in ticketDraws)
-        {
-            ticketDrawRepository.Insert(ticketDraw);
-        }
+        IReadOnlyCollection<Ticket> tickets = issuanceResult.Value;
 
         IssueMemberTicketsResult result = new IssueMemberTicketsResult(
             tickets.Select(ticket => new IssuedTicketDto(

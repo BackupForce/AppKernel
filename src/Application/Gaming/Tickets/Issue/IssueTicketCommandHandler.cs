@@ -3,11 +3,11 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Time;
+using Application.Gaming.Tickets.Services;
 using Domain.Gaming.Campaigns;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Shared;
-using Domain.Gaming.Tickets;
 using Domain.Gaming.TicketTemplates;
 using Domain.Members;
 using SharedKernel;
@@ -18,10 +18,9 @@ internal sealed class IssueTicketCommandHandler(
     ICampaignRepository campaignRepository,
     ICampaignDrawRepository campaignDrawRepository,
     IDrawRepository drawRepository,
-    ITicketRepository ticketRepository,
-    ITicketDrawRepository ticketDrawRepository,
     ITicketTemplateRepository ticketTemplateRepository,
     IMemberRepository memberRepository,
+    TicketIssuanceService ticketIssuanceService,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
@@ -122,33 +121,33 @@ internal sealed class IssueTicketCommandHandler(
             .Select(draw => draw.Id)
             .FirstOrDefault();
 
-        Ticket ticket = Ticket.Create(
+        TicketIssuanceRequest issuanceRequest = new(
             tenantContext.TenantId,
             campaign.GameCode,
             member.Id,
             campaign.Id,
             template?.Id,
             primaryDrawId,
-            null,
-            null,
-            now,
+            eligibleDraws.Select(draw => draw.Id).ToList(),
             IssuedByType.CustomerService,
             userContext.UserId,
             request.IssuedReason,
             null,
             now);
 
-        ticketRepository.Insert(ticket);
-
-        foreach (Draw draw in eligibleDraws)
+        Result<TicketIssuanceResult> issuanceResult = await ticketIssuanceService.IssueSingleAsync(
+            issuanceRequest,
+            cancellationToken);
+        if (issuanceResult.IsFailure)
         {
-            TicketDraw ticketDraw = TicketDraw.Create(tenantContext.TenantId, ticket.Id, draw.Id, now);
-            ticketDrawRepository.Insert(ticketDraw);
+            return Result.Failure<IssueTicketResult>(issuanceResult.Error);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        IssueTicketResult result = new IssueTicketResult(ticket.Id, eligibleDraws.Select(draw => draw.Id).ToList());
+        IssueTicketResult result = new IssueTicketResult(
+            issuanceResult.Value.Ticket.Id,
+            issuanceResult.Value.DrawIds.ToList());
         return result;
     }
 }
