@@ -4,7 +4,7 @@ using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Time;
 using Application.Gaming.Tickets.Services;
-using Domain.Gaming.Campaigns;
+using Domain.Gaming.DrawGroups;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Shared;
@@ -16,8 +16,8 @@ using SharedKernel;
 namespace Application.Gaming.Tickets.Issue;
 
 internal sealed class IssueTicketCommandHandler(
-    ICampaignRepository campaignRepository,
-    ICampaignDrawRepository campaignDrawRepository,
+    IDrawGroupRepository drawGroupRepository,
+    IDrawGroupDrawRepository drawGroupDrawRepository,
     IDrawRepository drawRepository,
     ITicketTemplateRepository ticketTemplateRepository,
     IMemberRepository memberRepository,
@@ -30,25 +30,25 @@ internal sealed class IssueTicketCommandHandler(
 {
     public async Task<Result<IssueTicketResult>> Handle(IssueTicketCommand request, CancellationToken cancellationToken)
     {
-        Campaign? campaign = await campaignRepository.GetByIdAsync(
+        DrawGroup? drawGroup = await drawGroupRepository.GetByIdAsync(
             tenantContext.TenantId,
-            request.CampaignId,
+            request.DrawGroupId,
             cancellationToken);
-        if (campaign is null)
+        if (drawGroup is null)
         {
-            return Result.Failure<IssueTicketResult>(GamingErrors.CampaignNotFound);
+            return Result.Failure<IssueTicketResult>(GamingErrors.DrawGroupNotFound);
         }
 
         DateTime now = dateTimeProvider.UtcNow;
-        if (campaign.Status != CampaignStatus.Active || now < campaign.GrantOpenAtUtc || now >= campaign.GrantCloseAtUtc)
+        if (drawGroup.Status != DrawGroupStatus.Active || now < drawGroup.GrantOpenAtUtc || now >= drawGroup.GrantCloseAtUtc)
         {
-            return Result.Failure<IssueTicketResult>(GamingErrors.CampaignInactive);
+            return Result.Failure<IssueTicketResult>(GamingErrors.DrawGroupInactive);
         }
 
         Result entitlementResult = await entitlementChecker.EnsurePlayEnabledAsync(
             tenantContext.TenantId,
-            campaign.GameCode,
-            campaign.PlayTypeCode,
+            drawGroup.GameCode,
+            drawGroup.PlayTypeCode,
             cancellationToken);
         if (entitlementResult.IsFailure)
         {
@@ -79,29 +79,29 @@ internal sealed class IssueTicketCommandHandler(
             }
         }
 
-        IReadOnlyCollection<CampaignDraw> campaignDraws = await campaignDrawRepository.GetByCampaignIdAsync(
+        IReadOnlyCollection<DrawGroupDraw> drawGroupDraws = await drawGroupDrawRepository.GetByDrawGroupIdAsync(
             tenantContext.TenantId,
-            campaign.Id,
+            drawGroup.Id,
             cancellationToken);
 
         List<Draw> eligibleDraws = new();
 
-        foreach (CampaignDraw campaignDraw in campaignDraws)
+        foreach (DrawGroupDraw drawGroupDraw in drawGroupDraws)
         {
-            Draw? draw = await drawRepository.GetByIdAsync(tenantContext.TenantId, campaignDraw.DrawId, cancellationToken);
+            Draw? draw = await drawRepository.GetByIdAsync(tenantContext.TenantId, drawGroupDraw.DrawId, cancellationToken);
             if (draw is null)
             {
                 continue;
             }
 
-            if (draw.GameCode != campaign.GameCode)
+            if (draw.GameCode != drawGroup.GameCode)
             {
                 continue;
             }
 
-            if (!draw.EnabledPlayTypes.Contains(campaign.PlayTypeCode))
+            if (!draw.EnabledPlayTypes.Contains(drawGroup.PlayTypeCode))
             {
-                return Result.Failure<IssueTicketResult>(GamingErrors.CampaignDrawPlayTypeNotEnabled);
+                return Result.Failure<IssueTicketResult>(GamingErrors.DrawGroupDrawPlayTypeNotEnabled);
             }
 
             if (!draw.IsWithinSalesWindow(now))
@@ -124,9 +124,9 @@ internal sealed class IssueTicketCommandHandler(
 
         TicketIssuanceRequest issuanceRequest = new(
             tenantContext.TenantId,
-            campaign.GameCode,
+            drawGroup.GameCode,
             member.Id,
-            campaign.Id,
+            drawGroup.Id,
             template?.Id,
             primaryDrawId,
             eligibleDraws.Select(draw => draw.Id).ToList(),

@@ -372,11 +372,12 @@
   ```json
   {
     "memberId": "guid",
-    "campaignId": "guid",
+    "drawGroupId": "guid",
     "ticketTemplateId": "guid|null",
     "issuedReason": "string|null"
   }
   ```
+- **相容欄位**：`campaignId` 仍可接受（短期相容）
 - **成功回應**
   ```json
   {
@@ -386,7 +387,7 @@
   ```
 - **描述**：客服/後台發券並回傳可參與期數。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L14-L49】【F:src/Application/Gaming/Tickets/Issue/IssueTicketCommandHandler.cs†L19-L168】
 
-### POST `/api/v1/tenants/{tenantId}/gaming/tickets/campaigns/{campaignId}/claim`
+### POST `/api/v1/tenants/{tenantId}/gaming/tickets/draw-groups/{drawGroupId}/claim`
 - **授權**：Member
 - **成功回應**
   ```json
@@ -395,7 +396,12 @@
     "drawIds": ["guid"]
   }
   ```
-- **描述**：會員領取活動票券，同活動僅可領取一次。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L51-L72】【F:src/Application/Gaming/Tickets/Claim/ClaimCampaignTicketCommandHandler.cs†L18-L154】
+- **描述**：會員領取期數群組票券，同群組僅可領取一次。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L51-L84】【F:src/Application/Gaming/Tickets/Claim/ClaimDrawGroupTicketCommandHandler.cs†L18-L154】
+
+### POST `/api/v1/tenants/{tenantId}/gaming/tickets/campaigns/{campaignId}/claim`
+- **授權**：Member
+- **成功回應**：同上
+- **描述**：舊路徑相容，將導向 DrawGroup 行為。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L85-L97】
 
 ### POST `/api/v1/tenants/{tenantId}/gaming/tickets/{ticketId}/submit`
 - **授權**：Member

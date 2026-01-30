@@ -19,7 +19,7 @@ public sealed class Ticket : Entity
         Guid tenantId,
         GameCode gameCode,
         Guid memberId,
-        Guid? campaignId,
+        Guid? drawGroupId,
         Guid? ticketTemplateId,
         Guid? drawId,
         decimal? priceSnapshot,
@@ -35,7 +35,7 @@ public sealed class Ticket : Entity
         GameCode = gameCode;
         PlayTypeCode = null;
         MemberId = memberId;
-        CampaignId = campaignId;
+        DrawGroupId = drawGroupId;
         TicketTemplateId = ticketTemplateId;
         DrawId = drawId;
         PriceSnapshot = priceSnapshot;
@@ -79,9 +79,9 @@ public sealed class Ticket : Entity
     public Guid MemberId { get; private set; }
 
     /// <summary>
-    /// 活動識別（若由活動發放）。
+    /// 期數群組識別（若由群組發放）。
     /// </summary>
-    public Guid? CampaignId { get; private set; }
+    public Guid? DrawGroupId { get; private set; }
 
     /// <summary>
     /// 票種模板識別，對應發放時選用的 TicketTemplate。
@@ -180,7 +180,7 @@ public sealed class Ticket : Entity
         Guid tenantId,
         GameCode gameCode,
         Guid memberId,
-        Guid? campaignId,
+        Guid? drawGroupId,
         Guid? ticketTemplateId,
         Guid? drawId,
         decimal? priceSnapshot,
@@ -197,7 +197,7 @@ public sealed class Ticket : Entity
             tenantId,
             gameCode,
             memberId,
-            campaignId,
+            drawGroupId,
             ticketTemplateId,
             drawId,
             priceSnapshot,

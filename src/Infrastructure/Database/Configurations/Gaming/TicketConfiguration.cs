@@ -27,7 +27,8 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
                 value => value == null ? null : new PlayTypeCode(value))
             .HasMaxLength(32);
         builder.Property(ticket => ticket.MemberId).IsRequired();
-        builder.Property(ticket => ticket.CampaignId);
+        builder.Property(ticket => ticket.DrawGroupId)
+            .HasColumnName("campaign_id");
         builder.Property(ticket => ticket.TicketTemplateId);
         builder.Property(ticket => ticket.PriceSnapshot).HasColumnType("decimal(18,2)");
         builder.Property(ticket => ticket.TotalCost);

@@ -8,7 +8,7 @@ internal sealed record TicketIssuanceRequest(
     Guid TenantId,
     GameCode GameCode,
     Guid MemberId,
-    Guid? CampaignId,
+    Guid? DrawGroupId,
     Guid? TicketTemplateId,
     Guid? PrimaryDrawId,
     IReadOnlyCollection<Guid> DrawIds,

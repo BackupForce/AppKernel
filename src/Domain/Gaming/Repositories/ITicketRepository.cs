@@ -21,10 +21,10 @@ public interface ITicketRepository
         DateTime? to,
         CancellationToken cancellationToken = default);
 
-    Task<bool> ExistsForCampaignAsync(
+    Task<bool> ExistsForDrawGroupAsync(
         Guid tenantId,
         Guid memberId,
-        Guid campaignId,
+        Guid drawGroupId,
         CancellationToken cancellationToken = default);
 
     Task<bool> TryMarkSubmittedAsync(
