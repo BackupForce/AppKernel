@@ -22,7 +22,7 @@ internal sealed class GetMyTicketsQueryHandler(
 {
     private sealed record TicketRow(
         Guid TicketId,
-        Guid? CampaignId,
+        Guid? DrawGroupId,
         string GameCode,
         string? PlayTypeCode,
         TicketSubmissionStatus SubmissionStatus,
@@ -63,7 +63,7 @@ internal sealed class GetMyTicketsQueryHandler(
         const string sql = """
             SELECT
                 t.id AS TicketId,
-                t.campaign_id AS CampaignId,
+                t.campaign_id AS DrawGroupId,
                 t.game_code AS GameCode,
                 -- TODO: add gaming.ticket_lines.play_type_code and backfill from tickets for historical records.
                 l.play_type_code AS PlayTypeCode,
@@ -111,7 +111,7 @@ internal sealed class GetMyTicketsQueryHandler(
             {
                 ticketMap[row.TicketId] = new TicketSummaryDto(
                     row.TicketId,
-                    row.CampaignId,
+                    row.DrawGroupId,
                     row.GameCode,
                     row.PlayTypeCode,
                     row.SubmissionStatus,

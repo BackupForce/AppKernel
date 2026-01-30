@@ -53,7 +53,7 @@ public sealed class GamingEndpoints : IEndpoint
             .WithTags("Gaming");
 
         Draws.GamingDrawEndpoints.Map(group);
-        Campaigns.GamingCampaignEndpoints.Map(group);
+        DrawGroups.GamingDrawGroupEndpoints.Map(group);
         Tickets.GamingTicketTemplateEndpoints.Map(group);
         Prizes.GamingPrizeEndpoints.Map(group);
         Entitlements.GamingEntitlementEndpoints.Map(group);

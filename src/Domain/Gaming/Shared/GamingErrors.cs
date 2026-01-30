@@ -347,60 +347,60 @@ public static class GamingErrors
         "Gaming.DrawReopenWindowInvalid",
         "解封時已不在可下注時間窗內。");
 
-    public static readonly Error CampaignNotFound = Error.NotFound(
-        "Gaming.CampaignNotFound",
+    public static readonly Error DrawGroupNotFound = Error.NotFound(
+        "Gaming.DrawGroupNotFound",
         "找不到活動。");
 
-    public static readonly Error CampaignNameRequired = Error.Validation(
-        "Gaming.CampaignNameRequired",
+    public static readonly Error DrawGroupNameRequired = Error.Validation(
+        "Gaming.DrawGroupNameRequired",
         "活動名稱不可為空白。");
 
-    public static readonly Error CampaignGrantWindowInvalid = Error.Validation(
-        "Gaming.CampaignGrantWindowInvalid",
+    public static readonly Error DrawGroupGrantWindowInvalid = Error.Validation(
+        "Gaming.DrawGroupGrantWindowInvalid",
         "活動發放時間窗設定不正確。");
 
-    public static readonly Error CampaignInactive = Error.Validation(
-        "Gaming.CampaignInactive",
+    public static readonly Error DrawGroupInactive = Error.Validation(
+        "Gaming.DrawGroupInactive",
         "活動尚未開放或已結束。");
 
-    public static readonly Error CampaignNotDraft = Error.Validation(
-        "Gaming.CampaignNotDraft",
+    public static readonly Error DrawGroupNotDraft = Error.Validation(
+        "Gaming.DrawGroupNotDraft",
         "活動狀態必須為草稿。");
 
-    public static readonly Error CampaignNotActive = Error.Validation(
-        "Gaming.CampaignNotActive",
+    public static readonly Error DrawGroupNotActive = Error.Validation(
+        "Gaming.DrawGroupNotActive",
         "活動狀態必須為啟用中。");
 
-    public static readonly Error CampaignDrawRequired = Error.Validation(
-        "Gaming.CampaignDrawRequired",
+    public static readonly Error DrawGroupDrawRequired = Error.Validation(
+        "Gaming.DrawGroupDrawRequired",
         "活動至少需要綁定一個期數。");
 
-    public static readonly Error CampaignDrawDuplicated = Error.Validation(
-        "Gaming.CampaignDrawDuplicated",
+    public static readonly Error DrawGroupDrawDuplicated = Error.Validation(
+        "Gaming.DrawGroupDrawDuplicated",
         "活動期數重複。");
 
-    public static readonly Error CampaignDrawNotFound = Error.Validation(
-        "Gaming.CampaignDrawNotFound",
+    public static readonly Error DrawGroupDrawNotFound = Error.Validation(
+        "Gaming.DrawGroupDrawNotFound",
         "活動期數不存在。");
 
-    public static readonly Error CampaignTenantMismatch = Error.Forbidden(
-        "Gaming.CampaignTenantMismatch",
+    public static readonly Error DrawGroupTenantMismatch = Error.Forbidden(
+        "Gaming.DrawGroupTenantMismatch",
         "租戶資訊不一致。");
 
-    public static readonly Error CampaignDrawGameCodeMismatch = Error.Validation(
-        "Gaming.CampaignDrawGameCodeMismatch",
+    public static readonly Error DrawGroupDrawGameCodeMismatch = Error.Validation(
+        "Gaming.DrawGroupDrawGameCodeMismatch",
         "活動遊戲與期數遊戲不一致。");
 
-    public static readonly Error CampaignStatusInvalid = Error.Validation(
-        "Gaming.CampaignStatusInvalid",
+    public static readonly Error DrawGroupStatusInvalid = Error.Validation(
+        "Gaming.DrawGroupStatusInvalid",
         "活動狀態不正確。");
 
-    public static readonly Error CampaignAlreadyClaimed = Error.Validation(
-        "Gaming.CampaignAlreadyClaimed",
+    public static readonly Error DrawGroupAlreadyClaimed = Error.Validation(
+        "Gaming.DrawGroupAlreadyClaimed",
         "活動已領取。");
 
-    public static readonly Error CampaignDrawPlayTypeNotEnabled = Error.Validation(
-        "Gaming.CampaignDrawPlayTypeNotEnabled",
+    public static readonly Error DrawGroupDrawPlayTypeNotEnabled = Error.Validation(
+        "Gaming.DrawGroupDrawPlayTypeNotEnabled",
         "期數尚未啟用指定玩法。");
 
     public static readonly Error PrizeAwardOptionNotFound = Error.Validation(

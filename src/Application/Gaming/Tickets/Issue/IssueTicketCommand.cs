@@ -4,6 +4,6 @@ namespace Application.Gaming.Tickets.Issue;
 
 public sealed record IssueTicketCommand(
     Guid MemberId,
-    Guid CampaignId,
+    Guid DrawGroupId,
     Guid? TicketTemplateId,
     string? IssuedReason) : ICommand<IssueTicketResult>;

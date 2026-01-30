@@ -26,7 +26,7 @@ internal static class GamingTicketEndpoints
                 {
                     IssueTicketCommand command = new IssueTicketCommand(
                         request.MemberId,
-                        request.CampaignId,
+                        request.ResolveDrawGroupId(),
                         request.TicketTemplateId,
                         request.IssuedReason);
                     return await UseCaseInvoker.Send<IssueTicketCommand, IssueTicketResult>(
@@ -41,11 +41,27 @@ internal static class GamingTicketEndpoints
             .WithName("IssueTicket");
 
         ticketGroup.MapPost(
+                "/draw-groups/{drawGroupId:guid}/claim",
+                async (Guid drawGroupId, ISender sender, CancellationToken ct) =>
+                {
+                    ClaimDrawGroupTicketCommand command = new ClaimDrawGroupTicketCommand(drawGroupId);
+                    return await UseCaseInvoker.Send<ClaimDrawGroupTicketCommand, IssueTicketResult>(
+                        command,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(AuthorizationPolicyNames.Member)
+            .Produces<IssueTicketResult>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("ClaimDrawGroupTicket");
+
+        ticketGroup.MapPost(
                 "/campaigns/{campaignId:guid}/claim",
                 async (Guid campaignId, ISender sender, CancellationToken ct) =>
                 {
-                    ClaimCampaignTicketCommand command = new ClaimCampaignTicketCommand(campaignId);
-                    return await UseCaseInvoker.Send<ClaimCampaignTicketCommand, IssueTicketResult>(
+                    ClaimDrawGroupTicketCommand command = new ClaimDrawGroupTicketCommand(campaignId);
+                    return await UseCaseInvoker.Send<ClaimDrawGroupTicketCommand, IssueTicketResult>(
                         command,
                         sender,
                         value => Results.Ok(value),

@@ -129,8 +129,8 @@ public static class DependencyInjection
         services.AddScoped<IDrawRepository, DrawRepository>();
         services.AddScoped<IDrawTemplateRepository, DrawTemplateRepository>();
         services.AddScoped<IDrawAllowedTicketTemplateRepository, DrawAllowedTicketTemplateRepository>();
-        services.AddScoped<ICampaignRepository, CampaignRepository>();
-        services.AddScoped<ICampaignDrawRepository, CampaignDrawRepository>();
+        services.AddScoped<IDrawGroupRepository, DrawGroupRepository>();
+        services.AddScoped<IDrawGroupDrawRepository, DrawGroupDrawRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<ITicketDrawRepository, TicketDrawRepository>();
         services.AddScoped<ITicketLineResultRepository, TicketLineResultRepository>();

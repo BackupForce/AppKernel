@@ -53,14 +53,14 @@ internal sealed class TicketRepository(ApplicationDbContext context) : ITicketRe
         return tickets;
     }
 
-    public async Task<bool> ExistsForCampaignAsync(
+    public async Task<bool> ExistsForDrawGroupAsync(
         Guid tenantId,
         Guid memberId,
-        Guid campaignId,
+        Guid drawGroupId,
         CancellationToken cancellationToken = default)
     {
         return await context.Tickets.AnyAsync(
-            ticket => ticket.TenantId == tenantId && ticket.MemberId == memberId && ticket.CampaignId == campaignId,
+            ticket => ticket.TenantId == tenantId && ticket.MemberId == memberId && ticket.DrawGroupId == drawGroupId,
             cancellationToken);
     }
 

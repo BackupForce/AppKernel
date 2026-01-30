@@ -7,6 +7,37 @@ namespace Infrastructure.Authorization;
 public sealed class PermissionEvaluator : IPermissionEvaluator
 {
     private readonly IGrantedPermissionProvider _grantedPermissionProvider;
+    private static readonly IReadOnlyDictionary<string, string[]> PermissionAliases = new Dictionary<string, string[]>
+    {
+        {
+            NormalizePermissionCode("gaming.drawgroup.read"),
+            new[] { NormalizePermissionCode("gaming.campaign.read") }
+        },
+        {
+            NormalizePermissionCode("gaming.drawgroup.create"),
+            new[] { NormalizePermissionCode("gaming.campaign.create") }
+        },
+        {
+            NormalizePermissionCode("gaming.drawgroup.update"),
+            new[] { NormalizePermissionCode("gaming.campaign.update") }
+        },
+        {
+            NormalizePermissionCode("gaming.drawgroup.activate"),
+            new[] { NormalizePermissionCode("gaming.campaign.activate") }
+        },
+        {
+            NormalizePermissionCode("gaming.drawgroup.end"),
+            new[] { NormalizePermissionCode("gaming.campaign.end") }
+        },
+        {
+            NormalizePermissionCode("gaming.drawgroup.delete"),
+            new[] { NormalizePermissionCode("gaming.campaign.delete") }
+        },
+        {
+            NormalizePermissionCode("gaming.drawgroup.draw.manage"),
+            new[] { NormalizePermissionCode("gaming.campaign.draw.manage") }
+        }
+    };
 
     public PermissionEvaluator(IGrantedPermissionProvider grantedPermissionProvider)
     {
@@ -58,6 +89,8 @@ public sealed class PermissionEvaluator : IPermissionEvaluator
             return false;
         }
 
+        IReadOnlyCollection<string> requiredCodes = GetRequiredCodes(requiredPermission);
+
         foreach (string grantedPermission in grantedPermissions)
         {
             if (string.IsNullOrWhiteSpace(grantedPermission))
@@ -66,7 +99,7 @@ public sealed class PermissionEvaluator : IPermissionEvaluator
             }
 
             string normalizedGranted = NormalizePermissionCode(grantedPermission);
-            if (normalizedGranted == requiredPermission)
+            if (requiredCodes.Contains(normalizedGranted))
             {
                 return true;
             }
@@ -74,7 +107,7 @@ public sealed class PermissionEvaluator : IPermissionEvaluator
             if (normalizedGranted.EndsWith(":*", StringComparison.Ordinal))
             {
                 string prefix = normalizedGranted[..^1];
-                if (requiredPermission.StartsWith(prefix, StringComparison.Ordinal))
+                if (requiredCodes.Any(code => code.StartsWith(prefix, StringComparison.Ordinal)))
                 {
                     return true;
                 }
@@ -82,6 +115,19 @@ public sealed class PermissionEvaluator : IPermissionEvaluator
         }
 
         return false;
+    }
+
+    private static IReadOnlyCollection<string> GetRequiredCodes(string requiredPermission)
+    {
+        if (PermissionAliases.TryGetValue(requiredPermission, out string[]? aliases))
+        {
+            string[] combined = new string[aliases.Length + 1];
+            combined[0] = requiredPermission;
+            Array.Copy(aliases, 0, combined, 1, aliases.Length);
+            return combined;
+        }
+
+        return new[] { requiredPermission };
     }
 
     private static string NormalizePermissionCode(string permissionCode)
