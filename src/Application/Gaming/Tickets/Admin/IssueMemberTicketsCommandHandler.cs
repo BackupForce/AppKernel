@@ -13,16 +13,16 @@ using Domain.Gaming.Shared;
 using Domain.Gaming.Tickets;
 using Domain.Members;
 using SharedKernel;
+using static Domain.Security.Permission;
 
 namespace Application.Gaming.Tickets.Admin;
 
 // 後台：發放票券給指定會員的 Command Handler
 internal sealed class IssueMemberTicketsCommandHandler(
     IDrawRepository drawRepository,
-    ITicketRepository ticketRepository,
-    ITicketDrawRepository ticketDrawRepository,
     ITicketIdempotencyRepository ticketIdempotencyRepository,
     IMemberRepository memberRepository,
+    TicketIssuanceService ticketIssuanceService,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
@@ -122,40 +122,30 @@ internal sealed class IssueMemberTicketsCommandHandler(
             return Result.Failure<IssueMemberTicketsResult>(GamingErrors.TicketIssueQuantityInvalid);
         }
 
-        List<Ticket> tickets = new();
-        List<TicketDraw> ticketDraws = new();
-        for (int index = 0; index < request.Quantity; index++)
-        {
-            Ticket ticket = Ticket.Create(
-                tenantContext.TenantId,
-                draw.GameCode,
-                member.Id,
-                null,
-                null,
-                draw.Id,
-                null,
-                null,
-                now,
-                IssuedByType.Backoffice,
-                userContext.UserId,
-                request.Reason,
-                request.Note,
-                now);
+        TicketIssuanceRequest issuanceRequest = new(
+             tenantContext.TenantId,
+             draw.GameCode,
+             member.Id,
+             null,
+             null,
+             draw.Id,
+             new[] { draw.Id },
+             IssuedByType.Backoffice,
+             userContext.UserId,
+             request.Reason,
+             request.Note,
+             now);
 
-            tickets.Add(ticket);
-            ticketDraws.Add(TicketDraw.Create(tenantContext.TenantId, ticket.Id, draw.Id, now));
-        }
-
-        foreach (Ticket ticket in tickets)
+        Result<IReadOnlyCollection<Ticket>> issuanceResult = await ticketIssuanceService.IssueBulkSameDrawAsync(
+            issuanceRequest,
+            request.Quantity,
+            cancellationToken);
+        if (issuanceResult.IsFailure)
         {
             return Result.Failure<IssueMemberTicketsResult>(issuanceResult.Error);
         }
 
-        foreach (TicketDraw ticketDraw in ticketDraws)
-        {
-            ticketDrawRepository.Insert(ticketDraw);
-        }
-
+        IReadOnlyCollection<Ticket> tickets = issuanceResult.Value;
         // 14) 組合回傳結果 DTO（後台用狀態字串 + 關鍵欄位）
         IssueMemberTicketsResult result = new IssueMemberTicketsResult(
             tickets.Select(ticket => new IssuedTicketDto(

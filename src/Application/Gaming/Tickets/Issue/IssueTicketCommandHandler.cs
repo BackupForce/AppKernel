@@ -8,6 +8,7 @@ using Domain.Gaming.Campaigns;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Shared;
+using Domain.Gaming.Tickets;
 using Domain.Gaming.TicketTemplates;
 using Domain.Members;
 using SharedKernel;

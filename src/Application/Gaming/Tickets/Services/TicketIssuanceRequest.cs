@@ -1,3 +1,4 @@
+using Domain.Gaming.Catalog;
 using Domain.Gaming.Shared;
 using Domain.Gaming.Tickets;
 
