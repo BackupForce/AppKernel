@@ -3,6 +3,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Time;
 using Application.Gaming.Tickets.Issue;
+using Application.Gaming.Tickets.Services;
 using Domain.Gaming.Campaigns;
 using Domain.Gaming.Catalog;
 using Domain.Gaming.Draws;
@@ -69,14 +70,15 @@ public sealed class IssueTicketCommandHandlerTests
         tenantContext.TenantId.Returns(tenantId);
         userContext.UserId.Returns(Guid.NewGuid());
 
+        TicketIssuanceService ticketIssuanceService = new(ticketRepository, ticketDrawRepository);
+
         IssueTicketCommandHandler handler = new(
             campaignRepository,
             campaignDrawRepository,
             drawRepository,
-            ticketRepository,
-            ticketDrawRepository,
             ticketTemplateRepository,
             memberRepository,
+            ticketIssuanceService,
             unitOfWork,
             dateTimeProvider,
             tenantContext,
