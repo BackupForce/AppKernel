@@ -86,12 +86,20 @@ internal sealed class GetMemberByIdQueryHandler(
                 continue;
             }
 
+            Uri? pictureUri = null;
+
+            if (!string.IsNullOrWhiteSpace(row.LoginBindingPictureUrl) &&
+            Uri.TryCreate(row.LoginBindingPictureUrl, UriKind.Absolute, out Uri? parsed))
+            {
+                pictureUri = parsed;
+            }
+
             loginBindings.Add(new LoginBindingDto(
                 row.LoginBindingId.Value,
                 (LoginProvider)row.LoginBindingProvider.GetValueOrDefault(),
                 row.LoginBindingProviderKey ?? string.Empty,
                 row.LoginBindingDisplayName,
-                row.LoginBindingPictureUrl,
+                pictureUri,
                 row.LoginBindingEmail,
                 row.LoginBindingCreatedAtUtc.GetValueOrDefault()));
         }

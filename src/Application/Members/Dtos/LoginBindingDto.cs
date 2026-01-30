@@ -7,6 +7,6 @@ public sealed record LoginBindingDto(
     LoginProvider Provider,
     string ProviderKey,
     string? DisplayName,
-    string? PictureUrl,
+    Uri? PictureUrl,
     string? Email,
     DateTime CreatedAtUtc);
