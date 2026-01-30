@@ -11,6 +11,7 @@ public sealed record AdminTicketListItemDto(
     string? MemberNo,
     string GameCode,
     Guid? DrawId,
+    string DrawCode,
     TicketSubmissionStatus SubmissionStatus,
     DateTime IssuedAtUtc,
     DateTime? SubmittedAtUtc,

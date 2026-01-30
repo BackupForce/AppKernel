@@ -25,6 +25,7 @@ internal sealed class GetAdminTicketsQueryHandler(
                 m.member_no AS MemberNo,
                 t.game_code AS GameCode,
                 t.draw_id AS DrawId,
+                d.draw_code AS DrawCode,
                 t.submission_status AS SubmissionStatus,
                 t.issued_at_utc AS IssuedAtUtc,
                 t.submitted_at_utc AS SubmittedAtUtc,
@@ -39,9 +40,15 @@ internal sealed class GetAdminTicketsQueryHandler(
                 ) AS LineCount,
                 t.created_at AS CreatedAt
             FROM gaming.tickets t
-            JOIN members m ON m.id = t.member_id AND m.tenant_id = @TenantId
+            JOIN members m 
+                ON m.id = t.member_id 
+               AND m.tenant_id = @TenantId
+            JOIN gaming.draws d
+                ON d.id = t.draw_id
+               AND d.tenant_id = @TenantId
             WHERE t.tenant_id = @TenantId
             """);
+
 
         var parameters = new DynamicParameters();
         parameters.Add("TenantId", request.TenantId);
