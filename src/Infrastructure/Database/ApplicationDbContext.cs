@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Application.Abstractions.Data;
+﻿using Application.Abstractions.Data;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -18,8 +17,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         modelBuilder.HasDefaultSchema(Schemas.Default);
     }
 
-    public async Task<IDbTransaction> BeginTransactionAsync()
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        return (await Database.BeginTransactionAsync()).GetDbTransaction();
+        return await Database.BeginTransactionAsync(cancellationToken);
     }
 }
