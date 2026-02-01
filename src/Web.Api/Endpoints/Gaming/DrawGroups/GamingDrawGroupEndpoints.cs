@@ -7,6 +7,7 @@ using Application.Gaming.DrawGroups.Draws.Remove;
 using Application.Gaming.DrawGroups.End;
 using Application.Gaming.DrawGroups.GetById;
 using Application.Gaming.DrawGroups.List;
+using Application.Gaming.DrawGroups.RemoteSearch;
 using Application.Gaming.DrawGroups.Update;
 using Application.Gaming.Dtos;
 using Domain.Security;
@@ -48,6 +49,26 @@ internal static class GamingDrawGroupEndpoints
             .Produces<Guid>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("CreateDrawGroup");
+
+        drawGroupGroup.MapGet(
+                "/remote-search",
+                async (Guid tenantId, [AsParameters] RemoteSearchDrawGroupsRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    RemoteSearchDrawGroupsQuery query = new RemoteSearchDrawGroupsQuery(
+                        tenantId,
+                        request.Q,
+                        request.Page,
+                        request.PageSize);
+                    return await UseCaseInvoker.Send<RemoteSearchDrawGroupsQuery, PagedResult<DrawGroupRemoteSearchDto>>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Gaming.DrawGroupRead.Name)
+            .Produces<PagedResult<DrawGroupRemoteSearchDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("RemoteSearchDrawGroups");
 
         drawGroupGroup.MapGet(
                 "/",

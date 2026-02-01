@@ -436,6 +436,32 @@
 **Errors**
 - 400: 參數格式錯誤（含 status/日期區間/分頁範圍）
 
+## Gaming - 期數群組
+
+- **路由前綴**：`/api/v1/tenants/{tenantId}/gaming`
+- **授權**：TenantUser + `gaming.drawgroup.read`
+
+### GET `/api/v1/tenants/{tenantId}/gaming/drawgroups/remote-search`
+- **QueryString**
+  - `q`: `string|null`（關鍵字，空值回傳前 N 筆）
+  - `page`: `int`（預設 1）
+  - `pageSize`: `int`（預設 20，最大 100）
+- **成功回應**
+  ```json
+  {
+    "items": [
+      {
+        "id": "guid",
+        "name": "Draw Group A"
+      }
+    ],
+    "totalCount": 1,
+    "page": 1,
+    "pageSize": 20
+  }
+  ```
+- **描述**：後台下拉/搜尋框遠端查詢 DrawGroup 名稱；依 tenant 範圍隔離並依名稱排序。 【F:src/Web.Api/Endpoints/Gaming/DrawGroups/GamingDrawGroupEndpoints.cs†L26-L82】【F:src/Application/Gaming/DrawGroups/RemoteSearch/RemoteSearchDrawGroupsQueryHandler.cs†L13-L61】
+
 ## Gaming - 票券
 
 - **路由前綴**：`/api/v1/tenants/{tenantId}/gaming`
