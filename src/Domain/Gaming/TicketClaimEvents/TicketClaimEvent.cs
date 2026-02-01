@@ -4,26 +4,26 @@ using SharedKernel;
 namespace Domain.Gaming.TicketClaimEvents;
 
 /// <summary>
-/// ²¼¨é»â¨ú¬¡°Ê¡]Ticket Claim Event¡^
+/// ç¥¨åˆ¸é ˜å–æ´»å‹•ï¼ˆTicket Claim Eventï¼‰
 ///
-/// ¥Î¨Ó´y­z¡u¤@¬q®É¶¡¤º¡A·|­û¥i»â¨ú¬YºØ²¼¨é¡vªº¬¡°Ê³W«h»Pª¬ºA¡C
-/// ³o­Ó Aggregate ¥D­n­t³d¡G
-/// - ¬¡°Ê°ò¥»¸ê°T¡]¦WºÙ¡B®É¶¡µ¡¡^
-/// - ª¬ºA¾÷¡]Draft / Active / Disabled / Ended / SoldOut¡^
-/// - °tÃB¡]Á`°tÃB¡B¤w»â¨ú¡B¨C¤H¤W­­¡^
-/// - ¾A¥Î½d³ò¡]ScopeType + ScopeId¡^
-/// - ¸j©w²¼¨é¼ÒªO¡]TicketTemplateId¡^
+/// ç”¨ä¾†æè¿°ã€Œä¸€æ®µæ™‚é–“å…§ï¼Œæœƒå“¡å¯é ˜å–æŸç¨®ç¥¨åˆ¸ã€çš„æ´»å‹•è¦å‰‡èˆ‡ç‹€æ…‹ã€‚
+/// é€™å€‹ Aggregate ä¸»è¦è² è²¬ï¼š
+/// - æ´»å‹•åŸºæœ¬è³‡è¨Šï¼ˆåç¨±ã€æ™‚é–“çª—ï¼‰
+/// - ç‹€æ…‹æ©Ÿï¼ˆDraft / Active / Disabled / Ended / SoldOutï¼‰
+/// - é…é¡ï¼ˆç¸½é…é¡ã€å·²é ˜å–ã€æ¯äººä¸Šé™ï¼‰
+/// - é©ç”¨ç¯„åœï¼ˆScopeType + ScopeIdï¼‰
+/// - ç¶å®šç¥¨åˆ¸æ¨¡æ¿ï¼ˆTicketTemplateIdï¼‰
 ///
-/// ª`·N¡G
-/// - ³o­Ó Aggregate ¦Û¨­¤£°lÂÜ¡u¨C­Ó·|­û»â¤F¦h¤Ö¡v¡F¨º³q±`·|¦b Application ©Î¥t¤@­Ó¬ö¿ıªí³B²z¡C
-/// - IncreaseClaimed ¥uºŞ¡uÁ`¤w»â¨ú¼Æ¡v¼W¥[»P°âÁj§PÂ_¡C
+/// æ³¨æ„ï¼š
+/// - é€™å€‹ Aggregate è‡ªèº«ä¸è¿½è¹¤ã€Œæ¯å€‹æœƒå“¡é ˜äº†å¤šå°‘ã€ï¼›é‚£é€šå¸¸æœƒåœ¨ Application æˆ–å¦ä¸€å€‹ç´€éŒ„è¡¨è™•ç†ã€‚
+/// - IncreaseClaimed åªç®¡ã€Œç¸½å·²é ˜å–æ•¸ã€å¢åŠ èˆ‡å”®ç½„åˆ¤æ–·ã€‚
 /// </summary>
 public sealed class TicketClaimEvent : Entity
 {
     /// <summary>
-    /// §¹¾ã«Øºc¤l¡]¨p¦³¡^¡G
-    /// - ±j¨î³z¹L Create ¤u¼t¤èªk«Ø¥ß¡A½T«O¶i¤JÂI³£¸g¹LÅçÃÒ³W«h¡C
-    /// - ¦P®É¤]¤è«K EF Core ¥Î¨p¦³«Øºc¤l materialize¡]·f°t³]©w¡^¡C
+    /// å®Œæ•´å»ºæ§‹å­ï¼ˆç§æœ‰ï¼‰ï¼š
+    /// - å¼·åˆ¶é€é Create å·¥å» æ–¹æ³•å»ºç«‹ï¼Œç¢ºä¿é€²å…¥é»éƒ½ç¶“éé©—è­‰è¦å‰‡ã€‚
+    /// - åŒæ™‚ä¹Ÿæ–¹ä¾¿ EF Core ç”¨ç§æœ‰å»ºæ§‹å­ materializeï¼ˆæ­é…è¨­å®šï¼‰ã€‚
     /// </summary>
     private TicketClaimEvent(
         Guid id,
@@ -32,7 +32,7 @@ public sealed class TicketClaimEvent : Entity
         DateTime startsAtUtc,
         DateTime endsAtUtc,
         TicketClaimEventStatus status,
-        int totalQuota,
+        int? totalQuota,
         int totalClaimed,
         int perMemberQuota,
         TicketClaimEventScopeType scopeType,
@@ -57,108 +57,105 @@ public sealed class TicketClaimEvent : Entity
     }
 
     /// <summary>
-    /// EF Core »İ­nªº parameterless ctor¡C
-    /// Åı ORM ¥i¥H¥ı new¡A¦A³v¤@ set ¨p¦³ setter ªºÄæ¦ì¡]©Î³z¹L¤Ï®g¡^¡C
+    /// EF Core éœ€è¦çš„ parameterless ctorã€‚
+    /// è®“ ORM å¯ä»¥å…ˆ newï¼Œå†é€ä¸€ set ç§æœ‰ setter çš„æ¬„ä½ï¼ˆæˆ–é€éåå°„ï¼‰ã€‚
     /// </summary>
     private TicketClaimEvent()
     {
     }
 
     /// <summary>
-    /// ¯²¤á Id¡]¦h¯²¤á¹jÂ÷¡^¡C
+    /// ç§Ÿæˆ¶ Idï¼ˆå¤šç§Ÿæˆ¶éš”é›¢ï¼‰ã€‚
     /// </summary>
     public Guid TenantId { get; private set; }
 
     /// <summary>
-    /// ¬¡°Ê¦WºÙ¡]«á¥xÅã¥Ü/ºŞ²z¥Î¡^¡C
+    /// æ´»å‹•åç¨±ï¼ˆå¾Œå°é¡¯ç¤º/ç®¡ç†ç”¨ï¼‰ã€‚
     /// </summary>
     public string Name { get; private set; } = string.Empty;
 
     /// <summary>
-    /// ¬¡°Ê¶}©l®É¶¡¡]UTC¡^¡C
+    /// æ´»å‹•é–‹å§‹æ™‚é–“ï¼ˆUTCï¼‰ã€‚
     /// </summary>
     public DateTime StartsAtUtc { get; private set; }
 
     /// <summary>
-    /// ¬¡°Êµ²§ô®É¶¡¡]UTC¡^¡C
+    /// æ´»å‹•çµæŸæ™‚é–“ï¼ˆUTCï¼‰ã€‚
     /// </summary>
     public DateTime EndsAtUtc { get; private set; }
 
     /// <summary>
-    /// ¬¡°Êª¬ºA¡]ª¬ºA¾÷®Ö¤ß¡^¡C
-    /// - Draft¡G¯ó½Z¡]©|¥¼¶}©l¡B¤£¥i»â¡^
-    /// - Active¡G±Ò¥Î¤¤¡]¥i»â¡A¤´»İ²Å¦X®É¶¡µ¡¡^
-    /// - Disabled¡G°±¥Î¡]¤£¥i»â¡A¦ı¤£¥Nªí®É¶¡¨ì¡^
-    /// - Ended¡Gµ²§ô¡]¤£¥i¦AÅÜ§ó/¤£¥i¦A»â¡^
-    /// - SoldOut¡G°âÁj¡]Á`°tÃB¤w¥Î§¹¡^
+    /// æ´»å‹•ç‹€æ…‹ï¼ˆç‹€æ…‹æ©Ÿæ ¸å¿ƒï¼‰ã€‚
+    /// - Draftï¼šè‰ç¨¿ï¼ˆå°šæœªé–‹å§‹ã€ä¸å¯é ˜ï¼‰
+    /// - Activeï¼šå•Ÿç”¨ä¸­ï¼ˆå¯é ˜ï¼Œä»éœ€ç¬¦åˆæ™‚é–“çª—ï¼‰
+    /// - Disabledï¼šåœç”¨ï¼ˆä¸å¯é ˜ï¼Œä½†ä¸ä»£è¡¨æ™‚é–“åˆ°ï¼‰
+    /// - Endedï¼šçµæŸï¼ˆä¸å¯å†è®Šæ›´/ä¸å¯å†é ˜ï¼‰
+    /// - SoldOutï¼šå”®ç½„ï¼ˆç¸½é…é¡å·²ç”¨å®Œï¼‰
     /// </summary>
     public TicketClaimEventStatus Status { get; private set; }
 
-    /// <summary>
-    /// Á`°tÃB¡G¬¡°Ê³Ì¦h¥i³Q»â¨úªº²¼¼Æ¤W­­¡C
-    /// </summary>
-    public int TotalQuota { get; private set; }
+    public int? TotalQuota { get; private set; }
 
     /// <summary>
-    /// ¤w»â¨ú¼Æ¡G©Ò¦³·|­û²Ö­p»â¨«ªº²¼¼Æ¡C
+    /// å·²é ˜å–æ•¸ï¼šæ‰€æœ‰æœƒå“¡ç´¯è¨ˆé ˜èµ°çš„ç¥¨æ•¸ã€‚
     /// </summary>
     public int TotalClaimed { get; private set; }
 
     /// <summary>
-    /// ¨C¦ì·|­û¥i»â¨ú¤W­­¡C
-    /// ª`·N¡G³o¸Ì¥u¬O¡u³W®æ¡v¡A¹ê»Ú¨C¦ì·|­û¤w»â¦h¤Ö»İ¥t¦æ°O¿ı/ÀË®Ö¡C
+    /// æ¯ä½æœƒå“¡å¯é ˜å–ä¸Šé™ã€‚
+    /// æ³¨æ„ï¼šé€™è£¡åªæ˜¯ã€Œè¦æ ¼ã€ï¼Œå¯¦éš›æ¯ä½æœƒå“¡å·²é ˜å¤šå°‘éœ€å¦è¡Œè¨˜éŒ„/æª¢æ ¸ã€‚
     /// </summary>
     public int PerMemberQuota { get; private set; }
 
     /// <summary>
-    /// ¬¡°Ê½d³òÃş«¬¡G¥Î¨Ó´y­z¦¹¬¡°Ê®M¥Î¨ì­ş­Óºû«×¡C
-    /// ¨Ò¦p¡GCampaign / Draw / CampaignDraw / ¥ş¯¸...¡]¨Ì§A enum ©w¸q¡^
+    /// æ´»å‹•ç¯„åœé¡å‹ï¼šç”¨ä¾†æè¿°æ­¤æ´»å‹•å¥—ç”¨åˆ°å“ªå€‹ç¶­åº¦ã€‚
+    /// ä¾‹å¦‚ï¼šCampaign / Draw / CampaignDraw / å…¨ç«™...ï¼ˆä¾ä½  enum å®šç¾©ï¼‰
     /// </summary>
     public TicketClaimEventScopeType ScopeType { get; private set; }
 
     /// <summary>
-    /// ¬¡°Ê½d³ò Id¡G¹ïÀ³ ScopeType ªº¹êÅé Id¡C
-    /// ¨Ò¡GScopeType=Draw => ScopeId=DrawId
+    /// æ´»å‹•ç¯„åœ Idï¼šå°æ‡‰ ScopeType çš„å¯¦é«” Idã€‚
+    /// ä¾‹ï¼šScopeType=Draw => ScopeId=DrawId
     /// </summary>
     public Guid ScopeId { get; private set; }
 
     /// <summary>
-    /// ¸j©w­nµo©ñªº²¼¨é¼ÒªO Id¡C
-    /// Nullable¡G¤¹³\¬Y¨Ç¬¡°Ê¥ı¤£¸j¼ÒªO¡]©Î¥¼¨ÓÂX¥R¦h¼ÒªO¡^¡C
+    /// ç¶å®šè¦ç™¼æ”¾çš„ç¥¨åˆ¸æ¨¡æ¿ Idã€‚
+    /// Nullableï¼šå…è¨±æŸäº›æ´»å‹•å…ˆä¸ç¶æ¨¡æ¿ï¼ˆæˆ–æœªä¾†æ“´å……å¤šæ¨¡æ¿ï¼‰ã€‚
     /// </summary>
     public Guid? TicketTemplateId { get; private set; }
 
     /// <summary>
-    /// «Ø¥ß®É¶¡¡]UTC¡^¡C
+    /// å»ºç«‹æ™‚é–“ï¼ˆUTCï¼‰ã€‚
     /// </summary>
     public DateTime CreatedAtUtc { get; private set; }
 
     /// <summary>
-    /// §ó·s®É¶¡¡]UTC¡^¡C
+    /// æ›´æ–°æ™‚é–“ï¼ˆUTCï¼‰ã€‚
     /// </summary>
     public DateTime UpdatedAtUtc { get; private set; }
 
     /// <summary>
-    /// ¤u¼t¤èªk¡G«Ø¥ß¬¡°Ê¡]¦^¶Ç Result<T>¡A§â validation error ³z¹L domain error ¶Ç¥X¡^¡C
+    /// å·¥å» æ–¹æ³•ï¼šå»ºç«‹æ´»å‹•ï¼ˆå›å‚³ Result<T>ï¼ŒæŠŠ validation error é€é domain error å‚³å‡ºï¼‰ã€‚
     ///
-    /// ¥D­n³W«h¡G
-    /// - tenant ¥²¶ñ
-    /// - name ¥²¶ñ¡Bªø«× <= 128
-    /// - ®É¶¡µ¡ startsAt < endsAt
-    /// - °tÃB totalQuota¡BperMemberQuota >= 1
-    /// - scopeId ¥²¶ñ¡]¤£¥i¬° Guid.Empty¡^
+    /// ä¸»è¦è¦å‰‡ï¼š
+    /// - tenant å¿…å¡«
+    /// - name å¿…å¡«ã€é•·åº¦ <= 128
+    /// - æ™‚é–“çª— startsAt < endsAt
+    /// - é…é¡ totalQuotaã€perMemberQuota >= 1
+    /// - scopeId å¿…å¡«ï¼ˆä¸å¯ç‚º Guid.Emptyï¼‰
     ///
-    /// ªì©lª¬ºA¡G
+    /// åˆå§‹ç‹€æ…‹ï¼š
     /// - Draft
     /// - TotalClaimed = 0
-    /// - createdAt/updatedAt ³£µ¥©ó utcNow
+    /// - createdAt/updatedAt éƒ½ç­‰æ–¼ utcNow
     /// </summary>
     public static Result<TicketClaimEvent> Create(
         Guid tenantId,
         string name,
         DateTime startsAtUtc,
         DateTime endsAtUtc,
-        int totalQuota,
+        int? totalQuota,
         int perMemberQuota,
         TicketClaimEventScopeType scopeType,
         Guid scopeId,
@@ -185,7 +182,7 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure<TicketClaimEvent>(GamingErrors.TicketClaimEventInvalidTimeWindow);
         }
 
-        if (totalQuota < 1)
+        if (totalQuota.HasValue && totalQuota.Value < 1)
         {
             return Result.Failure<TicketClaimEvent>(GamingErrors.TicketClaimEventInvalidQuota);
         }
@@ -218,27 +215,27 @@ public sealed class TicketClaimEvent : Entity
     }
 
     /// <summary>
-    /// §ó·s¬¡°Ê¸ê°T¡]«á¥x½s¿è¥Î¡^¡C
+    /// æ›´æ–°æ´»å‹•è³‡è¨Šï¼ˆå¾Œå°ç·¨è¼¯ç”¨ï¼‰ã€‚
     ///
-    /// ¤£¥i½s¿èª¬ºA¡G
-    /// - Ended¡G¤wµ²§ô
-    /// - SoldOut¡G¤w°âÁj
+    /// ä¸å¯ç·¨è¼¯ç‹€æ…‹ï¼š
+    /// - Endedï¼šå·²çµæŸ
+    /// - SoldOutï¼šå·²å”®ç½„
     ///
-    /// ÅçÃÒ³W«h¦P Create¡]¦WºÙ¡B®É¶¡µ¡¡B°tÃB¡Bscope¡^¡C
+    /// é©—è­‰è¦å‰‡åŒ Createï¼ˆåç¨±ã€æ™‚é–“çª—ã€é…é¡ã€scopeï¼‰ã€‚
     ///
-    /// ¯S®í³W«h¡G·íª¬ºA¬° Active ®É¡A¥u¤¹³\­×§ï¡G
+    /// ç‰¹æ®Šè¦å‰‡ï¼šç•¶ç‹€æ…‹ç‚º Active æ™‚ï¼Œåªå…è¨±ä¿®æ”¹ï¼š
     /// - Name
     /// - EndsAtUtc
-    /// ¡]Á×§K¬¡°Ê±Ò¥Î«áÅÜ§ó¶}©l®É¶¡/°tÃB/½d³ò/¼ÒªO¡A³y¦¨¤½¥­©Ê©Î¨t²Î¤@­P©Ê°İÃD¡^
+    /// ï¼ˆé¿å…æ´»å‹•å•Ÿç”¨å¾Œè®Šæ›´é–‹å§‹æ™‚é–“/é…é¡/ç¯„åœ/æ¨¡æ¿ï¼Œé€ æˆå…¬å¹³æ€§æˆ–ç³»çµ±ä¸€è‡´æ€§å•é¡Œï¼‰
     ///
-    /// §ó·s«áÃB¥~ÀË®Ö¡G
-    /// - TotalClaimed ¤£¯à¤j©ó TotalQuota¡]§_«hªí¥Ü§A§âÁ`°tÃB§ï¤p¨ì§C©ó¤w»â¨ú¼Æ¡^
+    /// æ›´æ–°å¾Œé¡å¤–æª¢æ ¸ï¼š
+    /// - TotalClaimed ä¸èƒ½å¤§æ–¼ TotalQuotaï¼ˆå¦å‰‡è¡¨ç¤ºä½ æŠŠç¸½é…é¡æ”¹å°åˆ°ä½æ–¼å·²é ˜å–æ•¸ï¼‰
     /// </summary>
     public Result UpdateInfo(
         string name,
         DateTime startsAtUtc,
         DateTime endsAtUtc,
-        int totalQuota,
+        int? totalQuota,
         int perMemberQuota,
         TicketClaimEventScopeType scopeType,
         Guid scopeId,
@@ -265,7 +262,7 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure(GamingErrors.TicketClaimEventInvalidTimeWindow);
         }
 
-        if (totalQuota < 1 || perMemberQuota < 1)
+        if ((totalQuota.HasValue && totalQuota.Value < 1) || perMemberQuota < 1)
         {
             return Result.Failure(GamingErrors.TicketClaimEventInvalidQuota);
         }
@@ -275,7 +272,7 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure(GamingErrors.TicketClaimEventScopeRequired);
         }
 
-        // Active ª¬ºA¤U¡G¥u¤¹³\§ï¦WºÙ»Pµ²§ô®É¶¡
+        // Active ç‹€æ…‹ä¸‹ï¼šåªå…è¨±æ”¹åç¨±èˆ‡çµæŸæ™‚é–“
         if (Status == TicketClaimEventStatus.Active)
         {
             Name = name.Trim();
@@ -283,7 +280,7 @@ public sealed class TicketClaimEvent : Entity
         }
         else
         {
-            // «D Active¡G¥i§¹¾ã­×§ï¬¡°Ê³]©w
+            // é Activeï¼šå¯å®Œæ•´ä¿®æ”¹æ´»å‹•è¨­å®š
             Name = name.Trim();
             StartsAtUtc = startsAtUtc;
             EndsAtUtc = endsAtUtc;
@@ -294,8 +291,7 @@ public sealed class TicketClaimEvent : Entity
             TicketTemplateId = ticketTemplateId;
         }
 
-        // ½T«O¡u¤w»â¨ú¼Æ¡v¤£·|¶W¹L§A§ï§¹ªºÁ`°tÃB
-        if (TotalClaimed > TotalQuota)
+        if (TotalQuota.HasValue && TotalClaimed > TotalQuota.Value)
         {
             return Result.Failure(GamingErrors.TicketClaimEventInvalidQuota);
         }
@@ -305,16 +301,16 @@ public sealed class TicketClaimEvent : Entity
     }
 
     /// <summary>
-    /// ±Ò¥Î¬¡°Ê¡C
+    /// å•Ÿç”¨æ´»å‹•ã€‚
     ///
-    /// ³W«h¡G
-    /// - ­Y¤w Active¡G¦^¶Ç AlreadyActive
-    /// - ­Y¤w Ended¡G¦^¶Ç AlreadyEnded¡]µ²§ô¤£¥i°f¡^
-    /// - ­Y¤w»â¨ú¼Æ >= Á`°tÃB¡Gª½±µ¼Ğ SoldOut¡A¨Ã¦^ SoldOut
-    /// - §_«hª¬ºAÅÜ Active
+    /// è¦å‰‡ï¼š
+    /// - è‹¥å·² Activeï¼šå›å‚³ AlreadyActive
+    /// - è‹¥å·² Endedï¼šå›å‚³ AlreadyEndedï¼ˆçµæŸä¸å¯é€†ï¼‰
+    /// - è‹¥å·²é ˜å–æ•¸ >= ç¸½é…é¡ï¼šç›´æ¥æ¨™ SoldOutï¼Œä¸¦å› SoldOut
+    /// - å¦å‰‡ç‹€æ…‹è®Š Active
     ///
-    /// ª`·N¡GActivate ¤£·|ÀË¬d¡u²{¦b¬O§_¤w¨ì StartsAtUtc¡v¡F
-    /// ¤]´N¬O¡G¥i¥H¥ı§âª¬ºA³]¬° Active¡A¦ı¹ê»Ú¯à¤£¯à»âÁÙ­n¨« EnsureCanClaim¡]§t®É¶¡µ¡¡^¡C
+    /// æ³¨æ„ï¼šActivate ä¸æœƒæª¢æŸ¥ã€Œç¾åœ¨æ˜¯å¦å·²åˆ° StartsAtUtcã€ï¼›
+    /// ä¹Ÿå°±æ˜¯ï¼šå¯ä»¥å…ˆæŠŠç‹€æ…‹è¨­ç‚º Activeï¼Œä½†å¯¦éš›èƒ½ä¸èƒ½é ˜é‚„è¦èµ° EnsureCanClaimï¼ˆå«æ™‚é–“çª—ï¼‰ã€‚
     /// </summary>
     public Result Activate(DateTime utcNow)
     {
@@ -328,7 +324,7 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure(GamingErrors.TicketClaimEventAlreadyEnded);
         }
 
-        if (TotalClaimed >= TotalQuota)
+        if (TotalQuota.HasValue && TotalClaimed >= TotalQuota.Value)
         {
             Status = TicketClaimEventStatus.SoldOut;
             UpdatedAtUtc = utcNow;
@@ -341,11 +337,11 @@ public sealed class TicketClaimEvent : Entity
     }
 
     /// <summary>
-    /// °±¥Î¬¡°Ê¡]³q±`¥Î©ó«á¥x¼È°±¡^¡C
+    /// åœç”¨æ´»å‹•ï¼ˆé€šå¸¸ç”¨æ–¼å¾Œå°æš«åœï¼‰ã€‚
     ///
-    /// ³W«h¡G
-    /// - Ended ¤£¥i¦AÅÜ§ó¡]µ²§ô¤£¥i°f¡^
-    /// - ¨ä¾lª¬ºA³£¥i¤Á¨ì Disabled
+    /// è¦å‰‡ï¼š
+    /// - Ended ä¸å¯å†è®Šæ›´ï¼ˆçµæŸä¸å¯é€†ï¼‰
+    /// - å…¶é¤˜ç‹€æ…‹éƒ½å¯åˆ‡åˆ° Disabled
     /// </summary>
     public Result Disable(DateTime utcNow)
     {
@@ -360,13 +356,13 @@ public sealed class TicketClaimEvent : Entity
     }
 
     /// <summary>
-    /// µ²§ô¬¡°Ê¡]¤H¤uµ²§ô¡^¡C
+    /// çµæŸæ´»å‹•ï¼ˆäººå·¥çµæŸï¼‰ã€‚
     ///
-    /// ³W«h¡G
-    /// - Ended ¤£¥i­«½Æµ²§ô
-    /// - µ²§ô«á¡G
+    /// è¦å‰‡ï¼š
+    /// - Ended ä¸å¯é‡è¤‡çµæŸ
+    /// - çµæŸå¾Œï¼š
     ///   - Status = Ended
-    ///   - EndsAtUtc = utcNow¡]±j¨î±N®É¶¡µ¡µ²§ô®É¶¡§ï¦¨²{¦b¡^
+    ///   - EndsAtUtc = utcNowï¼ˆå¼·åˆ¶å°‡æ™‚é–“çª—çµæŸæ™‚é–“æ”¹æˆç¾åœ¨ï¼‰
     ///   - UpdatedAtUtc = utcNow
     /// </summary>
     public Result End(DateTime utcNow)
@@ -383,21 +379,21 @@ public sealed class TicketClaimEvent : Entity
     }
 
     /// <summary>
-    /// ÀË¬d¥Ø«e¬O§_¤¹³\¡u¶i¦æ»â¨ú¡v¡C
+    /// æª¢æŸ¥ç›®å‰æ˜¯å¦å…è¨±ã€Œé€²è¡Œé ˜å–ã€ã€‚
     ///
-    /// ³o­Ó¤èªkªº¥Øªº³q±`¬O¡G¦b Application °õ¦æ Claim ¬yµ{«e¥ı°µ Gatekeeping¡C
+    /// é€™å€‹æ–¹æ³•çš„ç›®çš„é€šå¸¸æ˜¯ï¼šåœ¨ Application åŸ·è¡Œ Claim æµç¨‹å‰å…ˆåš Gatekeepingã€‚
     ///
-    /// ³W«hÀË®Ö¶¶§Ç¡]¨Ì§Ç¦^¶Ç¹ïÀ³¿ù»~¡^¡G
-    /// - Disabled¡G°±¥Î¤¤
-    /// - Draft¡G¥¼±Ò¥Î
-    /// - Ended¡G¤wµ²§ô
-    /// - SoldOut¡G¤w°âÁj
-    /// - ¥¼¨ì¶}©l®É¶¡¡GNotStarted
-    /// - ¤w¶W¹Lµ²§ô®É¶¡¡GEnded
-    /// - ¤w»â¨ú¼Æ >= Á`°tÃB¡G·|¡u¶¶«K¡v§âª¬ºA¼Ğ¦¨ SoldOut¡A¨Ã¦^ SoldOut
+    /// è¦å‰‡æª¢æ ¸é †åºï¼ˆä¾åºå›å‚³å°æ‡‰éŒ¯èª¤ï¼‰ï¼š
+    /// - Disabledï¼šåœç”¨ä¸­
+    /// - Draftï¼šæœªå•Ÿç”¨
+    /// - Endedï¼šå·²çµæŸ
+    /// - SoldOutï¼šå·²å”®ç½„
+    /// - æœªåˆ°é–‹å§‹æ™‚é–“ï¼šNotStarted
+    /// - å·²è¶…éçµæŸæ™‚é–“ï¼šEnded
+    /// - å·²é ˜å–æ•¸ >= ç¸½é…é¡ï¼šæœƒã€Œé †ä¾¿ã€æŠŠç‹€æ…‹æ¨™æˆ SoldOutï¼Œä¸¦å› SoldOut
     ///
-    /// ª`·N¡G³o¸Ì·|¦³¡u±aª¬ºA°Æ§@¥Î¡v¡G·íµo²{¤w¹F°tÃB·|§ï Status/UpdatedAt¡C
-    /// ³o¬O¦X²zªº¡G§â°âÁjª¬ºA©T¤Æ¦b Aggregate ¤W¡AÁ×§K¤§«á¨C¦¸³£­«·s§PÂ_¡C
+    /// æ³¨æ„ï¼šé€™è£¡æœƒæœ‰ã€Œå¸¶ç‹€æ…‹å‰¯ä½œç”¨ã€ï¼šç•¶ç™¼ç¾å·²é”é…é¡æœƒæ”¹ Status/UpdatedAtã€‚
+    /// é€™æ˜¯åˆç†çš„ï¼šæŠŠå”®ç½„ç‹€æ…‹å›ºåŒ–åœ¨ Aggregate ä¸Šï¼Œé¿å…ä¹‹å¾Œæ¯æ¬¡éƒ½é‡æ–°åˆ¤æ–·ã€‚
     /// </summary>
     public Result EnsureCanClaim(DateTime utcNow)
     {
@@ -431,7 +427,7 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure(GamingErrors.TicketClaimEventEnded);
         }
 
-        if (TotalClaimed >= TotalQuota)
+        if (TotalQuota.HasValue && TotalClaimed >= TotalQuota.Value)
         {
             Status = TicketClaimEventStatus.SoldOut;
             UpdatedAtUtc = utcNow;
@@ -442,17 +438,17 @@ public sealed class TicketClaimEvent : Entity
     }
 
     /// <summary>
-    /// ¼W¥[¤w»â¨ú¼Æ¡]³q±`¦b¡u¦¨¥\µo²¼/¦¨¥\¥e¥Î°tÃB¡v¤§«á©I¥s¡^¡C
+    /// å¢åŠ å·²é ˜å–æ•¸ï¼ˆé€šå¸¸åœ¨ã€ŒæˆåŠŸç™¼ç¥¨/æˆåŠŸå ç”¨é…é¡ã€ä¹‹å¾Œå‘¼å«ï¼‰ã€‚
     ///
-    /// ª`·N¡G
-    /// - ³o¸Ì¥uÀË¬d¡uÁ`°tÃB¡v¡F¤£ÀË¬d¡u³æ·|­û¤W­­¡v¡C
-    ///   ³æ·|­û¤W­­»İ¾a¥~³¡¡]Application¡^Åª¨ú¸Ó·|­û»â¨ú¬ö¿ı¨Ó§PÂ_¡C
+    /// æ³¨æ„ï¼š
+    /// - é€™è£¡åªæª¢æŸ¥ã€Œç¸½é…é¡ã€ï¼›ä¸æª¢æŸ¥ã€Œå–®æœƒå“¡ä¸Šé™ã€ã€‚
+    ///   å–®æœƒå“¡ä¸Šé™éœ€é å¤–éƒ¨ï¼ˆApplicationï¼‰è®€å–è©²æœƒå“¡é ˜å–ç´€éŒ„ä¾†åˆ¤æ–·ã€‚
     ///
-    /// ³W«h¡G
-    /// - quantity ¥²¶· > 0
-    /// - ­Y¥[Á`«á¶W¹LÁ`°tÃB¡G¼Ğ SoldOut¡A¦^ SoldOut
-    /// - ­Y¥[Á`«á¹F¨ìÁ`°tÃB¡G¼Ğ SoldOut
-    /// - ¦¨¥\«h§ó·s UpdatedAtUtc
+    /// è¦å‰‡ï¼š
+    /// - quantity å¿…é ˆ > 0
+    /// - è‹¥åŠ ç¸½å¾Œè¶…éç¸½é…é¡ï¼šæ¨™ SoldOutï¼Œå› SoldOut
+    /// - è‹¥åŠ ç¸½å¾Œé”åˆ°ç¸½é…é¡ï¼šæ¨™ SoldOut
+    /// - æˆåŠŸå‰‡æ›´æ–° UpdatedAtUtc
     /// </summary>
     public Result IncreaseClaimed(int quantity, DateTime utcNow)
     {
@@ -461,14 +457,15 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure(GamingErrors.TicketClaimEventInvalidQuota);
         }
 
-        if (TotalClaimed + quantity > TotalQuota)
+        if (TotalQuota.HasValue && TotalClaimed + quantity > TotalQuota.Value)
         {
             Status = TicketClaimEventStatus.SoldOut;
+            UpdatedAtUtc = utcNow;
             return Result.Failure(GamingErrors.TicketClaimEventSoldOut);
         }
 
         TotalClaimed += quantity;
-        if (TotalClaimed >= TotalQuota)
+        if (TotalQuota.HasValue && TotalClaimed >= TotalQuota.Value)
         {
             Status = TicketClaimEventStatus.SoldOut;
         }

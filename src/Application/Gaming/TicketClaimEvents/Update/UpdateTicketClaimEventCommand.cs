@@ -9,7 +9,7 @@ public sealed record UpdateTicketClaimEventCommand(
     string Name,
     DateTime StartsAtUtc,
     DateTime EndsAtUtc,
-    int TotalQuota,
+    int? TotalQuota,
     int PerMemberQuota,
     TicketClaimEventScopeType ScopeType,
     Guid ScopeId,

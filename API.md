@@ -240,13 +240,14 @@
   "name": "限時搶票",
   "startsAtUtc": "2024-01-01T00:00:00Z",
   "endsAtUtc": "2024-01-02T00:00:00Z",
-  "totalQuota": 100,
+  "totalQuota": null,
   "perMemberQuota": 1,
   "scopeType": "SingleDrawGroup",
   "scopeId": "00000000-0000-0000-0000-000000000000",
   "ticketTemplateId": "11111111-1111-1111-1111-111111111111"
 }
 ```
+`totalQuota` 為 `null` 表示總量無上限；若有值則需 >= 1。
 
 **Response**
 - 200: `Guid` (活動 Id)
@@ -262,13 +263,14 @@
   "name": "限時搶票",
   "startsAtUtc": "2024-01-01T00:00:00Z",
   "endsAtUtc": "2024-01-02T00:00:00Z",
-  "totalQuota": 100,
+  "totalQuota": null,
   "perMemberQuota": 1,
   "scopeType": "SingleDrawGroup",
   "scopeId": "00000000-0000-0000-0000-000000000000",
   "ticketTemplateId": "11111111-1111-1111-1111-111111111111"
 }
 ```
+`totalQuota` 為 `null` 表示總量無上限；若有值則需 >= 1。
 
 ---
 
