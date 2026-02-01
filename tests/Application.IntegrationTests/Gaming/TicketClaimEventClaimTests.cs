@@ -116,6 +116,190 @@ public sealed class TicketClaimEventClaimTests : BaseIntegrationTest
         updated!.TotalClaimed.Should().Be(5);
     }
 
+    [Fact]
+    public void Create_Null_TotalQuota_Should_Succeed()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        Result<TicketClaimEvent> result = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "不限量活動",
+            now,
+            now.AddHours(1),
+            null,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.TotalQuota.Should().BeNull();
+        result.Value.TotalClaimed.Should().Be(0);
+        result.Value.Status.Should().Be(TicketClaimEventStatus.Draft);
+    }
+
+    [Fact]
+    public void Create_Zero_TotalQuota_Should_Fail()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        Result<TicketClaimEvent> result = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "無效活動",
+            now,
+            now.AddHours(1),
+            0,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(GamingErrors.TicketClaimEventInvalidQuota);
+    }
+
+    [Fact]
+    public void EnsureCanClaim_With_Null_TotalQuota_Should_Succeed_When_Active()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "不限量活動",
+            now.AddMinutes(-5),
+            now.AddMinutes(5),
+            null,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now).Value;
+
+        ticketClaimEvent.Activate(now).IsSuccess.Should().BeTrue();
+
+        Result result = ticketClaimEvent.EnsureCanClaim(now);
+        result.IsSuccess.Should().BeTrue();
+        ticketClaimEvent.Status.Should().Be(TicketClaimEventStatus.Active);
+    }
+
+    [Fact]
+    public void IncreaseClaimed_With_Null_TotalQuota_Should_Not_SoldOut()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "不限量活動",
+            now.AddMinutes(-5),
+            now.AddMinutes(5),
+            null,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now).Value;
+
+        ticketClaimEvent.Activate(now).IsSuccess.Should().BeTrue();
+
+        ticketClaimEvent.IncreaseClaimed(2, now).IsSuccess.Should().BeTrue();
+        ticketClaimEvent.IncreaseClaimed(3, now.AddMinutes(1)).IsSuccess.Should().BeTrue();
+
+        ticketClaimEvent.TotalClaimed.Should().Be(5);
+        ticketClaimEvent.Status.Should().Be(TicketClaimEventStatus.Active);
+    }
+
+    [Fact]
+    public void Activate_With_Null_TotalQuota_Should_Succeed()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "不限量活動",
+            now.AddMinutes(-5),
+            now.AddMinutes(5),
+            null,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now).Value;
+
+        Result result = ticketClaimEvent.Activate(now);
+        result.IsSuccess.Should().BeTrue();
+        ticketClaimEvent.Status.Should().Be(TicketClaimEventStatus.Active);
+    }
+
+    [Fact]
+    public void UpdateInfo_With_Null_TotalQuota_Should_Not_Block_TotalClaimed()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "活動",
+            now.AddMinutes(-10),
+            now.AddMinutes(10),
+            20,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now).Value;
+
+        ticketClaimEvent.IncreaseClaimed(11, now).IsSuccess.Should().BeTrue();
+
+        Result result = ticketClaimEvent.UpdateInfo(
+            "活動更新",
+            now.AddMinutes(-10),
+            now.AddMinutes(20),
+            null,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now.AddMinutes(1));
+
+        result.IsSuccess.Should().BeTrue();
+        ticketClaimEvent.TotalQuota.Should().BeNull();
+    }
+
+    [Fact]
+    public void UpdateInfo_With_TotalQuota_Less_Than_TotalClaimed_Should_Fail()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "活動",
+            now.AddMinutes(-10),
+            now.AddMinutes(10),
+            20,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now).Value;
+
+        ticketClaimEvent.IncreaseClaimed(11, now).IsSuccess.Should().BeTrue();
+
+        Result result = ticketClaimEvent.UpdateInfo(
+            "活動更新",
+            now.AddMinutes(-10),
+            now.AddMinutes(20),
+            10,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now.AddMinutes(1));
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(GamingErrors.TicketClaimEventInvalidQuota);
+    }
+
     private async Task<(Guid eventId, Guid memberId)> SeedSingleDrawEventAsync(
         Guid tenantId,
         Guid userId,
@@ -233,7 +417,7 @@ public sealed class TicketClaimEventClaimTests : BaseIntegrationTest
                 starts_at_utc timestamptz NOT NULL,
                 ends_at_utc timestamptz NOT NULL,
                 status integer NOT NULL,
-                total_quota integer NOT NULL,
+                total_quota integer NULL,
                 total_claimed integer NOT NULL,
                 per_member_quota integer NOT NULL,
                 scope_type integer NOT NULL,

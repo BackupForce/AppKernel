@@ -18,7 +18,9 @@ internal sealed class TicketClaimEventConfiguration : IEntityTypeConfiguration<T
         builder.Property(ticketClaimEvent => ticketClaimEvent.StartsAtUtc).IsRequired();
         builder.Property(ticketClaimEvent => ticketClaimEvent.EndsAtUtc).IsRequired();
         builder.Property(ticketClaimEvent => ticketClaimEvent.Status).IsRequired();
-        builder.Property(ticketClaimEvent => ticketClaimEvent.TotalQuota).IsRequired();
+        builder.Property(ticketClaimEvent => ticketClaimEvent.TotalQuota)
+            .HasColumnName("total_quota")
+            .IsRequired(false);
         builder.Property(ticketClaimEvent => ticketClaimEvent.TotalClaimed).IsRequired();
         builder.Property(ticketClaimEvent => ticketClaimEvent.PerMemberQuota).IsRequired();
         builder.Property(ticketClaimEvent => ticketClaimEvent.ScopeType).IsRequired();

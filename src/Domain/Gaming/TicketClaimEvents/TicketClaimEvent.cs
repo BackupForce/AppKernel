@@ -12,7 +12,7 @@ public sealed class TicketClaimEvent : Entity
         DateTime startsAtUtc,
         DateTime endsAtUtc,
         TicketClaimEventStatus status,
-        int totalQuota,
+        int? totalQuota,
         int totalClaimed,
         int perMemberQuota,
         TicketClaimEventScopeType scopeType,
@@ -50,7 +50,7 @@ public sealed class TicketClaimEvent : Entity
 
     public TicketClaimEventStatus Status { get; private set; }
 
-    public int TotalQuota { get; private set; }
+    public int? TotalQuota { get; private set; }
 
     public int TotalClaimed { get; private set; }
 
@@ -71,7 +71,7 @@ public sealed class TicketClaimEvent : Entity
         string name,
         DateTime startsAtUtc,
         DateTime endsAtUtc,
-        int totalQuota,
+        int? totalQuota,
         int perMemberQuota,
         TicketClaimEventScopeType scopeType,
         Guid scopeId,
@@ -98,7 +98,7 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure<TicketClaimEvent>(GamingErrors.TicketClaimEventInvalidTimeWindow);
         }
 
-        if (totalQuota < 1)
+        if (totalQuota.HasValue && totalQuota.Value < 1)
         {
             return Result.Failure<TicketClaimEvent>(GamingErrors.TicketClaimEventInvalidQuota);
         }
@@ -134,7 +134,7 @@ public sealed class TicketClaimEvent : Entity
         string name,
         DateTime startsAtUtc,
         DateTime endsAtUtc,
-        int totalQuota,
+        int? totalQuota,
         int perMemberQuota,
         TicketClaimEventScopeType scopeType,
         Guid scopeId,
@@ -161,7 +161,7 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure(GamingErrors.TicketClaimEventInvalidTimeWindow);
         }
 
-        if (totalQuota < 1 || perMemberQuota < 1)
+        if ((totalQuota.HasValue && totalQuota.Value < 1) || perMemberQuota < 1)
         {
             return Result.Failure(GamingErrors.TicketClaimEventInvalidQuota);
         }
@@ -188,7 +188,7 @@ public sealed class TicketClaimEvent : Entity
             TicketTemplateId = ticketTemplateId;
         }
 
-        if (TotalClaimed > TotalQuota)
+        if (TotalQuota.HasValue && TotalClaimed > TotalQuota.Value)
         {
             return Result.Failure(GamingErrors.TicketClaimEventInvalidQuota);
         }
@@ -209,7 +209,7 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure(GamingErrors.TicketClaimEventAlreadyEnded);
         }
 
-        if (TotalClaimed >= TotalQuota)
+        if (TotalQuota.HasValue && TotalClaimed >= TotalQuota.Value)
         {
             Status = TicketClaimEventStatus.SoldOut;
             UpdatedAtUtc = utcNow;
@@ -278,7 +278,7 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure(GamingErrors.TicketClaimEventEnded);
         }
 
-        if (TotalClaimed >= TotalQuota)
+        if (TotalQuota.HasValue && TotalClaimed >= TotalQuota.Value)
         {
             Status = TicketClaimEventStatus.SoldOut;
             UpdatedAtUtc = utcNow;
@@ -295,14 +295,15 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure(GamingErrors.TicketClaimEventInvalidQuota);
         }
 
-        if (TotalClaimed + quantity > TotalQuota)
+        if (TotalQuota.HasValue && TotalClaimed + quantity > TotalQuota.Value)
         {
             Status = TicketClaimEventStatus.SoldOut;
+            UpdatedAtUtc = utcNow;
             return Result.Failure(GamingErrors.TicketClaimEventSoldOut);
         }
 
         TotalClaimed += quantity;
-        if (TotalClaimed >= TotalQuota)
+        if (TotalQuota.HasValue && TotalClaimed >= TotalQuota.Value)
         {
             Status = TicketClaimEventStatus.SoldOut;
         }

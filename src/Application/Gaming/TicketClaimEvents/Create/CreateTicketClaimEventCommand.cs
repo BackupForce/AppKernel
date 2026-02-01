@@ -8,7 +8,7 @@ public sealed record CreateTicketClaimEventCommand(
     string Name,
     DateTime StartsAtUtc,
     DateTime EndsAtUtc,
-    int TotalQuota,
+    int? TotalQuota,
     int PerMemberQuota,
     TicketClaimEventScopeType ScopeType,
     Guid ScopeId,
