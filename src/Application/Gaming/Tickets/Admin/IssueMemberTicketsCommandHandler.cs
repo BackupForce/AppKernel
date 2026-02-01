@@ -138,8 +138,8 @@ internal sealed class IssueMemberTicketsCommandHandler(
 
         Result<IReadOnlyCollection<Ticket>> issuanceResult = await ticketIssuanceService.IssueBulkSameDrawAsync(
             issuanceRequest,
-            request.Quantity,
-            cancellationToken);
+            request.Quantity
+            );
         if (issuanceResult.IsFailure)
         {
             return Result.Failure<IssueMemberTicketsResult>(issuanceResult.Error);

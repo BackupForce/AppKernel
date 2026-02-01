@@ -39,7 +39,7 @@ public sealed class TicketIssuanceServiceTests
             "note",
             now);
 
-        Result<TicketIssuanceResult> result = await service.IssueSingleAsync(request, CancellationToken.None);
+        Result<TicketIssuanceResult> result = await service.IssueSingleAsync(request);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.DrawIds.Should().BeEquivalentTo(new[] { drawId1, drawId2 });
@@ -76,8 +76,7 @@ public sealed class TicketIssuanceServiceTests
 
         Result<IReadOnlyCollection<Ticket>> result = await service.IssueBulkSameDrawAsync(
             request,
-            3,
-            CancellationToken.None);
+            3);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(3);

@@ -63,7 +63,7 @@ internal sealed class GetMyTicketsQueryHandler(
         const string sql = """
             SELECT
                 t.id AS TicketId,
-                t.campaign_id AS DrawGroupId,
+                t.draw_group_id AS DrawGroupId,
                 t.game_code AS GameCode,
                 -- TODO: add gaming.ticket_lines.play_type_code and backfill from tickets for historical records.
                 l.play_type_code AS PlayTypeCode,

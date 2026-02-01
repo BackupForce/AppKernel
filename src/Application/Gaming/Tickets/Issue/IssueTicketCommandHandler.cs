@@ -136,9 +136,7 @@ internal sealed class IssueTicketCommandHandler(
             null,
             now);
 
-        Result<TicketIssuanceResult> issuanceResult = await ticketIssuanceService.IssueSingleAsync(
-            issuanceRequest,
-            cancellationToken);
+        Result<TicketIssuanceResult> issuanceResult = await ticketIssuanceService.IssueSingleAsync(issuanceRequest);
         if (issuanceResult.IsFailure)
         {
             return Result.Failure<IssueTicketResult>(issuanceResult.Error);

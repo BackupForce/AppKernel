@@ -10,7 +10,7 @@ internal sealed class DrawGroupConfiguration : IEntityTypeConfiguration<DrawGrou
 {
     public void Configure(EntityTypeBuilder<DrawGroup> builder)
     {
-        builder.ToTable("campaigns", Schemas.Gaming);
+        builder.ToTable("draw_groups", Schemas.Gaming);
 
         builder.HasKey(drawGroup => drawGroup.Id);
 

@@ -36,10 +36,10 @@ internal sealed class GetDrawGroupByIdQueryHandler(
                 c.created_at_utc AS CreatedAtUtc,
                 (
                     SELECT COUNT(*)
-                    FROM gaming.campaign_draws cd
-                    WHERE cd.campaign_id = c.id
+                    FROM gaming.draw_group_draws cd
+                    WHERE cd.draw_group_id = c.id
                 ) AS DrawCount
-            FROM gaming.campaigns c
+            FROM gaming.draw_groups c
             WHERE c.tenant_id = @TenantId AND c.id = @DrawGroupId
             """;
 
@@ -47,8 +47,8 @@ internal sealed class GetDrawGroupByIdQueryHandler(
             SELECT
                 cd.draw_id AS DrawId,
                 cd.created_at_utc AS CreatedAtUtc
-            FROM gaming.campaign_draws cd
-            WHERE cd.tenant_id = @TenantId AND cd.campaign_id = @DrawGroupId
+            FROM gaming.draw_group_draws cd
+            WHERE cd.tenant_id = @TenantId AND cd.draw_group_id = @DrawGroupId
             ORDER BY cd.created_at_utc ASC
             """;
 

@@ -173,27 +173,6 @@ public sealed class Permission
         public static readonly Permission DrawGroupDelete = new(225, "gaming.drawgroup.delete", "刪除期數群組", PermissionScope.Tenant);
         public static readonly Permission DrawGroupDrawManage = new(226, "gaming.drawgroup.draw.manage", "管理期數群組期數", PermissionScope.Tenant);
 
-        [Obsolete("Use DrawGroupRead instead.")]
-        public static readonly Permission CampaignRead = new(220, "gaming.campaign.read", "檢視活動", PermissionScope.Tenant);
-
-        [Obsolete("Use DrawGroupCreate instead.")]
-        public static readonly Permission CampaignCreate = new(221, "gaming.campaign.create", "建立活動", PermissionScope.Tenant);
-
-        [Obsolete("Use DrawGroupUpdate instead.")]
-        public static readonly Permission CampaignUpdate = new(222, "gaming.campaign.update", "更新活動", PermissionScope.Tenant);
-
-        [Obsolete("Use DrawGroupActivate instead.")]
-        public static readonly Permission CampaignActivate = new(223, "gaming.campaign.activate", "啟用活動", PermissionScope.Tenant);
-
-        [Obsolete("Use DrawGroupEnd instead.")]
-        public static readonly Permission CampaignEnd = new(224, "gaming.campaign.end", "結束活動", PermissionScope.Tenant);
-
-        [Obsolete("Use DrawGroupDelete instead.")]
-        public static readonly Permission CampaignDelete = new(225, "gaming.campaign.delete", "刪除活動", PermissionScope.Tenant);
-
-        [Obsolete("Use DrawGroupDrawManage instead.")]
-        public static readonly Permission CampaignDrawManage = new(226, "gaming.campaign.draw.manage", "管理活動期數", PermissionScope.Tenant);
-
         public static IEnumerable<Permission> AllPermissions => new[]
         {
             All,

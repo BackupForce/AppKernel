@@ -135,7 +135,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("refresh_token_records", "public");
                 });
 
-            modelBuilder.Entity("Domain.Gaming.Campaigns.Campaign", b =>
+            modelBuilder.Entity("Domain.Gaming.DrawGroups.DrawGroup", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -181,28 +181,28 @@ namespace Infrastructure.Migrations
                         .HasColumnName("tenant_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_campaigns");
+                        .HasName("pk_draw_groups");
 
                     b.HasIndex("TenantId", "GameCode", "PlayTypeCode", "GrantOpenAtUtc")
-                        .HasDatabaseName("ix_campaigns_tenant_id_game_code_play_type_code_grant_open_at_");
+                        .HasDatabaseName("ix_draw_groups_tenant_id_game_code_play_type_code_grant_open_a");
 
-                    b.ToTable("campaigns", "gaming");
+                    b.ToTable("draw_groups", "gaming");
                 });
 
-            modelBuilder.Entity("Domain.Gaming.Campaigns.CampaignDraw", b =>
+            modelBuilder.Entity("Domain.Gaming.DrawGroups.DrawGroupDraw", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("CampaignId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("campaign_id");
-
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("DrawGroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draw_group_id");
 
                     b.Property<Guid>("DrawId")
                         .HasColumnType("uuid")
@@ -213,19 +213,19 @@ namespace Infrastructure.Migrations
                         .HasColumnName("tenant_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_campaign_draws");
+                        .HasName("pk_draw_group_draws");
 
-                    b.HasIndex("CampaignId")
-                        .HasDatabaseName("ix_campaign_draws_campaign_id");
+                    b.HasIndex("DrawGroupId")
+                        .HasDatabaseName("ix_draw_group_draws_draw_group_id");
 
-                    b.HasIndex("TenantId", "CampaignId")
-                        .HasDatabaseName("ix_campaign_draws_tenant_id_campaign_id");
+                    b.HasIndex("TenantId", "DrawGroupId")
+                        .HasDatabaseName("ix_draw_group_draws_tenant_id_draw_group_id");
 
-                    b.HasIndex("TenantId", "CampaignId", "DrawId")
+                    b.HasIndex("TenantId", "DrawGroupId", "DrawId")
                         .IsUnique()
-                        .HasDatabaseName("ix_campaign_draws_tenant_id_campaign_id_draw_id");
+                        .HasDatabaseName("ix_draw_group_draws_tenant_id_draw_group_id_draw_id");
 
-                    b.ToTable("campaign_draws", "gaming");
+                    b.ToTable("draw_group_draws", "gaming");
                 });
 
             modelBuilder.Entity("Domain.Gaming.DrawTemplates.DrawTemplate", b =>
@@ -971,10 +971,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid?>("CampaignId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("campaign_id");
-
                     b.Property<DateTime?>("CancelledAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("cancelled_at_utc");
@@ -991,6 +987,10 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<Guid?>("DrawGroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draw_group_id");
 
                     b.Property<Guid?>("DrawId")
                         .HasColumnType("uuid")
@@ -2128,14 +2128,14 @@ namespace Infrastructure.Migrations
                     b.Navigation("Session");
                 });
 
-            modelBuilder.Entity("Domain.Gaming.Campaigns.CampaignDraw", b =>
+            modelBuilder.Entity("Domain.Gaming.DrawGroups.DrawGroupDraw", b =>
                 {
-                    b.HasOne("Domain.Gaming.Campaigns.Campaign", null)
+                    b.HasOne("Domain.Gaming.DrawGroups.DrawGroup", null)
                         .WithMany("Draws")
-                        .HasForeignKey("CampaignId")
+                        .HasForeignKey("DrawGroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_campaign_draws_campaigns_campaign_id");
+                        .HasConstraintName("fk_draw_group_draws_draw_groups_draw_group_id");
                 });
 
             modelBuilder.Entity("Domain.Gaming.DrawTemplates.DrawTemplateAllowedTicketTemplate", b =>
@@ -2469,7 +2469,7 @@ namespace Infrastructure.Migrations
                     b.Navigation("RefreshTokens");
                 });
 
-            modelBuilder.Entity("Domain.Gaming.Campaigns.Campaign", b =>
+            modelBuilder.Entity("Domain.Gaming.DrawGroups.DrawGroup", b =>
                 {
                     b.Navigation("Draws");
                 });

@@ -42,10 +42,10 @@ internal sealed class ListDrawGroupsQueryHandler(
                 c.created_at_utc AS CreatedAtUtc,
                 (
                     SELECT COUNT(*)
-                    FROM gaming.campaign_draws cd
-                    WHERE cd.campaign_id = c.id
+                    FROM gaming.draw_group_draws cd
+                    WHERE cd.draw_group_id = c.id
                 ) AS DrawCount
-            FROM gaming.campaigns c
+            FROM gaming.draw_groups c
             WHERE c.tenant_id = @TenantId
             """);
 

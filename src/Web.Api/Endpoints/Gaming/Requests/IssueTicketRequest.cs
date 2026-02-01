@@ -8,12 +8,8 @@ public sealed class IssueTicketRequest
 
     public Guid? DrawGroupId { get; init; }
 
-    [JsonPropertyName("campaignId")]
-    public Guid? CampaignId { get; init; }
-
     public Guid? TicketTemplateId { get; init; }
 
     public string? IssuedReason { get; init; }
-
-    public Guid ResolveDrawGroupId() => DrawGroupId ?? CampaignId ?? Guid.Empty;
+    public Guid ResolveDrawGroupId() => DrawGroupId ?? Guid.Empty;
 }

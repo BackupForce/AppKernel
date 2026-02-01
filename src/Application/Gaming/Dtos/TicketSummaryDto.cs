@@ -16,9 +16,3 @@ public sealed partial record TicketSummaryDto(
     DateTime? SubmittedAtUtc,
     IReadOnlyCollection<TicketLineSummaryDto> Lines,
     IReadOnlyCollection<TicketDrawSummaryDto> Draws);
-
-public sealed partial record TicketSummaryDto
-{
-    [JsonPropertyName("campaignId")]
-    public Guid? CampaignId => DrawGroupId;
-}

@@ -9,13 +9,13 @@ internal sealed class DrawGroupDrawConfiguration : IEntityTypeConfiguration<Draw
 {
     public void Configure(EntityTypeBuilder<DrawGroupDraw> builder)
     {
-        builder.ToTable("campaign_draws", Schemas.Gaming);
+        builder.ToTable("draw_group_draws", Schemas.Gaming);
 
         builder.HasKey(item => item.Id);
 
         builder.Property(item => item.TenantId).IsRequired();
         builder.Property(item => item.DrawGroupId)
-            .HasColumnName("campaign_id")
+            .HasColumnName("draw_group_id")
             .IsRequired();
         builder.Property(item => item.DrawId).IsRequired();
         builder.Property(item => item.CreatedAtUtc).IsRequired();

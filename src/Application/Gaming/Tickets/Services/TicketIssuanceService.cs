@@ -10,8 +10,7 @@ internal sealed class TicketIssuanceService(
     ITicketDrawRepository ticketDrawRepository)
 {
     public Task<Result<TicketIssuanceResult>> IssueSingleAsync(
-        TicketIssuanceRequest request,
-        CancellationToken cancellationToken)
+        TicketIssuanceRequest request)
     {
         if (request.DrawIds.Count == 0)
         {
@@ -49,8 +48,7 @@ internal sealed class TicketIssuanceService(
 
     public Task<Result<IReadOnlyCollection<Ticket>>> IssueBulkSameDrawAsync(
         TicketIssuanceRequest request,
-        int quantity,
-        CancellationToken cancellationToken)
+        int quantity)
     {
         if (request.DrawIds.Count == 0)
         {

@@ -41,7 +41,23 @@ public partial class Init : Migration
             });
 
         migrationBuilder.CreateTable(
-            name: "campaigns",
+            name: "draw_allowed_ticket_templates",
+            schema: "gaming",
+            columns: table => new
+            {
+                id = table.Column<Guid>(type: "uuid", nullable: false),
+                tenant_id = table.Column<Guid>(type: "uuid", nullable: false),
+                draw_id = table.Column<Guid>(type: "uuid", nullable: false),
+                ticket_template_id = table.Column<Guid>(type: "uuid", nullable: false),
+                created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_draw_allowed_ticket_templates", x => x.id);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "draw_groups",
             schema: "gaming",
             columns: table => new
             {
@@ -57,23 +73,7 @@ public partial class Init : Migration
             },
             constraints: table =>
             {
-                table.PrimaryKey("pk_campaigns", x => x.id);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "draw_allowed_ticket_templates",
-            schema: "gaming",
-            columns: table => new
-            {
-                id = table.Column<Guid>(type: "uuid", nullable: false),
-                tenant_id = table.Column<Guid>(type: "uuid", nullable: false),
-                draw_id = table.Column<Guid>(type: "uuid", nullable: false),
-                ticket_template_id = table.Column<Guid>(type: "uuid", nullable: false),
-                created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("pk_draw_allowed_ticket_templates", x => x.id);
+                table.PrimaryKey("pk_draw_groups", x => x.id);
             });
 
         migrationBuilder.CreateTable(
@@ -439,7 +439,7 @@ public partial class Init : Migration
                 game_code = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
                 play_type_code = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: true),
                 member_id = table.Column<Guid>(type: "uuid", nullable: false),
-                campaign_id = table.Column<Guid>(type: "uuid", nullable: true),
+                draw_group_id = table.Column<Guid>(type: "uuid", nullable: true),
                 ticket_template_id = table.Column<Guid>(type: "uuid", nullable: true),
                 price_snapshot = table.Column<decimal>(type: "numeric(18,2)", nullable: true),
                 total_cost = table.Column<long>(type: "bigint", nullable: true),
@@ -510,24 +510,24 @@ public partial class Init : Migration
             });
 
         migrationBuilder.CreateTable(
-            name: "campaign_draws",
+            name: "draw_group_draws",
             schema: "gaming",
             columns: table => new
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 tenant_id = table.Column<Guid>(type: "uuid", nullable: false),
-                campaign_id = table.Column<Guid>(type: "uuid", nullable: false),
+                draw_group_id = table.Column<Guid>(type: "uuid", nullable: false),
                 draw_id = table.Column<Guid>(type: "uuid", nullable: false),
                 created_at_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
             },
             constraints: table =>
             {
-                table.PrimaryKey("pk_campaign_draws", x => x.id);
+                table.PrimaryKey("pk_draw_group_draws", x => x.id);
                 table.ForeignKey(
-                    name: "fk_campaign_draws_campaigns_campaign_id",
-                    column: x => x.campaign_id,
+                    name: "fk_draw_group_draws_draw_groups_draw_group_id",
+                    column: x => x.draw_group_id,
                     principalSchema: "gaming",
-                    principalTable: "campaigns",
+                    principalTable: "draw_groups",
                     principalColumn: "id",
                     onDelete: ReferentialAction.Cascade);
             });
@@ -846,7 +846,10 @@ public partial class Init : Migration
                 provider = table.Column<int>(type: "integer", nullable: false),
                 provider_key = table.Column<string>(type: "text", nullable: false),
                 normalized_provider_key = table.Column<string>(type: "text", nullable: false),
-                created_at_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                created_at_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                display_name = table.Column<string>(type: "text", nullable: true),
+                picture_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                email = table.Column<string>(type: "text", nullable: true)
             },
             constraints: table =>
             {
@@ -879,6 +882,33 @@ public partial class Init : Migration
                 table.PrimaryKey("pk_member_activity_log", x => x.id);
                 table.ForeignKey(
                     name: "fk_member_activity_log_members_member_id",
+                    column: x => x.member_id,
+                    principalSchema: "public",
+                    principalTable: "members",
+                    principalColumn: "id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "member_addresses",
+            schema: "public",
+            columns: table => new
+            {
+                id = table.Column<Guid>(type: "uuid", nullable: false),
+                member_id = table.Column<Guid>(type: "uuid", nullable: false),
+                receiver_name = table.Column<string>(type: "text", nullable: false),
+                phone_number = table.Column<string>(type: "text", nullable: false),
+                country = table.Column<string>(type: "text", nullable: false),
+                city = table.Column<string>(type: "text", nullable: false),
+                district = table.Column<string>(type: "text", nullable: false),
+                address_line = table.Column<string>(type: "text", nullable: false),
+                is_default = table.Column<bool>(type: "boolean", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_member_addresses", x => x.id);
+                table.ForeignKey(
+                    name: "fk_member_addresses_members_member_id",
                     column: x => x.member_id,
                     principalSchema: "public",
                     principalTable: "members",
@@ -988,36 +1018,36 @@ public partial class Init : Migration
                     onDelete: ReferentialAction.Cascade);
             });
 
+        migrationBuilder.CreateTable(
+            name: "member_profiles",
+            schema: "public",
+            columns: table => new
+            {
+                id = table.Column<Guid>(type: "uuid", nullable: false),
+                member_id = table.Column<Guid>(type: "uuid", nullable: false),
+                real_name = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                gender = table.Column<short>(type: "smallint", nullable: false),
+                phone_number = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: true),
+                phone_verified = table.Column<bool>(type: "boolean", nullable: false),
+                updated_at_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_member_profiles", x => x.id);
+                table.ForeignKey(
+                    name: "fk_member_profiles_members_member_id",
+                    column: x => x.member_id,
+                    principalSchema: "public",
+                    principalTable: "members",
+                    principalColumn: "id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
         migrationBuilder.CreateIndex(
             name: "ix_auth_sessions_tenant_user",
             schema: "public",
             table: "auth_sessions",
             columns: new[] { "tenant_id", "user_id" });
-
-        migrationBuilder.CreateIndex(
-            name: "ix_campaign_draws_campaign_id",
-            schema: "gaming",
-            table: "campaign_draws",
-            column: "campaign_id");
-
-        migrationBuilder.CreateIndex(
-            name: "ix_campaign_draws_tenant_id_campaign_id",
-            schema: "gaming",
-            table: "campaign_draws",
-            columns: new[] { "tenant_id", "campaign_id" });
-
-        migrationBuilder.CreateIndex(
-            name: "ix_campaign_draws_tenant_id_campaign_id_draw_id",
-            schema: "gaming",
-            table: "campaign_draws",
-            columns: new[] { "tenant_id", "campaign_id", "draw_id" },
-            unique: true);
-
-        migrationBuilder.CreateIndex(
-            name: "ix_campaigns_tenant_id_game_code_play_type_code_grant_open_at_",
-            schema: "gaming",
-            table: "campaigns",
-            columns: new[] { "tenant_id", "game_code", "play_type_code", "grant_open_at_utc" });
 
         migrationBuilder.CreateIndex(
             name: "ix_draw_allowed_ticket_templates_tenant_id_draw_id_ticket_temp",
@@ -1038,6 +1068,31 @@ public partial class Init : Migration
             table: "draw_enabled_play_types",
             columns: new[] { "tenant_id", "draw_id", "play_type_code" },
             unique: true);
+
+        migrationBuilder.CreateIndex(
+            name: "ix_draw_group_draws_draw_group_id",
+            schema: "gaming",
+            table: "draw_group_draws",
+            column: "draw_group_id");
+
+        migrationBuilder.CreateIndex(
+            name: "ix_draw_group_draws_tenant_id_draw_group_id",
+            schema: "gaming",
+            table: "draw_group_draws",
+            columns: new[] { "tenant_id", "draw_group_id" });
+
+        migrationBuilder.CreateIndex(
+            name: "ix_draw_group_draws_tenant_id_draw_group_id_draw_id",
+            schema: "gaming",
+            table: "draw_group_draws",
+            columns: new[] { "tenant_id", "draw_group_id", "draw_id" },
+            unique: true);
+
+        migrationBuilder.CreateIndex(
+            name: "ix_draw_groups_tenant_id_game_code_play_type_code_grant_open_a",
+            schema: "gaming",
+            table: "draw_groups",
+            columns: new[] { "tenant_id", "game_code", "play_type_code", "grant_open_at_utc" });
 
         migrationBuilder.CreateIndex(
             name: "ix_draw_prize_pool_items_draw_id",
@@ -1124,6 +1179,12 @@ public partial class Init : Migration
             columns: new[] { "member_id", "created_at" });
 
         migrationBuilder.CreateIndex(
+            name: "ix_member_addresses_member_id",
+            schema: "public",
+            table: "member_addresses",
+            column: "member_id");
+
+        migrationBuilder.CreateIndex(
             name: "ix_member_asset_ledger_member_id_asset_code_created_at",
             schema: "public",
             table: "member_asset_ledger",
@@ -1140,6 +1201,13 @@ public partial class Init : Migration
             schema: "public",
             table: "member_point_ledger",
             columns: new[] { "reference_type", "reference_id" });
+
+        migrationBuilder.CreateIndex(
+            name: "ux_member_profiles_member_id",
+            schema: "public",
+            table: "member_profiles",
+            column: "member_id",
+            unique: true);
 
         migrationBuilder.CreateIndex(
             name: "ix_members_user_id",
@@ -1362,15 +1430,15 @@ public partial class Init : Migration
     protected override void Down(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.DropTable(
-            name: "campaign_draws",
-            schema: "gaming");
-
-        migrationBuilder.DropTable(
             name: "draw_allowed_ticket_templates",
             schema: "gaming");
 
         migrationBuilder.DropTable(
             name: "draw_enabled_play_types",
+            schema: "gaming");
+
+        migrationBuilder.DropTable(
+            name: "draw_group_draws",
             schema: "gaming");
 
         migrationBuilder.DropTable(
@@ -1398,6 +1466,10 @@ public partial class Init : Migration
             schema: "public");
 
         migrationBuilder.DropTable(
+            name: "member_addresses",
+            schema: "public");
+
+        migrationBuilder.DropTable(
             name: "member_asset_balance",
             schema: "public");
 
@@ -1411,6 +1483,10 @@ public partial class Init : Migration
 
         migrationBuilder.DropTable(
             name: "member_point_ledger",
+            schema: "public");
+
+        migrationBuilder.DropTable(
+            name: "member_profiles",
             schema: "public");
 
         migrationBuilder.DropTable(
@@ -1490,7 +1566,7 @@ public partial class Init : Migration
             schema: "public");
 
         migrationBuilder.DropTable(
-            name: "campaigns",
+            name: "draw_groups",
             schema: "gaming");
 
         migrationBuilder.DropTable(

@@ -41,10 +41,10 @@ internal static class GamingTicketEndpoints
             .WithName("IssueTicket");
 
         ticketGroup.MapPost(
-                "/draw-groups/{drawGroupId:guid}/claim",
-                async (Guid drawGroupId, ISender sender, CancellationToken ct) =>
+                "/drawgroups/{drawgroupId:guid}/claim",
+                async (Guid drawgroupId, ISender sender, CancellationToken ct) =>
                 {
-                    ClaimDrawGroupTicketCommand command = new ClaimDrawGroupTicketCommand(drawGroupId);
+                    ClaimDrawGroupTicketCommand command = new ClaimDrawGroupTicketCommand(drawgroupId);
                     return await UseCaseInvoker.Send<ClaimDrawGroupTicketCommand, IssueTicketResult>(
                         command,
                         sender,
@@ -55,22 +55,6 @@ internal static class GamingTicketEndpoints
             .Produces<IssueTicketResult>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ClaimDrawGroupTicket");
-
-        ticketGroup.MapPost(
-                "/campaigns/{campaignId:guid}/claim",
-                async (Guid campaignId, ISender sender, CancellationToken ct) =>
-                {
-                    ClaimDrawGroupTicketCommand command = new ClaimDrawGroupTicketCommand(campaignId);
-                    return await UseCaseInvoker.Send<ClaimDrawGroupTicketCommand, IssueTicketResult>(
-                        command,
-                        sender,
-                        value => Results.Ok(value),
-                        ct);
-                })
-            .RequireAuthorization(AuthorizationPolicyNames.Member)
-            .Produces<IssueTicketResult>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithName("ClaimCampaignTicket");
 
         ticketGroup.MapPost(
                 "/{ticketId:guid}/submit",
