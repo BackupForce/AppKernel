@@ -30,6 +30,9 @@ public static class GamingErrors
     public static readonly Error DrawNotFound = Error.NotFound(
         "Gaming.DrawNotFound",
         "找不到期數。");
+    public static readonly Error DrawTenantMismatch = Error.Forbidden(
+        "Gaming.DrawTenantMismatch",
+        "無法存取其他租戶的期數資料。");
 
     public static readonly Error DrawTemplateNotFound = Error.NotFound(
         "Gaming.DrawTemplateNotFound",

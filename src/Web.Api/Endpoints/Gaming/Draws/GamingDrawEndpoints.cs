@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Authorization;
+using Application.Abstractions.Data;
 using Application.Gaming.Draws.AllowedTicketTemplates.Get;
 using Application.Gaming.Draws.AllowedTicketTemplates.Update;
 using Application.Gaming.Draws.Create;
@@ -10,6 +11,7 @@ using Application.Gaming.Draws.PrizePool;
 using Application.Gaming.Draws.PrizePool.Get;
 using Application.Gaming.Draws.PrizePool.Update;
 using Application.Gaming.Draws.PrizePool.Validate;
+using Application.Gaming.Draws.RemoteSearch;
 using Application.Gaming.Draws.Reopen;
 using Application.Gaming.Draws.SellingOptions;
 using Application.Gaming.Draws.Settle;
@@ -56,6 +58,26 @@ internal static class GamingDrawEndpoints
              .Produces<Guid>(StatusCodes.Status200OK)
              .ProducesProblem(StatusCodes.Status400BadRequest)
              .WithName("CreateGameDraw");
+
+        group.MapGet(
+                "/draws/remote-search",
+                async (Guid tenantId, [AsParameters] RemoteSearchDrawsRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    RemoteSearchDrawsQuery query = new RemoteSearchDrawsQuery(
+                        tenantId,
+                        request.Q,
+                        request.Page,
+                        request.PageSize);
+                    return await UseCaseInvoker.Send<RemoteSearchDrawsQuery, PagedResult<DrawRemoteSearchDto>>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Gaming.DrawGroupRead.Name)
+            .Produces<PagedResult<DrawRemoteSearchDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("RemoteSearchDraws");
 
         group.MapGet(
                 "/games/{gameCode}/draws",
