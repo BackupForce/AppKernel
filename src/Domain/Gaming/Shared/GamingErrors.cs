@@ -199,6 +199,78 @@ public static class GamingErrors
         "Gaming.TicketNotFound",
         "找不到票券。");
 
+    public static readonly Error TicketClaimEventNotFound = Error.NotFound(
+        "Gaming.TicketClaimEventNotFound",
+        "找不到搶票活動。");
+
+    public static readonly Error TicketClaimEventNotActive = Error.Validation(
+        "Gaming.TicketClaimEventNotActive",
+        "活動尚未啟用。");
+
+    public static readonly Error TicketClaimEventDisabled = Error.Validation(
+        "Gaming.TicketClaimEventDisabled",
+        "活動已停用。");
+
+    public static readonly Error TicketClaimEventNotStarted = Error.Validation(
+        "Gaming.TicketClaimEventNotStarted",
+        "活動尚未開始。");
+
+    public static readonly Error TicketClaimEventEnded = Error.Validation(
+        "Gaming.TicketClaimEventEnded",
+        "活動已結束。");
+
+    public static readonly Error TicketClaimEventSoldOut = Error.Validation(
+        "Gaming.TicketClaimEventSoldOut",
+        "活動已額滿。");
+
+    public static readonly Error TicketClaimEventMemberQuotaExceeded = Error.Validation(
+        "Gaming.TicketClaimEventMemberQuotaExceeded",
+        "已達會員領取上限。");
+
+    public static readonly Error TicketClaimEventInvalidTimeWindow = Error.Validation(
+        "Gaming.TicketClaimEventInvalidTimeWindow",
+        "活動時間區間不正確。");
+
+    public static readonly Error TicketClaimEventInvalidQuota = Error.Validation(
+        "Gaming.TicketClaimEventInvalidQuota",
+        "活動配額不正確。");
+
+    public static readonly Error TicketClaimEventScopeRequired = Error.Validation(
+        "Gaming.TicketClaimEventScopeRequired",
+        "活動範圍設定不可為空。");
+
+    public static readonly Error TicketClaimEventTenantRequired = Error.Validation(
+        "Gaming.TicketClaimEventTenantRequired",
+        "活動租戶不可為空。");
+
+    public static readonly Error TicketClaimEventTenantMismatch = Error.Validation(
+        "Gaming.TicketClaimEventTenantMismatch",
+        "活動租戶不一致。");
+
+    public static readonly Error TicketClaimEventNameRequired = Error.Validation(
+        "Gaming.TicketClaimEventNameRequired",
+        "活動名稱不可為空白。");
+
+    public static readonly Error TicketClaimEventNameTooLong = Error.Validation(
+        "Gaming.TicketClaimEventNameTooLong",
+        "活動名稱不可超過 128 字元。");
+
+    public static readonly Error TicketClaimEventAlreadyActive = Error.Validation(
+        "Gaming.TicketClaimEventAlreadyActive",
+        "活動已啟用。");
+
+    public static readonly Error TicketClaimEventAlreadyEnded = Error.Validation(
+        "Gaming.TicketClaimEventAlreadyEnded",
+        "活動已結束。");
+
+    public static readonly Error TicketClaimEventNotEditable = Error.Validation(
+        "Gaming.TicketClaimEventNotEditable",
+        "活動目前狀態不可編輯。");
+
+    public static readonly Error TicketClaimEventStatusInvalid = Error.Validation(
+        "Gaming.TicketClaimEventStatusInvalid",
+        "活動狀態不正確。");
+
     public static readonly Error TicketAlreadySubmitted = Error.Validation(
         "Gaming.TicketAlreadySubmitted",
         "票券已提交。");

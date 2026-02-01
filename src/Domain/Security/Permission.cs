@@ -172,6 +172,13 @@ public sealed class Permission
         public static readonly Permission DrawGroupEnd = new(224, "gaming.drawgroup.end", "結束期數群組", PermissionScope.Tenant);
         public static readonly Permission DrawGroupDelete = new(225, "gaming.drawgroup.delete", "刪除期數群組", PermissionScope.Tenant);
         public static readonly Permission DrawGroupDrawManage = new(226, "gaming.drawgroup.draw.manage", "管理期數群組期數", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventRead = new(230, "gaming.ticket-claim-event.read", "檢視領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventCreate = new(231, "gaming.ticket-claim-event.create", "建立領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventUpdate = new(232, "gaming.ticket-claim-event.update", "更新領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventActivate = new(233, "gaming.ticket-claim-event.activate", "啟用領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventDisable = new(234, "gaming.ticket-claim-event.disable", "停用領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventEnd = new(235, "gaming.ticket-claim-event.end", "結束領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventClaimRead = new(236, "gaming.ticket-claim-event.claim.read", "檢視領券紀錄", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {
@@ -191,7 +198,14 @@ public sealed class Permission
             DrawGroupActivate,
             DrawGroupEnd,
             DrawGroupDelete,
-            DrawGroupDrawManage
+            DrawGroupDrawManage,
+            TicketClaimEventRead,
+            TicketClaimEventCreate,
+            TicketClaimEventUpdate,
+            TicketClaimEventActivate,
+            TicketClaimEventDisable,
+            TicketClaimEventEnd,
+            TicketClaimEventClaimRead
         };
     }
 
