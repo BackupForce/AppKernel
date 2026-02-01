@@ -1,4 +1,5 @@
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Time;
 using Application.Gaming.TicketClaimEvents.Claim;
@@ -45,7 +46,7 @@ public sealed class TicketClaimEventClaimTests : BaseIntegrationTest
         persisted.Should().NotBeNull();
         persisted!.TotalClaimed.Should().Be(1);
 
-        int recordCount = DbContext.TicketClaimRecords.Count(r => r.EventId == eventId && r.MemberId == memberId);
+        int recordCount = await DbContext.TicketClaimRecords.CountAsync(r => r.EventId == eventId && r.MemberId == memberId);
         recordCount.Should().Be(1);
     }
 
@@ -371,17 +372,17 @@ public sealed class TicketClaimEventClaimTests : BaseIntegrationTest
     {
         await using AsyncServiceScope scope = ServiceProvider.CreateAsyncScope();
 
-        var ticketClaimEventRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimEventRepository>();
-        var ticketClaimMemberCounterRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimMemberCounterRepository>();
-        var ticketClaimRecordRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimRecordRepository>();
-        var drawGroupRepository = scope.ServiceProvider.GetRequiredService<IDrawGroupRepository>();
-        var drawGroupDrawRepository = scope.ServiceProvider.GetRequiredService<IDrawGroupDrawRepository>();
-        var drawRepository = scope.ServiceProvider.GetRequiredService<IDrawRepository>();
-        var ticketTemplateRepository = scope.ServiceProvider.GetRequiredService<ITicketTemplateRepository>();
-        var memberRepository = scope.ServiceProvider.GetRequiredService<IMemberRepository>();
-        var ticketRepository = scope.ServiceProvider.GetRequiredService<ITicketRepository>();
-        var ticketDrawRepository = scope.ServiceProvider.GetRequiredService<ITicketDrawRepository>();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        ITicketClaimEventRepository ticketClaimEventRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimEventRepository>();
+        ITicketClaimMemberCounterRepository ticketClaimMemberCounterRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimMemberCounterRepository>();
+        ITicketClaimRecordRepository ticketClaimRecordRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimRecordRepository>();
+        IDrawGroupRepository drawGroupRepository = scope.ServiceProvider.GetRequiredService<IDrawGroupRepository>();
+        IDrawGroupDrawRepository drawGroupDrawRepository = scope.ServiceProvider.GetRequiredService<IDrawGroupDrawRepository>();
+        IDrawRepository drawRepository = scope.ServiceProvider.GetRequiredService<IDrawRepository>();
+        ITicketTemplateRepository ticketTemplateRepository = scope.ServiceProvider.GetRequiredService<ITicketTemplateRepository>();
+        IMemberRepository memberRepository = scope.ServiceProvider.GetRequiredService<IMemberRepository>();
+        ITicketRepository ticketRepository = scope.ServiceProvider.GetRequiredService<ITicketRepository>();
+        ITicketDrawRepository ticketDrawRepository = scope.ServiceProvider.GetRequiredService<ITicketDrawRepository>();
+        IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
         TicketIssuanceService ticketIssuanceService = new(ticketRepository, ticketDrawRepository);
 
@@ -463,9 +464,9 @@ public sealed class TicketClaimEventClaimTests : BaseIntegrationTest
     {
         public Guid TenantId => tenantId;
 
-        public bool TryGetTenantId(out Guid resolved)
+        public bool TryGetTenantId(out Guid tenantId)
         {
-            resolved = tenantId;
+            tenantId = TenantId;
             return true;
         }
     }

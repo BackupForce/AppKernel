@@ -116,8 +116,8 @@ internal sealed class ClaimTicketFromEventCommandHandler(
         }
 
         Result<TicketIssuanceResult> issuanceResult = await ticketIssuanceService.IssueSingleAsync(
-            issuanceRequestResult.Value,
-            cancellationToken);
+            issuanceRequestResult.Value
+            );
 
         if (issuanceResult.IsFailure)
         {
