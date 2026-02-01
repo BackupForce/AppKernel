@@ -8,6 +8,7 @@ using Application.Gaming.Tickets.GetMy;
 using Domain.Gaming.Shared;
 using Domain.Members;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using SharedKernel;
 using Web.Api.Common;
 using Web.Api.Endpoints.Gaming.Requests;

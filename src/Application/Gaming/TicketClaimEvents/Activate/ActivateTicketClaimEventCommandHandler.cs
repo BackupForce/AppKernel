@@ -21,7 +21,7 @@ internal sealed class ActivateTicketClaimEventCommandHandler(
             return Result.Failure(GamingErrors.TicketClaimEventTenantMismatch);
         }
 
-        var ticketClaimEvent = await ticketClaimEventRepository.GetByIdAsync(
+        Domain.Gaming.TicketClaimEvents.TicketClaimEvent? ticketClaimEvent = await ticketClaimEventRepository.GetByIdAsync(
             request.TenantId,
             request.EventId,
             cancellationToken);
