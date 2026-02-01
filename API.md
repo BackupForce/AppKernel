@@ -229,6 +229,79 @@
 
 ---
 
+## Admin Ticket Claim Events
+
+#### [POST] `/api/v1/tenants/{tenantId}/admin/ticket-claim-events` - 建立領券活動
+**Auth:** JWT + Policy `TenantUser` + Permission `gaming.ticket-claim-event.create`。【F:src/Web.Api/Endpoints/Admin/AdminTicketClaimEventEndpoints.cs†L22-L65】【F:src/Domain/Security/Permission.cs†L162-L214】
+
+**Request**
+```json
+{
+  "name": "限時搶票",
+  "startsAtUtc": "2024-01-01T00:00:00Z",
+  "endsAtUtc": "2024-01-02T00:00:00Z",
+  "totalQuota": 100,
+  "perMemberQuota": 1,
+  "scopeType": "SingleDrawGroup",
+  "scopeId": "00000000-0000-0000-0000-000000000000",
+  "ticketTemplateId": "11111111-1111-1111-1111-111111111111"
+}
+```
+
+**Response**
+- 200: `Guid` (活動 Id)
+
+---
+
+#### [PUT] `/api/v1/tenants/{tenantId}/admin/ticket-claim-events/{id}` - 更新領券活動
+**Auth:** JWT + Policy `TenantUser` + Permission `gaming.ticket-claim-event.update`。【F:src/Web.Api/Endpoints/Admin/AdminTicketClaimEventEndpoints.cs†L67-L103】【F:src/Domain/Security/Permission.cs†L162-L214】
+
+**Request**
+```json
+{
+  "name": "限時搶票",
+  "startsAtUtc": "2024-01-01T00:00:00Z",
+  "endsAtUtc": "2024-01-02T00:00:00Z",
+  "totalQuota": 100,
+  "perMemberQuota": 1,
+  "scopeType": "SingleDrawGroup",
+  "scopeId": "00000000-0000-0000-0000-000000000000",
+  "ticketTemplateId": "11111111-1111-1111-1111-111111111111"
+}
+```
+
+---
+
+#### [POST] `/api/v1/tenants/{tenantId}/admin/ticket-claim-events/{id}/activate` - 啟用活動
+**Auth:** JWT + Policy `TenantUser` + Permission `gaming.ticket-claim-event.activate`。【F:src/Web.Api/Endpoints/Admin/AdminTicketClaimEventEndpoints.cs†L105-L116】【F:src/Domain/Security/Permission.cs†L162-L214】
+
+---
+
+#### [POST] `/api/v1/tenants/{tenantId}/admin/ticket-claim-events/{id}/disable` - 停用活動
+**Auth:** JWT + Policy `TenantUser` + Permission `gaming.ticket-claim-event.disable`。【F:src/Web.Api/Endpoints/Admin/AdminTicketClaimEventEndpoints.cs†L118-L129】【F:src/Domain/Security/Permission.cs†L162-L214】
+
+---
+
+#### [POST] `/api/v1/tenants/{tenantId}/admin/ticket-claim-events/{id}/end` - 結束活動
+**Auth:** JWT + Policy `TenantUser` + Permission `gaming.ticket-claim-event.end`。【F:src/Web.Api/Endpoints/Admin/AdminTicketClaimEventEndpoints.cs†L131-L142】【F:src/Domain/Security/Permission.cs†L162-L214】
+
+---
+
+#### [GET] `/api/v1/tenants/{tenantId}/admin/ticket-claim-events/{id}` - 活動詳情
+**Auth:** JWT + Policy `TenantUser` + Permission `gaming.ticket-claim-event.read`。【F:src/Web.Api/Endpoints/Admin/AdminTicketClaimEventEndpoints.cs†L144-L158】【F:src/Domain/Security/Permission.cs†L162-L214】
+
+---
+
+#### [GET] `/api/v1/tenants/{tenantId}/admin/ticket-claim-events` - 活動列表
+**Auth:** JWT + Policy `TenantUser` + Permission `gaming.ticket-claim-event.read`。【F:src/Web.Api/Endpoints/Admin/AdminTicketClaimEventEndpoints.cs†L160-L206】【F:src/Domain/Security/Permission.cs†L162-L214】
+
+---
+
+#### [GET] `/api/v1/tenants/{tenantId}/admin/ticket-claim-events/{id}/claims` - 領券稽核
+**Auth:** JWT + Policy `TenantUser` + Permission `gaming.ticket-claim-event.claim.read`。【F:src/Web.Api/Endpoints/Admin/AdminTicketClaimEventEndpoints.cs†L208-L249】【F:src/Domain/Security/Permission.cs†L162-L214】
+
+---
+
 #### [GET] 取得可下注票券（Member / Staff）
 **Member Endpoint:** `/api/v1/tenants/{tenantId}/gaming/members/me/tickets/available-for-bet`  
 **Staff Endpoint:** `/api/v1/tenants/{tenantId}/admin/members/{memberId}/tickets/available-for-bet`
@@ -402,6 +475,20 @@
 - **授權**：Member
 - **成功回應**：同上
 - **描述**：舊路徑相容，將導向 DrawGroup 行為。 【F:src/Web.Api/Endpoints/Gaming/Tickets/GamingTicketEndpoints.cs†L85-L97】
+
+### POST `/api/v1/tenants/{tenantId}/gaming/members/me/ticket-claim-events/{eventId}/claim`
+- **授權**：Member
+- **Headers**
+  - `Idempotency-Key` (optional)
+- **成功回應**
+  ```json
+  {
+    "eventId": "guid",
+    "ticketIds": ["guid"],
+    "quantity": 1
+  }
+  ```
+- **描述**：會員於活動期間領券，成功後建立 Ticket 並回傳 ticket ids。 【F:src/Web.Api/Endpoints/Gaming/Members/GamingMemberEndpoints.cs†L18-L41】【F:src/Application/Gaming/TicketClaimEvents/Claim/ClaimTicketFromEventCommandHandler.cs†L25-L180】
 
 ### POST `/api/v1/tenants/{tenantId}/gaming/tickets/{ticketId}/submit`
 - **授權**：Member

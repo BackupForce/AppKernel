@@ -135,6 +135,9 @@ public static class DependencyInjection
         services.AddScoped<ITicketDrawRepository, TicketDrawRepository>();
         services.AddScoped<ITicketLineResultRepository, TicketLineResultRepository>();
         services.AddScoped<ITicketIdempotencyRepository, TicketIdempotencyRepository>();
+        services.AddScoped<ITicketClaimEventRepository, TicketClaimEventRepository>();
+        services.AddScoped<ITicketClaimMemberCounterRepository, TicketClaimMemberCounterRepository>();
+        services.AddScoped<ITicketClaimRecordRepository, TicketClaimRecordRepository>();
         services.AddScoped<ITicketTemplateRepository, TicketTemplateRepository>();
         services.AddScoped<IPrizeRepository, PrizeRepository>();
         services.AddScoped<IPrizeAwardRepository, PrizeAwardRepository>();

@@ -2,6 +2,7 @@
 using Application.Abstractions.Authorization;
 using Application.Gaming.Awards.GetMy;
 using Application.Gaming.Dtos;
+using Application.Gaming.TicketClaimEvents.Claim;
 using Application.Gaming.Tickets.AvailableForBet;
 using Application.Gaming.Tickets.GetMy;
 using Domain.Gaming.Shared;
@@ -18,6 +19,25 @@ internal static class GamingMemberEndpoints
 {
     public static void Map(RouteGroupBuilder group)
     {
+        group.MapPost(
+                "/members/me/ticket-claim-events/{eventId:guid}/claim",
+                async (Guid eventId,
+                    [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+                    ISender sender,
+                    CancellationToken ct) =>
+                {
+                    ClaimTicketFromEventCommand command = new(eventId, idempotencyKey);
+                    return await UseCaseInvoker.Send<ClaimTicketFromEventCommand, TicketClaimResult>(
+                        command,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(AuthorizationPolicyNames.Member)
+            .Produces<TicketClaimResult>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("ClaimTicketFromEvent");
+
         group.MapGet(
                 "/games/{gameCode}/members/me/tickets",
                 async (string gameCode, [AsParameters] GetMyTicketsRequest request, ISender sender, CancellationToken ct) =>

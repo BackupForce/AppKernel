@@ -8,6 +8,7 @@ using Domain.Gaming.Entitlements;
 using Domain.Gaming.PrizeAwards;
 using Domain.Gaming.Prizes;
 using Domain.Gaming.RedeemRecords;
+using Domain.Gaming.TicketClaimEvents;
 using Domain.Gaming.Tickets;
 using Domain.Gaming.TicketTemplates;
 using Domain.Members;
@@ -42,6 +43,9 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<DrawEnabledPlayType> DrawEnabledPlayTypes { get; set; }
     public DbSet<DrawAllowedTicketTemplate> DrawAllowedTicketTemplates { get; set; }
     public DbSet<DrawPrizePoolItem> DrawPrizePoolItems { get; set; }
+    public DbSet<TicketClaimEvent> TicketClaimEvents { get; set; }
+    public DbSet<TicketClaimMemberCounter> TicketClaimMemberCounters { get; set; }
+    public DbSet<TicketClaimRecord> TicketClaimRecords { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<TicketLine> TicketLines { get; set; }
     public DbSet<TicketDraw> TicketDraws { get; set; }
