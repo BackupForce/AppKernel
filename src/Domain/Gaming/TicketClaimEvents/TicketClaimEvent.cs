@@ -262,7 +262,7 @@ public sealed class TicketClaimEvent : Entity
             return Result.Failure(GamingErrors.TicketClaimEventInvalidTimeWindow);
         }
 
-        if ((totalQuota.HasValue && totalQuota.Value < 1) || perMemberQuota < 1)
+        if (totalQuota.HasValue && totalQuota.Value < 1 || perMemberQuota < 1)
         {
             return Result.Failure(GamingErrors.TicketClaimEventInvalidQuota);
         }
