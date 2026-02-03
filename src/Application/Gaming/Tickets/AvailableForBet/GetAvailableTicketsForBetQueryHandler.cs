@@ -25,8 +25,12 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
         string GameCode,
         string? TicketPlayTypeCode,
         Guid? DrawId,
+        Guid? DrawGroupId,
+        string? DrawCode,
+        string? DrawGroupName,
         DateTime? SalesCloseAtUtc,
-        DateTime? ExpiresAtUtc);
+        DateTime ExpiresAtUtc,
+        string? DrawTemplateName);
 
     private sealed record DrawPlayTypeRow(Guid DrawId, string PlayTypeCode);
 
@@ -47,10 +51,25 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
                 t.game_code AS GameCode,
                 t.play_type_code AS TicketPlayTypeCode,
                 t.draw_id AS DrawId,
+                t.draw_group_id AS DrawGroupId,
+                d.draw_code AS DrawCode,
+                dg.name AS DrawGroupName,
                 d.sales_close_at AS SalesCloseAtUtc,
-                NULL::timestamp with time zone AS ExpiresAtUtc
+                COALESCE(d.sales_close_at, dg.grant_close_at_utc, t.created_at) AS ExpiresAtUtc,
+                COALESCE(dt.name, dgt.template_name) AS DrawTemplateName
             FROM gaming.tickets t
             LEFT JOIN gaming.draws d ON d.id = t.draw_id
+            LEFT JOIN gaming.draw_templates dt ON dt.id = d.source_template_id
+            LEFT JOIN gaming.draw_groups dg ON dg.id = t.draw_group_id
+            LEFT JOIN LATERAL (
+                SELECT dtg.name AS template_name
+                FROM gaming.draw_group_draws ggd
+                JOIN gaming.draws dg_draw ON dg_draw.id = ggd.draw_id
+                LEFT JOIN gaming.draw_templates dtg ON dtg.id = dg_draw.source_template_id
+                WHERE ggd.draw_group_id = dg.id
+                ORDER BY dg_draw.created_at ASC
+                LIMIT 1
+            ) dgt ON TRUE
             WHERE t.tenant_id = @TenantId
               AND t.member_id = @MemberId
               AND t.submission_status = @SubmissionStatus
@@ -73,7 +92,7 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
 
         using System.Data.IDbConnection connection = dbConnectionFactory.GetOpenConnection();
 
-        IEnumerable<TicketRow> rows = await connection.QueryAsync<TicketRow>(
+        IEnumerable<TicketRow> rows = await connection.QueryAsync<TicketRow>(new CommandDefinition(
             sql,
             new
             {
@@ -83,7 +102,8 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
                 NowUtc = dateTimeProvider.UtcNow,
                 request.DrawId,
                 Limit = limit
-            });
+            },
+            cancellationToken: cancellationToken));
 
         List<TicketRow> ticketRows = rows.ToList();
         if (ticketRows.Count == 0)
@@ -99,7 +119,8 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
         Dictionary<Guid, HashSet<string>> drawPlayTypes = await LoadDrawPlayTypesAsync(
             connection,
             request.TenantId,
-            drawIds);
+            drawIds,
+            cancellationToken);
 
         PlayRuleRegistry registry = PlayRuleRegistry.CreateDefault();
         TenantEntitlementsDto entitlements = await entitlementChecker.GetTenantEntitlementsAsync(
@@ -161,6 +182,7 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
             }
 
             string displayText = BuildDisplayText(row);
+            string scopeDisplayName = ResolveScopeDisplayName(row);
             List<TicketPlayTypeDto> playTypes = availableCodes
                 .OrderBy(code => code, StringComparer.Ordinal)
                 .Select(code => new TicketPlayTypeDto(code, code))
@@ -169,10 +191,13 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
             items.Add(new AvailableTicketItemDto(
                 row.TicketId,
                 displayText,
+                scopeDisplayName,
                 row.GameCode,
                 row.DrawId,
+                row.DrawGroupId,
                 row.SalesCloseAtUtc,
                 row.ExpiresAtUtc,
+                row.DrawTemplateName,
                 playTypes));
         }
 
@@ -199,10 +224,27 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
 
         return string.Join(" | ", segments);
     }
+
+    private static string ResolveScopeDisplayName(TicketRow row)
+    {
+        if (row.DrawId.HasValue)
+        {
+            return row.DrawCode ?? string.Empty;
+        }
+
+        if (row.DrawGroupId.HasValue)
+        {
+            return row.DrawGroupName ?? string.Empty;
+        }
+
+        return string.Empty;
+    }
+
     private static async Task<Dictionary<Guid, HashSet<string>>> LoadDrawPlayTypesAsync(
-    System.Data.IDbConnection connection,
-    Guid tenantId,
-    HashSet<Guid> drawIds)
+        System.Data.IDbConnection connection,
+        Guid tenantId,
+        HashSet<Guid> drawIds,
+        CancellationToken cancellationToken)
     {
         if (drawIds.Count == 0)
         {
@@ -218,13 +260,14 @@ internal sealed class GetAvailableTicketsForBetQueryHandler(
           AND p.draw_id = ANY(@DrawIds)
         """;
 
-        IEnumerable<DrawPlayTypeRow> rows = await connection.QueryAsync<DrawPlayTypeRow>(
+        IEnumerable<DrawPlayTypeRow> rows = await connection.QueryAsync<DrawPlayTypeRow>(new CommandDefinition(
             sql,
             new
             {
                 TenantId = tenantId,
                 DrawIds = drawIds.ToArray()
-            });
+            },
+            cancellationToken: cancellationToken));
 
         Dictionary<Guid, HashSet<string>> map = new(drawIds.Count);
         foreach (Guid drawId in drawIds)
