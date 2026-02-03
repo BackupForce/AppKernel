@@ -12,16 +12,20 @@ using Application.Gaming.DrawGroups.Update;
 using Application.Gaming.Dtos;
 using Domain.Security;
 using MediatR;
+using Pipelines.Sockets.Unofficial.Arenas;
 using Web.Api.Common;
 using Web.Api.Endpoints.Gaming.Requests;
 
-namespace Web.Api.Endpoints.Gaming.DrawGroups;
+namespace Web.Api.Endpoints.Gaming.SubEndpoints;
 
-internal static class GamingDrawGroupEndpoints
+internal static class DrawGroupEndpoints
 {
-    public static void Map(RouteGroupBuilder group)
+    public static void Map(RouteGroupBuilder parent)
     {
-        RouteGroupBuilder drawGroupGroup = group.MapGroup("/drawgroups");
+        RouteGroupBuilder drawGroupGroup = parent.MapGroup("/drawgroups")
+            .WithTags("Gaming.DrawGroups");
+
+
 
         MapDrawGroupRoutes(drawGroupGroup);
     }
@@ -32,7 +36,7 @@ internal static class GamingDrawGroupEndpoints
                 "/",
                 async (Guid tenantId, CreateDrawGroupRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    CreateDrawGroupCommand command = new CreateDrawGroupCommand(
+                    var command = new CreateDrawGroupCommand(
                         tenantId,
                         request.GameCode,
                         request.PlayTypeCode,
@@ -54,7 +58,7 @@ internal static class GamingDrawGroupEndpoints
                 "/remote-search",
                 async (Guid tenantId, [AsParameters] RemoteSearchDrawGroupsRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    RemoteSearchDrawGroupsQuery query = new RemoteSearchDrawGroupsQuery(
+                    var query = new RemoteSearchDrawGroupsQuery(
                         tenantId,
                         request.Q,
                         request.Page,
@@ -74,7 +78,7 @@ internal static class GamingDrawGroupEndpoints
                 "/",
                 async (Guid tenantId, [AsParameters] ListDrawGroupsRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    ListDrawGroupsQuery query = new ListDrawGroupsQuery(
+                    var query = new ListDrawGroupsQuery(
                         tenantId,
                         request.Status,
                         request.GameCode,
@@ -96,7 +100,7 @@ internal static class GamingDrawGroupEndpoints
                 "/{drawGroupId:guid}",
                 async (Guid tenantId, Guid drawGroupId, ISender sender, CancellationToken ct) =>
                 {
-                    GetDrawGroupByIdQuery query = new GetDrawGroupByIdQuery(tenantId, drawGroupId);
+                    var query = new GetDrawGroupByIdQuery(tenantId, drawGroupId);
                     return await UseCaseInvoker.Send<GetDrawGroupByIdQuery, DrawGroupDetailDto>(
                         query,
                         sender,
@@ -112,7 +116,7 @@ internal static class GamingDrawGroupEndpoints
                 "/{drawGroupId:guid}",
                 async (Guid tenantId, Guid drawGroupId, UpdateDrawGroupRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    UpdateDrawGroupCommand command = new UpdateDrawGroupCommand(
+                    var command = new UpdateDrawGroupCommand(
                         tenantId,
                         drawGroupId,
                         request.Name,
@@ -129,7 +133,7 @@ internal static class GamingDrawGroupEndpoints
                 "/{drawGroupId:guid}:activate",
                 async (Guid tenantId, Guid drawGroupId, ISender sender, CancellationToken ct) =>
                 {
-                    ActivateDrawGroupCommand command = new ActivateDrawGroupCommand(tenantId, drawGroupId);
+                    var command = new ActivateDrawGroupCommand(tenantId, drawGroupId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawGroupActivate.Name)
@@ -141,7 +145,7 @@ internal static class GamingDrawGroupEndpoints
                 "/{drawGroupId:guid}:end",
                 async (Guid tenantId, Guid drawGroupId, ISender sender, CancellationToken ct) =>
                 {
-                    EndDrawGroupCommand command = new EndDrawGroupCommand(tenantId, drawGroupId);
+                    var command = new EndDrawGroupCommand(tenantId, drawGroupId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawGroupEnd.Name)
@@ -153,7 +157,7 @@ internal static class GamingDrawGroupEndpoints
                 "/{drawGroupId:guid}/draws",
                 async (Guid tenantId, Guid drawGroupId, AddDrawGroupDrawRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    AddDrawGroupDrawCommand command = new AddDrawGroupDrawCommand(tenantId, drawGroupId, request.DrawId);
+                    var command = new AddDrawGroupDrawCommand(tenantId, drawGroupId, request.DrawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawGroupDrawManage.Name)
@@ -165,7 +169,7 @@ internal static class GamingDrawGroupEndpoints
                 "/{drawGroupId:guid}/draws/{drawId:guid}",
                 async (Guid tenantId, Guid drawGroupId, Guid drawId, ISender sender, CancellationToken ct) =>
                 {
-                    RemoveDrawGroupDrawCommand command = new RemoveDrawGroupDrawCommand(tenantId, drawGroupId, drawId);
+                    var command = new RemoveDrawGroupDrawCommand(tenantId, drawGroupId, drawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawGroupDrawManage.Name)
@@ -177,7 +181,7 @@ internal static class GamingDrawGroupEndpoints
                 "/{drawGroupId:guid}",
                 async (Guid tenantId, Guid drawGroupId, ISender sender, CancellationToken ct) =>
                 {
-                    DeleteDrawGroupCommand command = new DeleteDrawGroupCommand(tenantId, drawGroupId);
+                    var command = new DeleteDrawGroupCommand(tenantId, drawGroupId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawGroupDelete.Name)

@@ -19,29 +19,25 @@ using Application.Gaming.Dtos;
 using Application.Gaming.Tickets.Place;
 using Domain.Security;
 using MediatR;
+using Pipelines.Sockets.Unofficial.Arenas;
 using Web.Api.Common;
 using Web.Api.Endpoints.Gaming.Requests;
 
-namespace Web.Api.Endpoints.Gaming.Draws;
+namespace Web.Api.Endpoints.Gaming.SubEndpoints;
 
-internal static class GamingDrawEndpoints
+internal static class DrawEndpoints
 {
-    public static void Map(RouteGroupBuilder group)
+    public static void Map(RouteGroupBuilder parent)
     {
-        group.MapPost(
-                 "/games/{gameCode}/draws",
-                 async (string gameCode, CreateDrawRequest request, ISender sender, CancellationToken ct) =>
-                 {
-                     string resolvedGameCode = string.IsNullOrWhiteSpace(request.GameCode)
-                         ? gameCode
-                         : request.GameCode;
-                     if (!string.Equals(resolvedGameCode, gameCode, StringComparison.OrdinalIgnoreCase))
-                     {
-                         return Results.BadRequest("GameCode in path and body must match.");
-                     }
+        RouteGroupBuilder group = parent
+            .MapGroup("/draws")
+            .WithTags("Gaming.Draws");
 
-                     CreateDrawCommand command = new CreateDrawCommand(
-                         resolvedGameCode,
+        group.MapPost(
+                 "/",
+                 async (CreateDrawRequest request, ISender sender, CancellationToken ct) =>
+                 {
+                     var command = new CreateDrawCommand(
                          request.TemplateId,
                          request.SalesStartAt,
                          request.SalesCloseAt,
@@ -54,16 +50,15 @@ internal static class GamingDrawEndpoints
                          ct);
                  })
              .RequireAuthorization(Permission.Gaming.DrawCreate.Name)
-             .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
              .Produces<Guid>(StatusCodes.Status200OK)
              .ProducesProblem(StatusCodes.Status400BadRequest)
              .WithName("CreateGameDraw");
 
         group.MapGet(
-                "/draws/remote-search",
+                "/remote-search",
                 async (Guid tenantId, [AsParameters] RemoteSearchDrawsRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    RemoteSearchDrawsQuery query = new RemoteSearchDrawsQuery(
+                    var query = new RemoteSearchDrawsQuery(
                         tenantId,
                         request.Q,
                         request.Page,
@@ -80,10 +75,10 @@ internal static class GamingDrawEndpoints
             .WithName("RemoteSearchDraws");
 
         group.MapGet(
-                "/games/{gameCode}/draws",
-                async (string gameCode, [AsParameters] GetDrawsRequest request, ISender sender, CancellationToken ct) =>
+                "/",
+                async ([AsParameters] GetDrawsRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    GetOpenDrawsQuery query = new GetOpenDrawsQuery(gameCode, request.Status);
+                    var query = new GetOpenDrawsQuery(request.Status);
                     return await UseCaseInvoker.Send<GetOpenDrawsQuery, IReadOnlyCollection<DrawSummaryDto>>(
                         query,
                         sender,
@@ -95,10 +90,10 @@ internal static class GamingDrawEndpoints
             .WithName("GetGameOpenDraws");
 
         group.MapGet(
-                "/draws/selling/options",
+                "/selling/options",
                 async ([AsParameters] GetSellingDrawOptionsRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    GetSellingDrawOptionsQuery query = new GetSellingDrawOptionsQuery(
+                    var query = new GetSellingDrawOptionsQuery(
                         request.GameCode,
                         request.PlayTypeCode,
                         request.Take);
@@ -110,13 +105,15 @@ internal static class GamingDrawEndpoints
                 })
             .AllowAnonymous()
             .Produces<IReadOnlyList<DrawSellingOptionDto>>(StatusCodes.Status200OK)
+            .WithSummary("可售票期數下拉選項")
+            .WithDescription("可售票期數下拉選項")
             .WithName("GetSellingDrawOptions");
 
         group.MapGet(
-                "/games/{gameCode}/draws/{drawId:guid}",
-                async (string gameCode, Guid drawId, ISender sender, CancellationToken ct) =>
+                "/{drawId:guid}",
+                async (Guid drawId, ISender sender, CancellationToken ct) =>
                 {
-                    GetDrawByIdQuery query = new GetDrawByIdQuery(drawId);
+                    var query = new GetDrawByIdQuery(drawId);
                     return await UseCaseInvoker.Send<GetDrawByIdQuery, DrawDetailDto>(
                         query,
                         sender,
@@ -129,82 +126,58 @@ internal static class GamingDrawEndpoints
             .WithName("GetGameDrawById");
 
         group.MapPost(
-                "/games/{gameCode}/draws/{drawId:guid}/tickets",
-                async (string gameCode, Guid drawId, PlaceTicketRequest request, ISender sender, CancellationToken ct) =>
+                "/{drawId:guid}/execute",
+                async (Guid drawId, ISender sender, CancellationToken ct) =>
                 {
-                    PlaceTicketCommand command = new PlaceTicketCommand(
-                        drawId,
-                        request.PlayTypeCode,
-                        request.TemplateId,
-                        request.Lines);
-                    return await UseCaseInvoker.Send<PlaceTicketCommand, Guid>(
-                        command,
-                        sender,
-                        value => Results.Ok(value),
-                        ct);
-                })
-            .RequireAuthorization(AuthorizationPolicyNames.Member)
-            .Produces<Guid>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithName("PlaceGameTicket");
-
-        group.MapPost(
-                "/games/{gameCode}/draws/{drawId:guid}/execute",
-                async (string gameCode, Guid drawId, ISender sender, CancellationToken ct) =>
-                {
-                    ExecuteDrawCommand command = new ExecuteDrawCommand(drawId);
+                    var command = new ExecuteDrawCommand(drawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawExecute.Name)
-            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ExecuteGameDraw");
 
         group.MapPost(
-                "/games/{gameCode}/draws/{drawId:guid}/settle",
-                async (string gameCode, Guid drawId, ISender sender, CancellationToken ct) =>
+                "/{drawId:guid}/settle",
+                async (Guid drawId, ISender sender, CancellationToken ct) =>
                 {
-                    SettleDrawCommand command = new SettleDrawCommand(drawId);
+                    var command = new SettleDrawCommand(drawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
-            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("SettleGameDraw");
 
         group.MapPost(
-                "/games/{gameCode}/draws/{drawId:guid}/manual-close",
-                async (string gameCode, Guid drawId, CloseDrawManuallyRequest request, ISender sender, CancellationToken ct) =>
+                "/{drawId:guid}/manual-close",
+                async (Guid drawId, CloseDrawManuallyRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    CloseDrawManuallyCommand command = new CloseDrawManuallyCommand(drawId, request.Reason);
+                    var command = new CloseDrawManuallyCommand(drawId, request.Reason);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawManualClose.Name)
-            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("CloseGameDrawManually");
 
         group.MapPost(
-                "/games/{gameCode}/draws/{drawId:guid}/reopen",
-                async (string gameCode, Guid drawId, ISender sender, CancellationToken ct) =>
+                "/{drawId:guid}/reopen",
+                async (Guid drawId, ISender sender, CancellationToken ct) =>
                 {
-                    ReopenDrawCommand command = new ReopenDrawCommand(drawId);
+                    var command = new ReopenDrawCommand(drawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawReopen.Name)
-            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ReopenGameDraw");
 
         group.MapGet(
-                "/games/{gameCode}/draws/{drawId:guid}/allowed-ticket-templates",
-                async (string gameCode, Guid drawId, ISender sender, CancellationToken ct) =>
+                "/{drawId:guid}/allowed-ticket-templates",
+                async (Guid drawId, ISender sender, CancellationToken ct) =>
                 {
-                    GetDrawAllowedTicketTemplatesQuery query = new GetDrawAllowedTicketTemplatesQuery(drawId);
+                    var query = new GetDrawAllowedTicketTemplatesQuery(drawId);
                     return await UseCaseInvoker.Send<GetDrawAllowedTicketTemplatesQuery, IReadOnlyCollection<DrawAllowedTicketTemplateDto>>(
                         query,
                         sender,
@@ -215,25 +188,24 @@ internal static class GamingDrawEndpoints
             .WithName("GetGameDrawAllowedTicketTemplates");
 
         group.MapPut(
-                "/games/{gameCode}/draws/{drawId:guid}/allowed-ticket-templates",
-                async (string gameCode, Guid drawId, UpdateDrawAllowedTicketTemplatesRequest request, ISender sender, CancellationToken ct) =>
+                "/{drawId:guid}/allowed-ticket-templates",
+                async (Guid drawId, UpdateDrawAllowedTicketTemplatesRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    UpdateDrawAllowedTicketTemplatesCommand command = new UpdateDrawAllowedTicketTemplatesCommand(
+                    var command = new UpdateDrawAllowedTicketTemplatesCommand(
                         drawId,
                         request.TemplateIds);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawUpdateAllowedTemplates.Name)
-            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("UpdateGameDrawAllowedTicketTemplates");
 
         group.MapGet(
-                "/games/{gameCode}/draws/{drawId:guid}/prize-pool",
-                async (string gameCode, Guid drawId, ISender sender, CancellationToken ct) =>
+                "/{drawId:guid}/prize-pool",
+                async (Guid drawId, ISender sender, CancellationToken ct) =>
                 {
-                    GetDrawPrizePoolQuery query = new GetDrawPrizePoolQuery(drawId);
+                    var query = new GetDrawPrizePoolQuery(drawId);
                     return await UseCaseInvoker.Send<GetDrawPrizePoolQuery, DrawPrizePoolDto>(
                         query,
                         sender,
@@ -241,16 +213,15 @@ internal static class GamingDrawEndpoints
                         ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
-            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces<DrawPrizePoolDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("GetGameDrawPrizePool");
 
         group.MapPut(
-                "/games/{gameCode}/draws/{drawId:guid}/prize-pool",
-                async (string gameCode, Guid drawId, UpdateDrawPrizePoolRequest request, ISender sender, CancellationToken ct) =>
+                "/{drawId:guid}/prize-pool",
+                async (Guid drawId, UpdateDrawPrizePoolRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    UpdateDrawPrizePoolCommand command = new UpdateDrawPrizePoolCommand(
+                    var command = new UpdateDrawPrizePoolCommand(
                         drawId,
                         request.Items.Select(item => new UpdateDrawPrizePoolItem(
                             item.PlayTypeCode,
@@ -269,16 +240,15 @@ internal static class GamingDrawEndpoints
                         ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
-            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces<DrawPrizePoolDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("UpdateGameDrawPrizePool");
 
         group.MapGet(
-                "/games/{gameCode}/draws/{drawId:guid}/prize-pool/validation",
-                async (string gameCode, Guid drawId, ISender sender, CancellationToken ct) =>
+                "/{drawId:guid}/prize-pool/validation",
+                async (Guid drawId, ISender sender, CancellationToken ct) =>
                 {
-                    ValidateDrawPrizePoolQuery query = new ValidateDrawPrizePoolQuery(drawId);
+                    var query = new ValidateDrawPrizePoolQuery(drawId);
                     return await UseCaseInvoker.Send<ValidateDrawPrizePoolQuery, DrawPrizePoolValidationDto>(
                         query,
                         sender,
@@ -286,7 +256,6 @@ internal static class GamingDrawEndpoints
                         ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
-            .WithMetadata(new ResourceNodeMetadata("gameCode", "game:"))
             .Produces<DrawPrizePoolValidationDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ValidateGameDrawPrizePool");

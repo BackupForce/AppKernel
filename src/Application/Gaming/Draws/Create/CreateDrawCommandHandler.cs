@@ -48,7 +48,7 @@ internal sealed class CreateDrawCommandHandler(
             return Result.Failure<Guid>(GamingErrors.DrawTemplateInactive);
         }
 
-        Result<GameCode> gameCodeResult = GameCode.Create(request.GameCode);
+        Result<GameCode> gameCodeResult = GameCode.Create(template.GameCode.Value);
         if (gameCodeResult.IsFailure)
         {
             return Result.Failure<Guid>(gameCodeResult.Error);

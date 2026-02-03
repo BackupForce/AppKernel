@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using static Domain.Security.Permission;
 
 namespace Web.Api.OpenApi;
 
@@ -48,7 +49,9 @@ public class ConfigureSwaggerGenOptions : IConfigureNamedOptions<SwaggerGenOptio
             string[] groups = new[]
             {
             $"admin-v{version}",
-            $"frontend-v{version}"
+            $"frontend-v{version}",
+            $"gaming-v{version}",
+            $"tenant-v{version}",
         };
 
             foreach (string group in groups)

@@ -32,6 +32,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Web.Api.Common;
 using Web.Api.Endpoints.Gaming.Requests;
+using Web.Api.Endpoints.Gaming.SubEndpoints;
 
 namespace Web.Api.Endpoints.Gaming;
 
@@ -47,24 +48,21 @@ public sealed class GamingEndpoints : IEndpoint
     {
         // 依租戶隔離路由，權限由 AuthorizationPolicy 控制。
         RouteGroupBuilder group = app.MapGroup("/tenants/{tenantId:guid}/gaming")
-            .WithGroupName("tenant-v1")
+            .WithGroupName("gaming-v1")
             .WithMetadata(new ApiVersion(1, 0))
             .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
             .WithTags("Gaming");
 
-        Draws.GamingDrawEndpoints.Map(group);
-        DrawGroups.GamingDrawGroupEndpoints.Map(group);
-        Tickets.GamingTicketTemplateEndpoints.Map(group);
-        Prizes.GamingPrizeEndpoints.Map(group);
-        Entitlements.GamingEntitlementEndpoints.Map(group);
-        Catalog.GamingCatalogEndpoints.Map(group);
-        Members.GamingMemberEndpoints.Map(group);
-        Tickets.GamingTicketEndpoints.Map(group);
+        DrawEndpoints.Map(group);
+        DrawGroupEndpoints.Map(group);
+        TicketTemplateEndpoints.Map(group);
+        PrizeEndpoints.Map(group);
+        EntitlementEndpoints.Map(group);
+        CatalogEndpoints.Map(group);
+        TicketEndpoints.Map(group);
         
         MapRedeemEndpoints(group);
     }
-
-
 
 
 

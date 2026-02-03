@@ -12,28 +12,12 @@ namespace Application.Gaming.Draws.GetOpen;
 internal sealed class GetOpenDrawsQueryHandler(
     IDbConnectionFactory dbConnectionFactory,
     ITenantContext tenantContext,
-    IDateTimeProvider dateTimeProvider,
-    IEntitlementChecker entitlementChecker) : IQueryHandler<GetOpenDrawsQuery, IReadOnlyCollection<DrawSummaryDto>>
+    IDateTimeProvider dateTimeProvider) : IQueryHandler<GetOpenDrawsQuery, IReadOnlyCollection<DrawSummaryDto>>
 {
     public async Task<Result<IReadOnlyCollection<DrawSummaryDto>>> Handle(
         GetOpenDrawsQuery request,
         CancellationToken cancellationToken)
     {
-        Result<GameCode> gameCodeResult = GameCode.Create(request.GameCode);
-        if (gameCodeResult.IsFailure)
-        {
-            return Result.Failure<IReadOnlyCollection<DrawSummaryDto>>(gameCodeResult.Error);
-        }
-
-        Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
-            tenantContext.TenantId,
-            gameCodeResult.Value,
-            cancellationToken);
-        if (entitlementResult.IsFailure)
-        {
-            return Result.Failure<IReadOnlyCollection<DrawSummaryDto>>(entitlementResult.Error);
-        }
-
         const string sql = """
             WITH draws AS (
                 SELECT
@@ -56,7 +40,6 @@ internal sealed class GetOpenDrawsQueryHandler(
                     END AS effective_status
                 FROM gaming.draws d
                 WHERE d.tenant_id = @TenantId
-                  AND d.game_code = @GameCode
                   AND d.status <> 4
             )
             SELECT
@@ -82,7 +65,6 @@ internal sealed class GetOpenDrawsQueryHandler(
             new
             {
                 tenantContext.TenantId,
-                GameCode = gameCodeResult.Value.Value,
                 Now = dateTimeProvider.UtcNow,
                 Status = status
             });

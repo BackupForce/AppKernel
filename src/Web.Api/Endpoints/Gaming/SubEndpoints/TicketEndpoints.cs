@@ -10,21 +10,21 @@ using MediatR;
 using Web.Api.Common;
 using Web.Api.Endpoints.Gaming.Requests;
 
-namespace Web.Api.Endpoints.Gaming.Tickets;
+namespace Web.Api.Endpoints.Gaming.SubEndpoints;
 
-internal static class GamingTicketEndpoints
+internal static class TicketEndpoints
 {
     public static void Map(RouteGroupBuilder group)
     {
         RouteGroupBuilder ticketGroup = group.MapGroup("/tickets")
             .WithMetadata(new ApiVersion(1, 0))
-            .WithTags("Gaming Tickets");
+            .WithTags("Gaming.Tickets");
 
         ticketGroup.MapPost(
                 "/issue",
                 async (IssueTicketRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    IssueTicketCommand command = new IssueTicketCommand(
+                    var command = new IssueTicketCommand(
                         request.MemberId,
                         request.ResolveDrawGroupId(),
                         request.TicketTemplateId,
@@ -44,7 +44,7 @@ internal static class GamingTicketEndpoints
                 "/drawgroups/{drawgroupId:guid}/claim",
                 async (Guid drawgroupId, ISender sender, CancellationToken ct) =>
                 {
-                    ClaimDrawGroupTicketCommand command = new ClaimDrawGroupTicketCommand(drawgroupId);
+                    var command = new ClaimDrawGroupTicketCommand(drawgroupId);
                     return await UseCaseInvoker.Send<ClaimDrawGroupTicketCommand, IssueTicketResult>(
                         command,
                         sender,
@@ -77,8 +77,8 @@ internal static class GamingTicketEndpoints
                 "/{ticketId:guid}/draws/{drawId:guid}/redeem",
                 async (Guid ticketId, Guid drawId, ISender sender, CancellationToken ct) =>
                 {
-                    RedeemTicketDrawCommand command = new RedeemTicketDrawCommand(ticketId, drawId);
-                    return await UseCaseInvoker.Send<RedeemTicketDrawCommand>(
+                    var command = new RedeemTicketDrawCommand(ticketId, drawId);
+                    return await UseCaseInvoker.Send(
                         command,
                         sender,
                         ct);
@@ -92,8 +92,8 @@ internal static class GamingTicketEndpoints
                 "/{ticketId:guid}/cancel",
                 async (Guid ticketId, CancelTicketRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    CancelTicketCommand command = new CancelTicketCommand(ticketId, request.Reason);
-                    return await UseCaseInvoker.Send<CancelTicketCommand>(
+                    var command = new CancelTicketCommand(ticketId, request.Reason);
+                    return await UseCaseInvoker.Send(
                         command,
                         sender,
                         ct);

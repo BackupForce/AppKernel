@@ -1,3 +1,3 @@
-namespace Web.Api.Endpoints.Gaming.Requests;
+namespace Web.Api.Endpoints.Frontends.Requests;
 
 public sealed record GetAvailableTicketsForBetRequest(Guid? DrawId, int? Limit);

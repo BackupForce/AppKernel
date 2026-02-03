@@ -23,6 +23,8 @@ public sealed class PermissionsEndpoints : IEndpoint
                     return Results.Ok(catalog);
                 })
             .Produces<PermissionCatalogDto>(StatusCodes.Status200OK)
+            .WithSummary("權限目錄")
+            .WithDescription("提供前端取得 UI 友善的權限目錄")
             .WithName("GetPermissionCatalog");
     }
 }

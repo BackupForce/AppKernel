@@ -6,21 +6,24 @@ using Application.Gaming.TicketTemplates.GetList;
 using Application.Gaming.TicketTemplates.Update;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Pipelines.Sockets.Unofficial.Arenas;
 using Web.Api.Common;
 using Web.Api.Endpoints.Gaming.Requests;
 
-namespace Web.Api.Endpoints.Gaming.Tickets;
+namespace Web.Api.Endpoints.Gaming.SubEndpoints;
 
-internal static class GamingTicketTemplateEndpoints
+internal static class TicketTemplateEndpoints
 {
-    public static void Map(RouteGroupBuilder group)
+    public static void Map(RouteGroupBuilder parent)
     {
+        RouteGroupBuilder group = parent.MapGroup("/ticket-templates")
+            .WithTags("Gaming.TicketTemplates");
 
         group.MapGet(
-                "/ticket-templates",
+                "/",
                 async ([FromQuery] bool activeOnly, ISender sender, CancellationToken ct) =>
                 {
-                    GetTicketTemplatesQuery query = new GetTicketTemplatesQuery(activeOnly);
+                    var query = new GetTicketTemplatesQuery(activeOnly);
                     return await UseCaseInvoker.Send<GetTicketTemplatesQuery, IReadOnlyCollection<TicketTemplateDto>>(
                         query,
                         sender,
@@ -31,10 +34,10 @@ internal static class GamingTicketTemplateEndpoints
             .WithName("GetTicketTemplates");
 
         group.MapPost(
-                "/ticket-templates",
+                "/",
                 async (CreateTicketTemplateRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    CreateTicketTemplateCommand command = new CreateTicketTemplateCommand(
+                    var command = new CreateTicketTemplateCommand(
                         request.Code,
                         request.Name,
                         request.Type,
@@ -53,10 +56,10 @@ internal static class GamingTicketTemplateEndpoints
             .WithName("CreateTicketTemplate");
 
         group.MapPut(
-                "/ticket-templates/{templateId:guid}",
+                "/{templateId:guid}",
                 async (Guid templateId, UpdateTicketTemplateRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    UpdateTicketTemplateCommand command = new UpdateTicketTemplateCommand(
+                    var command = new UpdateTicketTemplateCommand(
                         templateId,
                         request.Code,
                         request.Name,
@@ -72,20 +75,20 @@ internal static class GamingTicketTemplateEndpoints
             .WithName("UpdateTicketTemplate");
 
         group.MapPatch(
-                "/ticket-templates/{templateId:guid}/activate",
+                "/{templateId:guid}/activate",
                 async (Guid templateId, ISender sender, CancellationToken ct) =>
                 {
-                    ActivateTicketTemplateCommand command = new ActivateTicketTemplateCommand(templateId);
+                    var command = new ActivateTicketTemplateCommand(templateId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .Produces(StatusCodes.Status200OK)
             .WithName("ActivateTicketTemplate");
 
         group.MapPatch(
-                "/ticket-templates/{templateId:guid}/deactivate",
+                "/{templateId:guid}/deactivate",
                 async (Guid templateId, ISender sender, CancellationToken ct) =>
                 {
-                    DeactivateTicketTemplateCommand command = new DeactivateTicketTemplateCommand(templateId);
+                    var command = new DeactivateTicketTemplateCommand(templateId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .Produces(StatusCodes.Status200OK)
