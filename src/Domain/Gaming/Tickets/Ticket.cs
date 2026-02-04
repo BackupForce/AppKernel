@@ -59,7 +59,7 @@ public sealed class Ticket : Entity
     public Guid TenantId { get; private set; }
 
     /// <summary>
-    /// 主要期數識別（相容舊查詢，已改由 TicketDraw 維護逐期關係）。
+    /// 主要期數識別
     /// </summary>
     public Guid? DrawId { get; private set; }
 
