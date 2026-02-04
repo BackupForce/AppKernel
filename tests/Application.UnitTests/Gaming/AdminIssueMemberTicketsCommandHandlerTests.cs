@@ -31,7 +31,6 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
 
         IDrawRepository drawRepository = Substitute.For<IDrawRepository>();
         ITicketRepository ticketRepository = Substitute.For<ITicketRepository>();
-        ITicketDrawRepository ticketDrawRepository = Substitute.For<ITicketDrawRepository>();
         ITicketIdempotencyRepository ticketIdempotencyRepository = Substitute.For<ITicketIdempotencyRepository>();
         IMemberRepository memberRepository = Substitute.For<IMemberRepository>();
         IUnitOfWork unitOfWork = Substitute.For<IUnitOfWork>();
@@ -49,7 +48,7 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
         tenantContext.TenantId.Returns(tenantId);
         userContext.UserId.Returns(Guid.NewGuid());
 
-        TicketIssuanceService ticketIssuanceService = new(ticketRepository, ticketDrawRepository);
+        TicketIssuanceService ticketIssuanceService = new(ticketRepository);
 
         IssueMemberTicketsCommandHandler handler = new(
             drawRepository,
@@ -76,7 +75,6 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Tickets.Should().HaveCount(2);
         ticketRepository.Received(2).Insert(Arg.Any<Ticket>());
-        ticketDrawRepository.Received(2).Insert(Arg.Any<TicketDraw>());
     }
 
     [Fact]
@@ -104,7 +102,6 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
 
         IDrawRepository drawRepository = Substitute.For<IDrawRepository>();
         ITicketRepository ticketRepository = Substitute.For<ITicketRepository>();
-        ITicketDrawRepository ticketDrawRepository = Substitute.For<ITicketDrawRepository>();
         ITicketIdempotencyRepository ticketIdempotencyRepository = Substitute.For<ITicketIdempotencyRepository>();
         IMemberRepository memberRepository = Substitute.For<IMemberRepository>();
         IUnitOfWork unitOfWork = Substitute.For<IUnitOfWork>();
@@ -116,7 +113,7 @@ public sealed class AdminIssueMemberTicketsCommandHandlerTests
             .Returns(record);
         tenantContext.TenantId.Returns(tenantId);
 
-        TicketIssuanceService ticketIssuanceService = new(ticketRepository, ticketDrawRepository);
+        TicketIssuanceService ticketIssuanceService = new(ticketRepository);
 
         IssueMemberTicketsCommandHandler handler = new(
             drawRepository,

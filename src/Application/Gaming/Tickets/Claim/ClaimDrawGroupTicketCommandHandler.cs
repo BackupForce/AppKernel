@@ -4,6 +4,7 @@ using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Time;
 using Application.Gaming.Tickets.Issue;
+using Application.Gaming.Tickets.Services;
 using Domain.Gaming.DrawGroups;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
@@ -19,7 +20,6 @@ internal sealed class ClaimDrawGroupTicketCommandHandler(
     IDrawGroupDrawRepository drawGroupDrawRepository,
     IDrawRepository drawRepository,
     ITicketRepository ticketRepository,
-    ITicketDrawRepository ticketDrawRepository,
     IMemberRepository memberRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
@@ -79,16 +79,15 @@ internal sealed class ClaimDrawGroupTicketCommandHandler(
             drawGroup.Id,
             cancellationToken);
 
+        List<Guid> drawIds = drawGroupDraws.Select(item => item.DrawId).Distinct().ToList();
+        IReadOnlyCollection<Draw> draws = drawIds.Count == 0
+            ? Array.Empty<Draw>()
+            : await drawRepository.GetByIdsAsync(tenantContext.TenantId, drawIds, cancellationToken);
+
         List<Draw> eligibleDraws = new();
 
-        foreach (DrawGroupDraw drawGroupDraw in drawGroupDraws)
+        foreach (Draw draw in draws)
         {
-            Draw? draw = await drawRepository.GetByIdAsync(tenantContext.TenantId, drawGroupDraw.DrawId, cancellationToken);
-            if (draw is null)
-            {
-                continue;
-            }
-
             if (draw.GameCode != drawGroup.GameCode)
             {
                 continue;
@@ -99,7 +98,7 @@ internal sealed class ClaimDrawGroupTicketCommandHandler(
                 return Result.Failure<IssueTicketResult>(GamingErrors.DrawGroupDrawPlayTypeNotEnabled);
             }
 
-            if (!draw.IsWithinSalesWindow(now))
+            if (!DrawEligibility.IsEligiblePrimary(draw, now))
             {
                 continue;
             }
@@ -112,10 +111,11 @@ internal sealed class ClaimDrawGroupTicketCommandHandler(
             return Result.Failure<IssueTicketResult>(GamingErrors.TicketDrawNotAvailable);
         }
 
-        Guid? primaryDrawId = eligibleDraws
-            .OrderBy(draw => draw.DrawAt)
+        Guid primaryDrawId = eligibleDraws
+            .OrderBy(draw => draw.SalesOpenAt)
+            .ThenBy(draw => draw.DrawAt)
             .Select(draw => draw.Id)
-            .FirstOrDefault();
+            .First();
 
         Ticket ticket = Ticket.Create(
             tenantContext.TenantId,
@@ -135,15 +135,9 @@ internal sealed class ClaimDrawGroupTicketCommandHandler(
 
         ticketRepository.Insert(ticket);
 
-        foreach (Draw draw in eligibleDraws)
-        {
-            TicketDraw ticketDraw = TicketDraw.Create(tenantContext.TenantId, ticket.Id, draw.Id, now);
-            ticketDrawRepository.Insert(ticketDraw);
-        }
-
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        IssueTicketResult result = new IssueTicketResult(ticket.Id, eligibleDraws.Select(draw => draw.Id).ToList());
+        IssueTicketResult result = new IssueTicketResult(ticket.Id, primaryDrawId);
         return result;
     }
 }

@@ -1,5 +1,6 @@
-﻿using Application.Abstractions.Behaviors;
+using Application.Abstractions.Behaviors;
 using Application.Abstractions.Time;
+using Application.Gaming.Tickets.Redeem;
 using Application.Gaming.Tickets.Services;
 using Application.Gaming.Tickets.Submission;
 using Application.Time;
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddSingleton<Authorization.PermissionSelectionNormalizer>();
         services.AddSingleton<IUtcRangeCalculator, UtcRangeCalculator>();
         services.AddScoped<TicketIssuanceService>();
+        services.AddScoped<TicketRedeemableDrawService>();
         services.AddScoped<ITicketBetSubmissionService, TicketBetSubmissionService>();
 
         return services;

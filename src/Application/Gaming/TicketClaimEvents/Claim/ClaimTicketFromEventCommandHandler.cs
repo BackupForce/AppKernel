@@ -215,19 +215,15 @@ internal sealed class ClaimTicketFromEventCommandHandler(
                 drawGroup.Id,
                 cancellationToken);
 
+            List<Guid> drawIds = drawGroupDraws.Select(item => item.DrawId).Distinct().ToList();
+            IReadOnlyCollection<Draw> draws = drawIds.Count == 0
+                ? Array.Empty<Draw>()
+                : await drawRepository.GetByIdsAsync(tenantContext.TenantId, drawIds, cancellationToken);
+
             List<Draw> eligibleDraws = new();
 
-            foreach (DrawGroupDraw drawGroupDraw in drawGroupDraws)
+            foreach (Draw draw in draws)
             {
-                Draw? draw = await drawRepository.GetByIdAsync(
-                    tenantContext.TenantId,
-                    drawGroupDraw.DrawId,
-                    cancellationToken);
-                if (draw is null)
-                {
-                    continue;
-                }
-
                 if (draw.GameCode != drawGroup.GameCode)
                 {
                     continue;
@@ -238,7 +234,7 @@ internal sealed class ClaimTicketFromEventCommandHandler(
                     return Result.Failure<TicketIssuanceRequest>(GamingErrors.DrawGroupDrawPlayTypeNotEnabled);
                 }
 
-                if (!draw.IsWithinSalesWindow(now))
+                if (!DrawEligibility.IsEligiblePrimary(draw, now))
                 {
                     continue;
                 }
@@ -251,10 +247,11 @@ internal sealed class ClaimTicketFromEventCommandHandler(
                 return Result.Failure<TicketIssuanceRequest>(GamingErrors.TicketDrawNotAvailable);
             }
 
-            Guid? primaryDrawId = eligibleDraws
-                .OrderBy(draw => draw.DrawAt)
+            Guid primaryDrawId = eligibleDraws
+                .OrderBy(draw => draw.SalesOpenAt)
+                .ThenBy(draw => draw.DrawAt)
                 .Select(draw => draw.Id)
-                .FirstOrDefault();
+                .First();
 
             return new TicketIssuanceRequest(
                 tenantContext.TenantId,
@@ -263,7 +260,6 @@ internal sealed class ClaimTicketFromEventCommandHandler(
                 drawGroup.Id,
                 template?.Id,
                 primaryDrawId,
-                eligibleDraws.Select(draw => draw.Id).ToList(),
                 IssuedByType.System,
                 userContext.UserId,
                 "TicketClaimEvent",
@@ -280,7 +276,7 @@ internal sealed class ClaimTicketFromEventCommandHandler(
             return Result.Failure<TicketIssuanceRequest>(GamingErrors.DrawNotFound);
         }
 
-        if (!targetDraw.IsWithinSalesWindow(now))
+        if (!DrawEligibility.IsEligiblePrimary(targetDraw, now))
         {
             return Result.Failure<TicketIssuanceRequest>(GamingErrors.TicketDrawNotAvailable);
         }
@@ -292,7 +288,6 @@ internal sealed class ClaimTicketFromEventCommandHandler(
             null,
             template?.Id,
             targetDraw.Id,
-            new[] { targetDraw.Id },
             IssuedByType.System,
             userContext.UserId,
             "TicketClaimEvent",

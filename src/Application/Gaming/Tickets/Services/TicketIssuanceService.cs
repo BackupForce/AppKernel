@@ -6,13 +6,12 @@ using SharedKernel;
 namespace Application.Gaming.Tickets.Services;
 
 internal sealed class TicketIssuanceService(
-    ITicketRepository ticketRepository,
-    ITicketDrawRepository ticketDrawRepository)
+    ITicketRepository ticketRepository)
 {
     public Task<Result<TicketIssuanceResult>> IssueSingleAsync(
         TicketIssuanceRequest request)
     {
-        if (request.DrawIds.Count == 0)
+        if (request.PrimaryDrawId == Guid.Empty)
         {
             return Task.FromResult(Result.Failure<TicketIssuanceResult>(GamingErrors.TicketDrawNotAvailable));
         }
@@ -35,14 +34,7 @@ internal sealed class TicketIssuanceService(
 
         ticketRepository.Insert(ticket);
 
-        List<Guid> drawIds = request.DrawIds.ToList();
-        foreach (Guid drawId in drawIds)
-        {
-            TicketDraw ticketDraw = TicketDraw.Create(request.TenantId, ticket.Id, drawId, request.NowUtc);
-            ticketDrawRepository.Insert(ticketDraw);
-        }
-
-        TicketIssuanceResult result = new(ticket, drawIds);
+        TicketIssuanceResult result = new(ticket, request.PrimaryDrawId);
         return Task.FromResult<Result<TicketIssuanceResult>>(result);
     }
 
@@ -50,14 +42,12 @@ internal sealed class TicketIssuanceService(
         TicketIssuanceRequest request,
         int quantity)
     {
-        if (request.DrawIds.Count == 0)
+        if (request.PrimaryDrawId == Guid.Empty)
         {
             return Task.FromResult(Result.Failure<IReadOnlyCollection<Ticket>>(GamingErrors.TicketDrawNotAvailable));
         }
 
-        Guid drawId = request.DrawIds.First();
         List<Ticket> tickets = new();
-        List<TicketDraw> ticketDraws = new();
 
         for (int index = 0; index < quantity; index++)
         {
@@ -78,7 +68,6 @@ internal sealed class TicketIssuanceService(
                 request.NowUtc);
 
             tickets.Add(ticket);
-            ticketDraws.Add(TicketDraw.Create(request.TenantId, ticket.Id, drawId, request.NowUtc));
         }
 
         foreach (Ticket ticket in tickets)
@@ -86,13 +75,8 @@ internal sealed class TicketIssuanceService(
             ticketRepository.Insert(ticket);
         }
 
-        foreach (TicketDraw ticketDraw in ticketDraws)
-        {
-            ticketDrawRepository.Insert(ticketDraw);
-        }
-
         return Task.FromResult<Result<IReadOnlyCollection<Ticket>>>(tickets);
     }
 }
 
-internal sealed record TicketIssuanceResult(Ticket Ticket, IReadOnlyCollection<Guid> DrawIds);
+internal sealed record TicketIssuanceResult(Ticket Ticket, Guid PrimaryDrawId);

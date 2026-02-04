@@ -381,10 +381,9 @@ public sealed class TicketClaimEventClaimTests : BaseIntegrationTest
         ITicketTemplateRepository ticketTemplateRepository = scope.ServiceProvider.GetRequiredService<ITicketTemplateRepository>();
         IMemberRepository memberRepository = scope.ServiceProvider.GetRequiredService<IMemberRepository>();
         ITicketRepository ticketRepository = scope.ServiceProvider.GetRequiredService<ITicketRepository>();
-        ITicketDrawRepository ticketDrawRepository = scope.ServiceProvider.GetRequiredService<ITicketDrawRepository>();
         IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-        TicketIssuanceService ticketIssuanceService = new(ticketRepository, ticketDrawRepository);
+        TicketIssuanceService ticketIssuanceService = new(ticketRepository);
 
         ClaimTicketFromEventCommandHandler handler = new(
             ticketClaimEventRepository,

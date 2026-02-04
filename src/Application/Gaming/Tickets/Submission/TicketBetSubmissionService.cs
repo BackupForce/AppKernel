@@ -148,32 +148,11 @@ internal sealed class TicketBetSubmissionService(
 
         ticketRepository.InsertLine(line);
 
-        IReadOnlyCollection<TicketDraw> ticketDraws = await ticketDrawRepository.GetByTicketIdAsync(
-            tenantId,
-            ticket.Id,
-            cancellationToken);
-
-        foreach (TicketDraw ticketDraw in ticketDraws)
-        {
-            Draw? ticketDrawRef = await drawRepository.GetByIdAsync(tenantId, ticketDraw.DrawId, cancellationToken);
-            if (ticketDrawRef is null)
-            {
-                ticketDraw.MarkInvalid(nowUtc);
-                continue;
-            }
-
-            if (ticketDrawRef.IsWithinSalesWindow(nowUtc))
-            {
-                ticketDraw.MarkActive(nowUtc);
-            }
-            else
-            {
-                ticketDraw.MarkInvalid(nowUtc);
-            }
-        }
+        TicketDraw ticketDraw = TicketDraw.Create(tenantId, ticket.Id, draw.Id, nowUtc);
+        ticketDraw.MarkActive(nowUtc);
 
         ticketRepository.Update(ticket);
-        ticketDrawRepository.UpdateRange(ticketDraws);
+        ticketDrawRepository.Insert(ticketDraw);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
         transaction.Commit();

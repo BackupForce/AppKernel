@@ -88,16 +88,15 @@ internal sealed class IssueTicketCommandHandler(
             drawGroup.Id,
             cancellationToken);
 
+        List<Guid> drawIds = drawGroupDraws.Select(item => item.DrawId).Distinct().ToList();
+        IReadOnlyCollection<Draw> draws = drawIds.Count == 0
+            ? Array.Empty<Draw>()
+            : await drawRepository.GetByIdsAsync(tenantContext.TenantId, drawIds, cancellationToken);
+
         List<Draw> eligibleDraws = new();
 
-        foreach (DrawGroupDraw drawGroupDraw in drawGroupDraws)
+        foreach (Draw draw in draws)
         {
-            Draw? draw = await drawRepository.GetByIdAsync(tenantContext.TenantId, drawGroupDraw.DrawId, cancellationToken);
-            if (draw is null)
-            {
-                continue;
-            }
-
             if (draw.GameCode != drawGroup.GameCode)
             {
                 continue;
@@ -108,7 +107,7 @@ internal sealed class IssueTicketCommandHandler(
                 return Result.Failure<IssueTicketResult>(GamingErrors.DrawGroupDrawPlayTypeNotEnabled);
             }
 
-            if (!draw.IsWithinSalesWindow(now))
+            if (!DrawEligibility.IsEligiblePrimary(draw, now))
             {
                 continue;
             }
@@ -121,10 +120,11 @@ internal sealed class IssueTicketCommandHandler(
             return Result.Failure<IssueTicketResult>(GamingErrors.TicketDrawNotAvailable);
         }
 
-        Guid? primaryDrawId = eligibleDraws
-            .OrderBy(draw => draw.DrawAt)
+        Guid primaryDrawId = eligibleDraws
+            .OrderBy(draw => draw.SalesOpenAt)
+            .ThenBy(draw => draw.DrawAt)
             .Select(draw => draw.Id)
-            .FirstOrDefault();
+            .First();
 
         TicketIssuanceRequest issuanceRequest = new(
             tenantContext.TenantId,
@@ -133,7 +133,6 @@ internal sealed class IssueTicketCommandHandler(
             drawGroup.Id,
             template?.Id,
             primaryDrawId,
-            eligibleDraws.Select(draw => draw.Id).ToList(),
             IssuedByType.CustomerService,
             userContext.UserId,
             request.IssuedReason,
@@ -150,7 +149,7 @@ internal sealed class IssueTicketCommandHandler(
 
         IssueTicketResult result = new IssueTicketResult(
             issuanceResult.Value.Ticket.Id,
-            issuanceResult.Value.DrawIds.ToList());
+            issuanceResult.Value.PrimaryDrawId);
         return result;
     }
 }
