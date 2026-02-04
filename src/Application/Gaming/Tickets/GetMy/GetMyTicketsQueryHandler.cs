@@ -82,9 +82,9 @@ internal sealed class GetMyTicketsQueryHandler(
             LEFT JOIN gaming.draws d ON d.id = td.draw_id
             WHERE t.tenant_id = @TenantId
               AND t.member_id = @MemberId
-              AND t.game_code = @GameCode
-              AND (@From IS NULL OR t.issued_at_utc >= @From)
-              AND (@To IS NULL OR t.issued_at_utc <= @To)
+              AND t.game_code = @GameCode::varchar(32)
+              AND (@From::timestamptz IS NULL OR t.issued_at_utc >= @From::timestamptz)
+              AND (@To::timestamptz IS NULL OR t.issued_at_utc <= @To::timestamptz)
             ORDER BY t.issued_at_utc DESC
             """;
 
