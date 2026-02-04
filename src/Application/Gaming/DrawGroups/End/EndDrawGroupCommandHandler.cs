@@ -12,6 +12,7 @@ internal sealed class EndDrawGroupCommandHandler(
     IDrawGroupRepository drawGroupRepository,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
+    IUserContext userContext,
     ITenantContext tenantContext) : ICommandHandler<EndDrawGroupCommand>
 {
     public async Task<Result> Handle(EndDrawGroupCommand request, CancellationToken cancellationToken)
@@ -27,11 +28,7 @@ internal sealed class EndDrawGroupCommandHandler(
             return Result.Failure(GamingErrors.DrawGroupNotFound);
         }
 
-        Result endResult = drawGroup.End(dateTimeProvider.UtcNow);
-        if (endResult.IsFailure)
-        {
-            return endResult;
-        }
+        drawGroup.Disable(userContext.UserId, dateTimeProvider.UtcNow);
 
         drawGroupRepository.Update(drawGroup);
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -29,9 +29,9 @@ internal sealed class AddDrawGroupDrawCommandHandler(
             return Result.Failure(GamingErrors.DrawGroupNotFound);
         }
 
-        if (drawGroup.Status != DrawGroupStatus.Draft)
+        if (drawGroup.Status != DrawGroupStatus.Disabled)
         {
-            return Result.Failure(GamingErrors.DrawGroupNotDraft);
+            return Result.Failure(GamingErrors.DrawGroupNotDisabled);
         }
 
         Draw? draw = await drawRepository.GetByIdAsync(request.TenantId, request.DrawId, cancellationToken);

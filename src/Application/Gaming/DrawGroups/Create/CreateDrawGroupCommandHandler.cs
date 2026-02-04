@@ -61,7 +61,7 @@ internal sealed class CreateDrawGroupCommandHandler(
             gameCodeResult.Value,
             playTypeResult.Value,
             request.Name,
-            DrawGroupStatus.Draft,
+            DrawGroupStatus.Disabled,
             now);
 
         if (drawGroupResult.IsFailure)

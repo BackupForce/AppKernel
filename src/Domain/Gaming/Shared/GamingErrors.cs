@@ -436,14 +436,14 @@ public static class GamingErrors
 
     public static readonly Error DrawGroupInactive = Error.Validation(
         "Gaming.DrawGroupInactive",
-        "活動尚未開放或已結束。");
+        "活動尚未啟用或已停用。");
 
-    public static readonly Error DrawGroupNotDraft = Error.Validation(
-        "Gaming.DrawGroupNotDraft",
-        "活動狀態必須為草稿。");
+    public static readonly Error DrawGroupNotDisabled = Error.Validation(
+        "Gaming.DrawGroupNotDisabled",
+        "活動狀態必須為停用。");
 
-    public static readonly Error DrawGroupNotActive = Error.Validation(
-        "Gaming.DrawGroupNotActive",
+    public static readonly Error DrawGroupNotEnabled = Error.Validation(
+        "Gaming.DrawGroupNotEnabled",
         "活動狀態必須為啟用中。");
 
     public static readonly Error DrawGroupDrawRequired = Error.Validation(

@@ -30,10 +30,9 @@ internal sealed class ListDrawGroupsQueryHandler(
                 c.id AS Id,
                 c.name AS Name,
                 CASE
-                    WHEN c.status = 0 THEN 'Draft'
-                    WHEN c.status = 1 THEN 'Active'
-                    WHEN c.status = 2 THEN 'Ended'
-                    ELSE 'Draft'
+                    WHEN c.status = 0 THEN 'Disabled'
+                    WHEN c.status = 1 THEN 'Enabled'
+                    ELSE 'Disabled'
                 END AS Status,
                 c.game_code AS GameCode,
                 c.play_type_code AS PlayTypeCode,
