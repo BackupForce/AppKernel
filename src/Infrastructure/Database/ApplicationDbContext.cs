@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Application.Abstractions.Data;
+using Domain.Admin.OperationLogs;
 using Domain.Auth;
 using Domain.Gaming.DrawGroups;
 using Domain.Gaming.DrawTemplates;
@@ -66,6 +67,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<AuthSession> AuthSessions { get; set; }
     public DbSet<RefreshTokenRecord> RefreshTokenRecords { get; set; }
     public DbSet<DrawSequence> DrawSequences { get; set; }
+    public DbSet<AdminOperationLog> AdminOperationLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

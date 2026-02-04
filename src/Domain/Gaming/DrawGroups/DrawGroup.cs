@@ -1,4 +1,5 @@
 using Domain.Gaming.Catalog;
+using Domain.Gaming.DrawGroups.Events;
 using Domain.Gaming.Shared;
 using SharedKernel;
 
@@ -17,6 +18,8 @@ public sealed class DrawGroup : Entity
         DateTime? grantOpenAtUtc,
         DateTime? grantCloseAtUtc,
         DrawGroupStatus status,
+        DateTime? enabledAtUtc,
+        DateTime? disabledAtUtc,
         DateTime createdAtUtc) : base(id)
     {
         TenantId = tenantId;
@@ -26,6 +29,8 @@ public sealed class DrawGroup : Entity
         GrantOpenAtUtc = grantOpenAtUtc;
         GrantCloseAtUtc = grantCloseAtUtc;
         Status = status;
+        EnabledAtUtc = enabledAtUtc;
+        DisabledAtUtc = disabledAtUtc;
         CreatedAtUtc = createdAtUtc;
     }
 
@@ -46,6 +51,10 @@ public sealed class DrawGroup : Entity
     public DateTime? GrantCloseAtUtc { get; private set; }
 
     public DrawGroupStatus Status { get; private set; }
+
+    public DateTime? EnabledAtUtc { get; private set; }
+
+    public DateTime? DisabledAtUtc { get; private set; }
 
     public DateTime CreatedAtUtc { get; private set; }
 
@@ -78,6 +87,8 @@ public sealed class DrawGroup : Entity
             null,
             null,
             status,
+            null,
+            null,
             utcNow);
     }
 
@@ -104,38 +115,35 @@ public sealed class DrawGroup : Entity
         return Result.Success();
     }
 
-    public Result Activate(DateTime utcNow)
+    public void Enable(Guid operatorUserId, DateTime nowUtc, string? reason = null)
     {
-        if (Status != DrawGroupStatus.Draft)
+        if (Status == DrawGroupStatus.Enabled)
         {
-            return Result.Failure(GamingErrors.DrawGroupNotDraft);
+            return;
         }
 
-        if (_draws.Count == 0)
-        {
-            return Result.Failure(GamingErrors.DrawGroupDrawRequired);
-        }
-
-        Status = DrawGroupStatus.Active;
-        return Result.Success();
+        Status = DrawGroupStatus.Enabled;
+        EnabledAtUtc = nowUtc;
+        Raise(new DrawGroupEnabledDomainEvent(TenantId, Id, operatorUserId, nowUtc, reason));
     }
 
-    public Result End(DateTime utcNow)
+    public void Disable(Guid operatorUserId, DateTime nowUtc, string? reason = null)
     {
-        if (Status != DrawGroupStatus.Active)
+        if (Status == DrawGroupStatus.Disabled)
         {
-            return Result.Failure(GamingErrors.DrawGroupNotActive);
+            return;
         }
 
-        Status = DrawGroupStatus.Ended;
-        return Result.Success();
+        Status = DrawGroupStatus.Disabled;
+        DisabledAtUtc = nowUtc;
+        Raise(new DrawGroupDisabledDomainEvent(TenantId, Id, operatorUserId, nowUtc, reason));
     }
 
     public Result RemoveDraw(Guid drawId, IReadOnlyCollection<DrawGrantWindow> grantWindows)
     {
-        if (Status != DrawGroupStatus.Draft)
+        if (Status != DrawGroupStatus.Disabled)
         {
-            return Result.Failure(GamingErrors.DrawGroupNotDraft);
+            return Result.Failure(GamingErrors.DrawGroupNotDisabled);
         }
 
         DrawGroupDraw? existing = _draws.Find(item => item.DrawId == drawId);

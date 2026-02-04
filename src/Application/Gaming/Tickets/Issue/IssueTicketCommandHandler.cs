@@ -40,7 +40,7 @@ internal sealed class IssueTicketCommandHandler(
         }
 
         DateTime now = dateTimeProvider.UtcNow;
-        if (drawGroup.Status != DrawGroupStatus.Active
+        if (drawGroup.Status != DrawGroupStatus.Enabled
             || drawGroup.GrantOpenAtUtc is null
             || drawGroup.GrantCloseAtUtc is null
             || now < drawGroup.GrantOpenAtUtc.Value

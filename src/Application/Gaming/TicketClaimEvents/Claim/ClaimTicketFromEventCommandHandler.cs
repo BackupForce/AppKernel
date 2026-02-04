@@ -191,7 +191,7 @@ internal sealed class ClaimTicketFromEventCommandHandler(
                 return Result.Failure<TicketIssuanceRequest>(GamingErrors.DrawGroupNotFound);
             }
 
-            if (drawGroup.Status != DrawGroupStatus.Active
+            if (drawGroup.Status != DrawGroupStatus.Enabled
                 || drawGroup.GrantOpenAtUtc is null
                 || drawGroup.GrantCloseAtUtc is null
                 || now < drawGroup.GrantOpenAtUtc.Value

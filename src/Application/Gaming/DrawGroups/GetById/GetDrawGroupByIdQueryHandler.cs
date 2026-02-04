@@ -23,12 +23,11 @@ internal sealed class GetDrawGroupByIdQueryHandler(
             SELECT
                 c.id AS Id,
                 c.name AS Name,
-                CASE
-                    WHEN c.status = 0 THEN 'Draft'
-                    WHEN c.status = 1 THEN 'Active'
-                    WHEN c.status = 2 THEN 'Ended'
-                    ELSE 'Draft'
-                END AS Status,
+                    CASE
+                        WHEN c.status = 0 THEN 'Disabled'
+                        WHEN c.status = 1 THEN 'Enabled'
+                        ELSE 'Disabled'
+                    END AS Status,
                 c.game_code AS GameCode,
                 c.play_type_code AS PlayTypeCode,
                 c.grant_open_at_utc AS GrantOpenAtUtc,

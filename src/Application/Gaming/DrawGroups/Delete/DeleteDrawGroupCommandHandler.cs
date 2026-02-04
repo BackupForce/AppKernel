@@ -26,9 +26,9 @@ internal sealed class DeleteDrawGroupCommandHandler(
             return Result.Failure(GamingErrors.DrawGroupNotFound);
         }
 
-        if (drawGroup.Status != DrawGroupStatus.Draft)
+        if (drawGroup.Status != DrawGroupStatus.Disabled)
         {
-            return Result.Failure(GamingErrors.DrawGroupNotDraft);
+            return Result.Failure(GamingErrors.DrawGroupNotDisabled);
         }
 
         drawGroupRepository.Remove(drawGroup);

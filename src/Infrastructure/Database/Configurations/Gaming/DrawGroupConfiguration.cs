@@ -27,6 +27,8 @@ internal sealed class DrawGroupConfiguration : IEntityTypeConfiguration<DrawGrou
         builder.Property(drawGroup => drawGroup.GrantOpenAtUtc).IsRequired(false);
         builder.Property(drawGroup => drawGroup.GrantCloseAtUtc).IsRequired(false);
         builder.Property(drawGroup => drawGroup.Status).IsRequired();
+        builder.Property(drawGroup => drawGroup.EnabledAtUtc).IsRequired(false);
+        builder.Property(drawGroup => drawGroup.DisabledAtUtc).IsRequired(false);
         builder.Property(drawGroup => drawGroup.CreatedAtUtc).IsRequired();
 
         builder.HasMany(c => c.Draws)
