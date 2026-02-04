@@ -1,5 +1,6 @@
 ﻿using Domain.Gaming.Catalog;
 using Domain.Gaming.DrawTemplates;
+using Domain.Gaming.Draws.Events;
 using Domain.Gaming.Rules;
 using Domain.Gaming.Shared;
 using SharedKernel;
@@ -457,6 +458,29 @@ public sealed class Draw : Entity
         ManualCloseAt = utcNow;
         ManualCloseReason = reason;
         UpdatedAt = utcNow;
+        Raise(new DrawManuallyClosedDomainEvent(TenantId, Id, utcNow));
+    }
+
+    /// <summary>
+    /// 更新售票截止時間（UTC），並同步記錄事件供 outbox 處理。
+    /// </summary>
+    public Result UpdateSalesCloseAt(DateTime salesCloseAt, DateTime utcNow)
+    {
+        if (salesCloseAt <= SalesOpenAt || salesCloseAt > DrawAt)
+        {
+            return Result.Failure(GamingErrors.DrawTimeInvalid);
+        }
+
+        if (SalesCloseAt == salesCloseAt)
+        {
+            return Result.Success();
+        }
+
+        SalesCloseAt = salesCloseAt;
+        UpdatedAt = utcNow;
+        Raise(new DrawSalesCloseAtChangedDomainEvent(TenantId, Id, utcNow));
+
+        return Result.Success();
     }
 
     /// <summary>
