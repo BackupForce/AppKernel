@@ -14,5 +14,6 @@ public sealed partial record TicketSummaryDto(
     TicketSubmissionStatus SubmissionStatus,
     DateTime IssuedAtUtc,
     DateTime? SubmittedAtUtc,
+    DateTime? ExpiresAtUtc,
     IReadOnlyCollection<TicketLineSummaryDto> Lines,
     IReadOnlyCollection<TicketDrawSummaryDto> Draws);

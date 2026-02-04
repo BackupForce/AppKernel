@@ -28,6 +28,7 @@ internal sealed class GetMyTicketsQueryHandler(
         TicketSubmissionStatus SubmissionStatus,
         DateTime IssuedAtUtc,
         DateTime? SubmittedAtUtc,
+        DateTime? ExpiresAtUtc,
         int? LineIndex,
         string? Numbers,
         Guid? DrawId,
@@ -70,6 +71,11 @@ internal sealed class GetMyTicketsQueryHandler(
                 t.submission_status AS SubmissionStatus,
                 t.issued_at_utc AS IssuedAtUtc,
                 t.submitted_at_utc AS SubmittedAtUtc,
+                CASE
+                    WHEN dg.id IS NOT NULL THEN dg.grant_close_at_utc
+                    WHEN d.id IS NOT NULL THEN COALESCE(d.manual_close_at, d.sales_close_at)
+                    ELSE NULL
+                END AS ExpiresAtUtc,
                 l.line_index AS LineIndex,
                 l.numbers_raw AS Numbers,
                 td.draw_id AS DrawId,
@@ -80,6 +86,7 @@ internal sealed class GetMyTicketsQueryHandler(
             LEFT JOIN gaming.ticket_lines l ON l.ticket_id = t.id
             LEFT JOIN gaming.ticket_draws td ON td.ticket_id = t.id
             LEFT JOIN gaming.draws d ON d.id = td.draw_id
+            LEFT JOIN gaming.draw_groups dg ON dg.id = t.draw_group_id AND dg.tenant_id = t.tenant_id
             WHERE t.tenant_id = @TenantId
               AND t.member_id = @MemberId
               AND t.game_code = @GameCode::varchar(32)
@@ -117,6 +124,7 @@ internal sealed class GetMyTicketsQueryHandler(
                     row.SubmissionStatus,
                     row.IssuedAtUtc,
                     row.SubmittedAtUtc,
+                    row.ExpiresAtUtc,
                     Array.Empty<TicketLineSummaryDto>(),
                     Array.Empty<TicketDrawSummaryDto>());
                 lineMap[row.TicketId] = new List<TicketLineSummaryDto>();
