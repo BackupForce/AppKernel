@@ -40,7 +40,11 @@ internal sealed class IssueTicketCommandHandler(
         }
 
         DateTime now = dateTimeProvider.UtcNow;
-        if (drawGroup.Status != DrawGroupStatus.Active || now < drawGroup.GrantOpenAtUtc || now >= drawGroup.GrantCloseAtUtc)
+        if (drawGroup.Status != DrawGroupStatus.Active
+            || drawGroup.GrantOpenAtUtc is null
+            || drawGroup.GrantCloseAtUtc is null
+            || now < drawGroup.GrantOpenAtUtc.Value
+            || now >= drawGroup.GrantCloseAtUtc.Value)
         {
             return Result.Failure<IssueTicketResult>(GamingErrors.DrawGroupInactive);
         }

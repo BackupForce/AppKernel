@@ -9,7 +9,7 @@ public sealed record DrawGroupSummaryDto(
     string Status,
     string GameCode,
     string PlayTypeCode,
-    DateTime GrantOpenAtUtc,
-    DateTime GrantCloseAtUtc,
+    DateTime? GrantOpenAtUtc,
+    DateTime? GrantCloseAtUtc,
     DateTime CreatedAtUtc,
     long DrawCount);

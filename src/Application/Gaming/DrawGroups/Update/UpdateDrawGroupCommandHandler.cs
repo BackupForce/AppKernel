@@ -31,7 +31,7 @@ internal sealed class UpdateDrawGroupCommandHandler(
             return Result.Failure(GamingErrors.DrawGroupNotDraft);
         }
 
-        Result updateResult = drawGroup.Update(request.Name, request.GrantOpenAtUtc, request.GrantCloseAtUtc);
+        Result updateResult = drawGroup.Update(request.Name);
         if (updateResult.IsFailure)
         {
             return updateResult;

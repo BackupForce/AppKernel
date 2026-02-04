@@ -9,8 +9,8 @@ public sealed record DrawGroupDetailDto(
     string Status,
     string GameCode,
     string PlayTypeCode,
-    DateTime GrantOpenAtUtc,
-    DateTime GrantCloseAtUtc,
+    DateTime? GrantOpenAtUtc,
+    DateTime? GrantCloseAtUtc,
     int DrawCount,
     DateTime CreatedAtUtc,
     IReadOnlyCollection<DrawGroupDrawDto> Draws);

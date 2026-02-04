@@ -45,7 +45,12 @@ internal sealed class AddDrawGroupDrawCommandHandler(
             return Result.Failure(GamingErrors.DrawGroupDrawGameCodeMismatch);
         }
 
-        Result addResult = drawGroup.AddDraw(request.DrawId, dateTimeProvider.UtcNow);
+        IReadOnlyCollection<DrawGrantWindow> grantWindows = await BuildGrantWindowsAsync(
+            drawGroup,
+            draw,
+            cancellationToken);
+
+        Result addResult = drawGroup.AddDraw(request.DrawId, dateTimeProvider.UtcNow, grantWindows);
         if (addResult.IsFailure)
         {
             return addResult;
@@ -54,5 +59,40 @@ internal sealed class AddDrawGroupDrawCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
+    }
+
+    private async Task<IReadOnlyCollection<DrawGrantWindow>> BuildGrantWindowsAsync(
+        DrawGroup drawGroup,
+        Draw addedDraw,
+        CancellationToken cancellationToken)
+    {
+        List<Guid> existingDrawIds = drawGroup.Draws
+            .Select(item => item.DrawId)
+            .ToList();
+
+        List<DrawGrantWindow> windows = new();
+
+        if (existingDrawIds.Count > 0)
+        {
+            IReadOnlyCollection<Draw> existingDraws = await drawRepository.GetByIdsAsync(
+                drawGroup.TenantId,
+                existingDrawIds,
+                cancellationToken);
+
+            windows.AddRange(existingDraws.Select(ToGrantWindow));
+        }
+
+        if (!existingDrawIds.Contains(addedDraw.Id))
+        {
+            windows.Add(ToGrantWindow(addedDraw));
+        }
+
+        return windows;
+    }
+
+    private static DrawGrantWindow ToGrantWindow(Draw draw)
+    {
+        DateTime closeAtUtc = draw.ManualCloseAt ?? draw.SalesCloseAt;
+        return new DrawGrantWindow(draw.SalesOpenAt, closeAtUtc);
     }
 }

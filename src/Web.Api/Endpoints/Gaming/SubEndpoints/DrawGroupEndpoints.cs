@@ -40,9 +40,7 @@ internal static class DrawGroupEndpoints
                         tenantId,
                         request.GameCode,
                         request.PlayTypeCode,
-                        request.Name,
-                        request.GrantOpenAtUtc,
-                        request.GrantCloseAtUtc);
+                        request.Name);
                     return await UseCaseInvoker.Send<CreateDrawGroupCommand, Guid>(
                         command,
                         sender,
@@ -119,9 +117,7 @@ internal static class DrawGroupEndpoints
                     var command = new UpdateDrawGroupCommand(
                         tenantId,
                         drawGroupId,
-                        request.Name,
-                        request.GrantOpenAtUtc,
-                        request.GrantCloseAtUtc);
+                        request.Name);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.Gaming.DrawGroupUpdate.Name)

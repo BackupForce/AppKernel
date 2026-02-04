@@ -14,8 +14,8 @@ public sealed class DrawGroup : Entity
         GameCode gameCode,
         PlayTypeCode playTypeCode,
         string name,
-        DateTime grantOpenAtUtc,
-        DateTime grantCloseAtUtc,
+        DateTime? grantOpenAtUtc,
+        DateTime? grantCloseAtUtc,
         DrawGroupStatus status,
         DateTime createdAtUtc) : base(id)
     {
@@ -41,9 +41,9 @@ public sealed class DrawGroup : Entity
 
     public string Name { get; private set; }
 
-    public DateTime GrantOpenAtUtc { get; private set; }
+    public DateTime? GrantOpenAtUtc { get; private set; }
 
-    public DateTime GrantCloseAtUtc { get; private set; }
+    public DateTime? GrantCloseAtUtc { get; private set; }
 
     public DrawGroupStatus Status { get; private set; }
 
@@ -56,8 +56,6 @@ public sealed class DrawGroup : Entity
         GameCode gameCode,
         PlayTypeCode playTypeCode,
         string name,
-        DateTime grantOpenAtUtc,
-        DateTime grantCloseAtUtc,
         DrawGroupStatus status,
         DateTime utcNow)
     {
@@ -71,24 +69,19 @@ public sealed class DrawGroup : Entity
             return Result.Failure<DrawGroup>(GamingErrors.DrawGroupNameRequired);
         }
 
-        if (grantOpenAtUtc >= grantCloseAtUtc)
-        {
-            return Result.Failure<DrawGroup>(GamingErrors.DrawGroupGrantWindowInvalid);
-        }
-
         return new DrawGroup(
             Guid.NewGuid(),
             tenantId,
             gameCode,
             playTypeCode,
             name.Trim(),
-            grantOpenAtUtc,
-            grantCloseAtUtc,
+            null,
+            null,
             status,
             utcNow);
     }
 
-    public Result AddDraw(Guid drawId, DateTime utcNow)
+    public Result AddDraw(Guid drawId, DateTime utcNow, IReadOnlyCollection<DrawGrantWindow> grantWindows)
     {
         if (_draws.Any(item => item.DrawId == drawId))
         {
@@ -96,24 +89,18 @@ public sealed class DrawGroup : Entity
         }
 
         _draws.Add(DrawGroupDraw.Create(TenantId, Id, drawId, utcNow));
+        RecalculateGrantWindow(grantWindows);
         return Result.Success();
     }
 
-    public Result Update(string name, DateTime grantOpenAtUtc, DateTime grantCloseAtUtc)
+    public Result Update(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Failure(GamingErrors.DrawGroupNameRequired);
         }
 
-        if (grantOpenAtUtc >= grantCloseAtUtc)
-        {
-            return Result.Failure(GamingErrors.DrawGroupGrantWindowInvalid);
-        }
-
         Name = name.Trim();
-        GrantOpenAtUtc = grantOpenAtUtc;
-        GrantCloseAtUtc = grantCloseAtUtc;
         return Result.Success();
     }
 
@@ -130,7 +117,6 @@ public sealed class DrawGroup : Entity
         }
 
         Status = DrawGroupStatus.Active;
-        GrantOpenAtUtc = utcNow;
         return Result.Success();
     }
 
@@ -142,11 +128,10 @@ public sealed class DrawGroup : Entity
         }
 
         Status = DrawGroupStatus.Ended;
-        GrantCloseAtUtc = utcNow;
         return Result.Success();
     }
 
-    public Result RemoveDraw(Guid drawId)
+    public Result RemoveDraw(Guid drawId, IReadOnlyCollection<DrawGrantWindow> grantWindows)
     {
         if (Status != DrawGroupStatus.Draft)
         {
@@ -160,6 +145,20 @@ public sealed class DrawGroup : Entity
         }
 
         _draws.Remove(existing);
+        RecalculateGrantWindow(grantWindows);
         return Result.Success();
+    }
+
+    private void RecalculateGrantWindow(IReadOnlyCollection<DrawGrantWindow> grantWindows)
+    {
+        if (grantWindows is null || grantWindows.Count == 0)
+        {
+            GrantOpenAtUtc = null;
+            GrantCloseAtUtc = null;
+            return;
+        }
+
+        GrantOpenAtUtc = grantWindows.Min(item => item.OpenAtUtc);
+        GrantCloseAtUtc = grantWindows.Max(item => item.CloseAtUtc);
     }
 }
