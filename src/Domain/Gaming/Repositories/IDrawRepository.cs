@@ -13,6 +13,14 @@ public interface IDrawRepository
     Task<Draw?> GetByIdAsync(Guid tenantId, Guid drawId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// 依租戶與期數集合取得 Draw。
+    /// </summary>
+    Task<IReadOnlyCollection<Draw>> GetByIdsAsync(
+        Guid tenantId,
+        IReadOnlyCollection<Guid> drawIds,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// 新增 Draw。
     /// </summary>
     void Insert(Draw draw);

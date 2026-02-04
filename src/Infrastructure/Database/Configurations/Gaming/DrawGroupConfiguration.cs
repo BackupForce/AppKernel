@@ -24,8 +24,8 @@ internal sealed class DrawGroupConfiguration : IEntityTypeConfiguration<DrawGrou
             .HasMaxLength(32)
             .IsRequired();
         builder.Property(drawGroup => drawGroup.Name).HasMaxLength(128).IsRequired();
-        builder.Property(drawGroup => drawGroup.GrantOpenAtUtc).IsRequired();
-        builder.Property(drawGroup => drawGroup.GrantCloseAtUtc).IsRequired();
+        builder.Property(drawGroup => drawGroup.GrantOpenAtUtc).IsRequired(false);
+        builder.Property(drawGroup => drawGroup.GrantCloseAtUtc).IsRequired(false);
         builder.Property(drawGroup => drawGroup.Status).IsRequired();
         builder.Property(drawGroup => drawGroup.CreatedAtUtc).IsRequired();
 
