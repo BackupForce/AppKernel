@@ -21,7 +21,7 @@ public static class TicketSubmissionPolicy
             return Result.Failure(GamingErrors.TicketAlreadySubmittedConflict);
         }
 
-        if (draw.IsEffectivelyClosed(utcNow))
+        if (!draw.IsWithinSalesWindow(utcNow))
         {
             return Result.Failure(GamingErrors.TicketSubmissionClosed);
         }

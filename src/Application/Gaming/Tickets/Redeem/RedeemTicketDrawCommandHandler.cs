@@ -12,6 +12,7 @@ namespace Application.Gaming.Tickets.Redeem;
 internal sealed class RedeemTicketDrawCommandHandler(
     ITicketRepository ticketRepository,
     ITicketDrawRepository ticketDrawRepository,
+    TicketRedeemableDrawService redeemableDrawService,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext) : ICommandHandler<RedeemTicketDrawCommand>
@@ -22,6 +23,21 @@ internal sealed class RedeemTicketDrawCommandHandler(
         if (ticket is null)
         {
             return Result.Failure(GamingErrors.TicketNotFound);
+        }
+
+        Result<IReadOnlyCollection<Guid>> redeemableResult = await redeemableDrawService.GetRedeemableDrawIdsAsync(
+            tenantContext.TenantId,
+            ticket,
+            dateTimeProvider.UtcNow,
+            cancellationToken);
+        if (redeemableResult.IsFailure)
+        {
+            return Result.Failure(redeemableResult.Error);
+        }
+
+        if (!redeemableResult.Value.Contains(request.DrawId))
+        {
+            return Result.Failure(GamingErrors.TicketDrawNotAvailable);
         }
 
         IReadOnlyCollection<TicketDraw> ticketDraws = await ticketDrawRepository.GetByTicketIdAsync(

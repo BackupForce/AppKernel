@@ -17,7 +17,7 @@ using static Domain.Security.Permission;
 
 namespace Application.Gaming.Tickets.Admin;
 
-// «á¥x¡Gµo©ñ²¼¨éµ¹«ü©w·|­ûªº Command Handler
+// å¾Œå°ï¼šç™¼æ”¾ç¥¨åˆ¸çµ¦æŒ‡å®šæœƒå“¡çš„ Command Handler
 internal sealed class IssueMemberTicketsCommandHandler(
     IDrawRepository drawRepository,
     ITicketIdempotencyRepository ticketIdempotencyRepository,
@@ -28,24 +28,24 @@ internal sealed class IssueMemberTicketsCommandHandler(
     ITenantContext tenantContext,
     IUserContext userContext) : ICommandHandler<IssueMemberTicketsCommand, IssueMemberTicketsResult>
 {
-    // ¾­µ¥©Ê¡G¥Î¨Ó¼ĞÃÑ¦¹¾Ş§@Ãş«¬¡]¼g¤J TicketIdempotencyRecord.Operation¡^
+    // å†ªç­‰æ€§ï¼šç”¨ä¾†æ¨™è­˜æ­¤æ“ä½œé¡å‹ï¼ˆå¯«å…¥ TicketIdempotencyRecord.Operationï¼‰
     private const string Operation = "issue_ticket";
 
-    // JSON §Ç¦C¤Æ³]©w¡GWeb defaults¡]camelCase¡B±`¥Î Web ¦æ¬°¡^
-    // ¥Øªº¡G§â¦^¶Çµ²ªG§Ç¦C¤Æ«á¦s¶i¾­µ¥°O¿ı¡A¥¼¨Ó¥iª½±µ¦^©ñ
+    // JSON åºåˆ—åŒ–è¨­å®šï¼šWeb defaultsï¼ˆcamelCaseã€å¸¸ç”¨ Web è¡Œç‚ºï¼‰
+    // ç›®çš„ï¼šæŠŠå›å‚³çµæœåºåˆ—åŒ–å¾Œå­˜é€²å†ªç­‰è¨˜éŒ„ï¼Œæœªä¾†å¯ç›´æ¥å›æ”¾
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<Result<IssueMemberTicketsResult>> Handle(
         IssueMemberTicketsCommand request,
         CancellationToken cancellationToken)
     {
-        // 1) ³B²z¾­µ¥ Key¡G¥h±¼ªÅ¥Õ¡AªÅ¥Õµø¬° null
+        // 1) è™•ç†å†ªç­‰ Keyï¼šå»æ‰ç©ºç™½ï¼Œç©ºç™½è¦–ç‚º null
         string? idempotencyKey = NormalizeKey(request.IdempotencyKey);
 
-        // 2) ­pºâ request hash¡G¥Î¨Ó°»´ú¡u¦P¤@­Ó idempotencyKey ¦ı request ¤º®e¤£¦P¡vªº½Ä¬ğ
+        // 2) è¨ˆç®— request hashï¼šç”¨ä¾†åµæ¸¬ã€ŒåŒä¸€å€‹ idempotencyKey ä½† request å…§å®¹ä¸åŒã€çš„è¡çª
         string requestHash = ComputeIssueHash(request);
 
-        // 3) ­Y¦³´£¨Ñ¾­µ¥ key¡A¥ı¬d¬O§_¤w¦s¦b¬ö¿ı
+        // 3) è‹¥æœ‰æä¾›å†ªç­‰ keyï¼Œå…ˆæŸ¥æ˜¯å¦å·²å­˜åœ¨ç´€éŒ„
         if (!string.IsNullOrWhiteSpace(idempotencyKey))
         {
             TicketIdempotencyRecord? existing = await ticketIdempotencyRepository.GetByKeyAsync(
@@ -54,69 +54,68 @@ internal sealed class IssueMemberTicketsCommandHandler(
                 Operation,
                 cancellationToken);
 
-            // 3-1) ­Y¦s¦b¡A¥Nªí³o¦¸¾Ş§@¥i¯à¤w¸g¦¨¥\¹L¡]©Î¦Ü¤Ö¤w¸g³Q¼g¤J¾­µ¥ªí¡^
+            // 3-1) è‹¥å­˜åœ¨ï¼Œä»£è¡¨é€™æ¬¡æ“ä½œå¯èƒ½å·²ç¶“æˆåŠŸéï¼ˆæˆ–è‡³å°‘å·²ç¶“è¢«å¯«å…¥å†ªç­‰è¡¨ï¼‰
             if (existing is not null)
             {
-                // ­Y¦P key ¦ı request hash ¤£¦P -> µø¬°½Ä¬ğ¡]Á×§K¿ù¥Î¦P¤@ key ­«©ñ¤£¦P½Ğ¨D¡^
+                // è‹¥åŒ key ä½† request hash ä¸åŒ -> è¦–ç‚ºè¡çªï¼ˆé¿å…éŒ¯ç”¨åŒä¸€ key é‡æ”¾ä¸åŒè«‹æ±‚ï¼‰
                 if (!string.Equals(existing.RequestHash, requestHash, StringComparison.Ordinal))
                 {
                     return Result.Failure<IssueMemberTicketsResult>(GamingErrors.TicketIdempotencyKeyConflict);
                 }
 
-                // 3-2) ¦^©ñ¥ı«eµ²ªG¡Gª½±µ¤Ï§Ç¦C¤Æ¬J¦³ ResponsePayload
+                // 3-2) å›æ”¾å…ˆå‰çµæœï¼šç›´æ¥ååºåˆ—åŒ–æ—¢æœ‰ ResponsePayload
                 IssueMemberTicketsResult? cached =
                     JsonSerializer.Deserialize<IssueMemberTicketsResult>(existing.ResponsePayload, JsonOptions);
 
-                // payload µLªk¤Ï§Ç¦C¤Æ -> µø¬°¸ê®Æ²§±`
+                // payload ç„¡æ³•ååºåˆ—åŒ– -> è¦–ç‚ºè³‡æ–™ç•°å¸¸
                 if (cached is null)
                 {
                     return Result.Failure<IssueMemberTicketsResult>(GamingErrors.TicketIdempotencyPayloadInvalid);
                 }
 
-                // ª½±µ¦^¶Ç cached µ²ªG¡]¹F¦¨¾­µ¥¡^
+                // ç›´æ¥å›å‚³ cached çµæœï¼ˆé”æˆå†ªç­‰ï¼‰
                 return cached;
             }
         }
 
-        // 4) ÅçÃÒ¨Ã«Ø¥ß GameCode Value Object
+        // 4) é©—è­‰ä¸¦å»ºç«‹ GameCode Value Object
         Result<GameCode> gameCodeResult = GameCode.Create(request.GameCode);
         if (gameCodeResult.IsFailure)
         {
             return Result.Failure<IssueMemberTicketsResult>(gameCodeResult.Error);
         }
 
-        // 5) ¨ú UTC Now¡]²Î¤@®É¶¡¨Ó·½¡^
-        DateTime now = dateTimeProvider.UtcNow;
+        if (!DrawEligibility.IsEligiblePrimary(draw, now))
         GameCode gameCode = gameCodeResult.Value;
 
-        // 6) Åª¨ú Draw¡G¥Î request.DrawId
+        // 6) è®€å– Drawï¼šç”¨ request.DrawId
         Draw? draw = await drawRepository.GetByIdAsync(tenantContext.TenantId, request.DrawId, cancellationToken);
         if (draw is null)
         {
             return Result.Failure<IssueMemberTicketsResult>(GamingErrors.DrawNotFound);
         }
 
-        // 7) ¦A¦¸½T»{ Draw ªº GameCode »P request.GameCode ¤@­P
-        //    ¡]Á×§K¥Î¿ù drawId / gameCode ªº²Õ¦X¡^
+        // 7) å†æ¬¡ç¢ºèª Draw çš„ GameCode èˆ‡ request.GameCode ä¸€è‡´
+        //    ï¼ˆé¿å…ç”¨éŒ¯ drawId / gameCode çš„çµ„åˆï¼‰
         if (draw.GameCode != gameCode)
         {
             return Result.Failure<IssueMemberTicketsResult>(GamingErrors.DrawNotFound);
         }
 
-        // 8) ­Y Draw ¤w¡u¹ê½è«Ê½L/Ãö³¬¡v-> ¤£¤¹³\µo²¼¡]¨Ì§Aªº domain ³W«h¡^
+        // 8) è‹¥ Draw å·²ã€Œå¯¦è³ªå°ç›¤/é—œé–‰ã€-> ä¸å…è¨±ç™¼ç¥¨ï¼ˆä¾ä½ çš„ domain è¦å‰‡ï¼‰
         if (draw.IsEffectivelyClosed(now))
         {
             return Result.Failure<IssueMemberTicketsResult>(GamingErrors.DrawNotOpen);
         }
 
-        // 9) Åª¨ú·|­û
+        // 9) è®€å–æœƒå“¡
         Member? member = await memberRepository.GetByIdAsync(tenantContext.TenantId, request.MemberId, cancellationToken);
         if (member is null)
         {
             return Result.Failure<IssueMemberTicketsResult>(GamingErrors.MemberNotFound);
         }
 
-        // 10) ¼Æ¶q­­¨î¡G1~100
+        // 10) æ•¸é‡é™åˆ¶ï¼š1~100
         if (request.Quantity <= 0 || request.Quantity > 100)
         {
             return Result.Failure<IssueMemberTicketsResult>(GamingErrors.TicketIssueQuantityInvalid);
@@ -146,20 +145,20 @@ internal sealed class IssueMemberTicketsCommandHandler(
         }
 
         IReadOnlyCollection<Ticket> tickets = issuanceResult.Value;
-        // 14) ²Õ¦X¦^¶Çµ²ªG DTO¡]«á¥x¥Îª¬ºA¦r¦ê + ÃöÁäÄæ¦ì¡^
+        // 14) çµ„åˆå›å‚³çµæœ DTOï¼ˆå¾Œå°ç”¨ç‹€æ…‹å­—ä¸² + é—œéµæ¬„ä½ï¼‰
         IssueMemberTicketsResult result = new IssueMemberTicketsResult(
             tickets.Select(ticket => new IssuedTicketDto(
                 ticket.Id,
-                TicketStatusMapper.ToAdminStatus(ticket.SubmissionStatus), // ±N domain enum ¬M®g¦¨«á¥xÅã¥Üª¬ºA
+                TicketStatusMapper.ToAdminStatus(ticket.SubmissionStatus), // å°‡ domain enum æ˜ å°„æˆå¾Œå°é¡¯ç¤ºç‹€æ…‹
                 ticket.IssuedAtUtc,
-                ticket.DrawId ?? draw.Id,                                 // ²z½×¤WÀ³¸Ó¦³ DrawId¡F«OÀI¥Î fallback
+                ticket.DrawId ?? draw.Id,                                 // ç†è«–ä¸Šæ‡‰è©²æœ‰ DrawIdï¼›ä¿éšªç”¨ fallback
                 ticket.GameCode.Value,
-                ticket.IssuedByUserId ?? Guid.Empty,                      // ²z½×¤W·|¦³ userId¡F«OÀI¥Î Empty
+                ticket.IssuedByUserId ?? Guid.Empty,                      // ç†è«–ä¸Šæœƒæœ‰ userIdï¼›ä¿éšªç”¨ Empty
                 ticket.IssuedReason,
                 ticket.IssuedNote))
             .ToList());
 
-        // 15) ­Y¦³¾­µ¥ key¡G±N result §Ç¦C¤Æ«á¡A¼g¤J TicketIdempotencyRecord
+        // 15) è‹¥æœ‰å†ªç­‰ keyï¼šå°‡ result åºåˆ—åŒ–å¾Œï¼Œå¯«å…¥ TicketIdempotencyRecord
         if (!string.IsNullOrWhiteSpace(idempotencyKey))
         {
             string payload = JsonSerializer.Serialize(result, JsonOptions);
@@ -175,56 +174,56 @@ internal sealed class IssueMemberTicketsCommandHandler(
             ticketIdempotencyRepository.Insert(record);
         }
 
-        // 16) ¥æ©ö´£¥æ¡Gtickets¡BticketDraws¡B¡]¥i¯àªº¡^idempotency record ¤@¦¸«O¦s
+        // 16) äº¤æ˜“æäº¤ï¼šticketsã€ticketDrawsã€ï¼ˆå¯èƒ½çš„ï¼‰idempotency record ä¸€æ¬¡ä¿å­˜
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // 17) ¦^¶Çµ²ªG
+        // 17) å›å‚³çµæœ
         return result;
     }
 
-    // ¾­µ¥ key ¥¿³W¤Æ¡GªÅ¥Õµø¬° null¡A§_«h Trim
+    // å†ªç­‰ key æ­£è¦åŒ–ï¼šç©ºç™½è¦–ç‚º nullï¼Œå¦å‰‡ Trim
     private static string? NormalizeKey(string? key)
     {
         return string.IsNullOrWhiteSpace(key) ? null : key.Trim();
     }
 
-    // ­pºâµo²¼½Ğ¨Dªº hash¡]SHA256¡^
-    // ¥Î©ó¡G
-    // - ¦P¤@ idempotencyKey ­«©ñ®É¡A½T«O request ¤º®e¤@­P
-    // - Á×§K¦P key ³Q»~¥Î¦b¤£¦P request
+    // è¨ˆç®—ç™¼ç¥¨è«‹æ±‚çš„ hashï¼ˆSHA256ï¼‰
+    // ç”¨æ–¼ï¼š
+    // - åŒä¸€ idempotencyKey é‡æ”¾æ™‚ï¼Œç¢ºä¿ request å…§å®¹ä¸€è‡´
+    // - é¿å…åŒ key è¢«èª¤ç”¨åœ¨ä¸åŒ request
     private static string ComputeIssueHash(IssueMemberTicketsCommand request)
     {
-        // ª`·N¡G³o¸Ì¥H¦r¦ê«÷±µ§Î¦¨ raw¡A¥]§t MemberId/GameCode/DrawId/Quantity/Reason/Note
-        // ­Y Reason/Note ¥i¯à¦³ | ©Î®æ¦¡®t²§¡A³q±`¤]¨S°İÃD¡]¥u­n¤@­P§Y¥i¡^¡F¦ı­nª`·N null ªí²{¤@­P©Ê
+        // æ³¨æ„ï¼šé€™è£¡ä»¥å­—ä¸²æ‹¼æ¥å½¢æˆ rawï¼ŒåŒ…å« MemberId/GameCode/DrawId/Quantity/Reason/Note
+        // è‹¥ Reason/Note å¯èƒ½æœ‰ | æˆ–æ ¼å¼å·®ç•°ï¼Œé€šå¸¸ä¹Ÿæ²’å•é¡Œï¼ˆåªè¦ä¸€è‡´å³å¯ï¼‰ï¼›ä½†è¦æ³¨æ„ null è¡¨ç¾ä¸€è‡´æ€§
         string raw = $"{request.MemberId:N}|{request.GameCode}|{request.DrawId:N}|{request.Quantity}|{request.Reason}|{request.Note}";
 
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
 
-        // Âà¦¨ HEX ¦r¦ê¡]¤j¼g¡^
+        // è½‰æˆ HEX å­—ä¸²ï¼ˆå¤§å¯«ï¼‰
         return Convert.ToHexString(hash);
     }
 }
 
-// «á¥xÅã¥Ü¥Î¡G±N TicketSubmissionStatus ¬M®g¬°¦r¦ê
+// å¾Œå°é¡¯ç¤ºç”¨ï¼šå°‡ TicketSubmissionStatus æ˜ å°„ç‚ºå­—ä¸²
 internal static class TicketStatusMapper
 {
     public static string ToAdminStatus(TicketSubmissionStatus status)
     {
         return status switch
         {
-            // ¥¼´£¥æ¡G«á¥xµø¬°¡u¤wµo©ñ¡v
+            // æœªæäº¤ï¼šå¾Œå°è¦–ç‚ºã€Œå·²ç™¼æ”¾ã€
             TicketSubmissionStatus.NotSubmitted => "Issued",
 
-            // ¤w´£¥æ¡G¥Nªí·|­û¤w¶ñ¼g¨Ã°e¥X
+            // å·²æäº¤ï¼šä»£è¡¨æœƒå“¡å·²å¡«å¯«ä¸¦é€å‡º
             TicketSubmissionStatus.Submitted => "Submitted",
 
-            // ¤w¨ú®ø¡G«á¥xÅã¥Ü¬°§@¼o
+            // å·²å–æ¶ˆï¼šå¾Œå°é¡¯ç¤ºç‚ºä½œå»¢
             TicketSubmissionStatus.Cancelled => "Voided",
 
-            // ¤w¹L´Á¡G«Ê½L¥¼´£¥æµ¥±¡¹Ò
+            // å·²éæœŸï¼šå°ç›¤æœªæäº¤ç­‰æƒ…å¢ƒ
             TicketSubmissionStatus.Expired => "Expired",
 
-            // ¨ä¥L¥¼ª¾ enum ­È¡G°h¦^ ToString¡]Á×§KÃz¬µ¡^
+            // å…¶ä»–æœªçŸ¥ enum å€¼ï¼šé€€å› ToStringï¼ˆé¿å…çˆ†ç‚¸ï¼‰
             _ => status.ToString()
         };
     }

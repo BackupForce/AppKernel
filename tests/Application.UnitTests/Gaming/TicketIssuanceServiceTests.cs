@@ -12,18 +12,16 @@ namespace Application.UnitTests.Gaming;
 public sealed class TicketIssuanceServiceTests
 {
     [Fact]
-    public async Task IssueSingleAsync_Should_Create_Ticket_And_TicketDraws()
+    public async Task IssueSingleAsync_Should_Create_Ticket()
     {
         Guid tenantId = Guid.NewGuid();
         Guid memberId = Guid.NewGuid();
-        Guid drawId1 = Guid.NewGuid();
-        Guid drawId2 = Guid.NewGuid();
+        Guid drawId = Guid.NewGuid();
         DateTime now = DateTime.UtcNow;
 
         ITicketRepository ticketRepository = Substitute.For<ITicketRepository>();
-        ITicketDrawRepository ticketDrawRepository = Substitute.For<ITicketDrawRepository>();
 
-        TicketIssuanceService service = new(ticketRepository, ticketDrawRepository);
+        TicketIssuanceService service = new(ticketRepository);
 
         TicketIssuanceRequest request = new(
             tenantId,
@@ -31,8 +29,7 @@ public sealed class TicketIssuanceServiceTests
             memberId,
             null,
             null,
-            drawId1,
-            new[] { drawId1, drawId2 },
+            drawId,
             IssuedByType.Backoffice,
             Guid.NewGuid(),
             "reason",
@@ -42,9 +39,8 @@ public sealed class TicketIssuanceServiceTests
         Result<TicketIssuanceResult> result = await service.IssueSingleAsync(request);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.DrawIds.Should().BeEquivalentTo(new[] { drawId1, drawId2 });
+        result.Value.PrimaryDrawId.Should().Be(drawId);
         ticketRepository.Received(1).Insert(Arg.Any<Ticket>());
-        ticketDrawRepository.Received(2).Insert(Arg.Any<TicketDraw>());
     }
 
     [Fact]
@@ -56,9 +52,8 @@ public sealed class TicketIssuanceServiceTests
         DateTime now = DateTime.UtcNow;
 
         ITicketRepository ticketRepository = Substitute.For<ITicketRepository>();
-        ITicketDrawRepository ticketDrawRepository = Substitute.For<ITicketDrawRepository>();
 
-        TicketIssuanceService service = new(ticketRepository, ticketDrawRepository);
+        TicketIssuanceService service = new(ticketRepository);
 
         TicketIssuanceRequest request = new(
             tenantId,
@@ -67,7 +62,6 @@ public sealed class TicketIssuanceServiceTests
             null,
             null,
             drawId,
-            new[] { drawId },
             IssuedByType.Backoffice,
             Guid.NewGuid(),
             "reason",
@@ -81,6 +75,5 @@ public sealed class TicketIssuanceServiceTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(3);
         ticketRepository.Received(3).Insert(Arg.Any<Ticket>());
-        ticketDrawRepository.Received(3).Insert(Arg.Any<TicketDraw>());
     }
 }
