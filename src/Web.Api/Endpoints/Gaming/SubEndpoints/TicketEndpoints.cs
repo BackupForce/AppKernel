@@ -56,22 +56,7 @@ internal static class TicketEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ClaimDrawGroupTicket");
 
-        ticketGroup.MapPost(
-                "/{ticketId:guid}/submit",
-                async (Guid ticketId, SubmitTicketNumbersRequest request, ISender sender, CancellationToken ct) =>
-                {
-                    SubmitTicketNumbersCommand command =
-                        new(ticketId, request.PlayTypeCode, request.Numbers);
 
-                    return await UseCaseInvoker.Send(
-                        command,
-                        sender,
-                        ct);
-                })
-            .RequireAuthorization(AuthorizationPolicyNames.Member)
-            .Produces(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithName("SubmitTicketNumbers");
 
         ticketGroup.MapPost(
                 "/{ticketId:guid}/draws/{drawId:guid}/redeem",

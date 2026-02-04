@@ -71,11 +71,11 @@ internal sealed class GetMyTicketsQueryHandler(
                 t.issued_at_utc AS IssuedAtUtc,
                 t.submitted_at_utc AS SubmittedAtUtc,
                 l.line_index AS LineIndex,
-                l.numbers AS Numbers,
+                l.numbers_raw AS Numbers,
                 td.draw_id AS DrawId,
                 td.participation_status AS ParticipationStatus,
                 d.draw_at AS DrawAt,
-                d.winning_numbers AS WinningNumbers
+                d.winning_numbers_raw AS WinningNumbers
             FROM gaming.tickets t
             LEFT JOIN gaming.ticket_lines l ON l.ticket_id = t.id
             LEFT JOIN gaming.ticket_draws td ON td.ticket_id = t.id

@@ -10,6 +10,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SharedKernel;
 using Web.Api.Common;
+using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Frontends.SubEndpoints;
 

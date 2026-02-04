@@ -1,4 +1,4 @@
-namespace Web.Api.Endpoints.Gaming.Requests;
+namespace Web.Api.Endpoints.Frontends.Requests;
 
 public sealed record SubmitTicketNumbersRequest(
     string PlayTypeCode,

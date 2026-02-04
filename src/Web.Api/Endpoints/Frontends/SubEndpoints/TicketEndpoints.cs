@@ -5,6 +5,7 @@ using Application.Gaming.TicketClaimEvents.Claim;
 using Application.Gaming.Tickets.AvailableForBet;
 using Application.Gaming.Tickets.GetMy;
 using Application.Gaming.Tickets.Place;
+using Application.Gaming.Tickets.Submit;
 using Domain.Gaming.Shared;
 using Domain.Members;
 using MediatR;
@@ -74,26 +75,43 @@ internal static class TicketEndpoints
             .WithName("GetMyGameTickets");
 
 
+        //group.MapPost(
+        //        "/",
+        //        async (PlaceTicketRequest request, ISender sender, CancellationToken ct) =>
+        //        {
+        //            var command = new PlaceTicketCommand(
+        //                request.DrawId,
+        //                request.PlayTypeCode,
+        //                request.TemplateId,
+        //                request.Lines);
+        //            return await UseCaseInvoker.Send<PlaceTicketCommand, Guid>(
+        //                command,
+        //                sender,
+        //                value => Results.Ok(value),
+        //                ct);
+        //        })
+        //    .RequireAuthorization(AuthorizationPolicyNames.Member)
+        //    .Produces<Guid>(StatusCodes.Status200OK)
+        //    .ProducesProblem(StatusCodes.Status400BadRequest)
+        //    .WithName("PlaceGameTicket");
+
+
         group.MapPost(
-                "/",
-                async (PlaceTicketRequest request, ISender sender, CancellationToken ct) =>
+                "/{ticketId:guid}/submit",
+                async (Guid ticketId, SubmitTicketNumbersRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    var command = new PlaceTicketCommand(
-                        request.DrawId,
-                        request.PlayTypeCode,
-                        request.TemplateId,
-                        request.Lines);
-                    return await UseCaseInvoker.Send<PlaceTicketCommand, Guid>(
+                    SubmitTicketNumbersCommand command =
+                        new(ticketId, request.PlayTypeCode, request.Numbers);
+
+                    return await UseCaseInvoker.Send(
                         command,
                         sender,
-                        value => Results.Ok(value),
                         ct);
                 })
             .RequireAuthorization(AuthorizationPolicyNames.Member)
-            .Produces<Guid>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithName("PlaceGameTicket");
-
+            .WithName("SubmitTicketNumbers");
 
     }
 }
