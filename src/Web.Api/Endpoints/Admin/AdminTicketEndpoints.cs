@@ -202,6 +202,62 @@ public sealed class AdminTicketEndpoints : IEndpoint
             .WithName("AdminGetTickets");
 
         group.MapGet(
+                "/gaming/winning-tickets",
+                async ([AsParameters] GetWinningTicketsRequest request,
+                    ITenantContext tenantContext,
+                    ISender sender,
+                    CancellationToken ct) =>
+                {
+                    if (request.Page < 1)
+                    {
+                        return Results.BadRequest("Page must be greater than or equal to 1.");
+                    }
+
+                    if (request.PageSize < 1 || request.PageSize > 200)
+                    {
+                        return Results.BadRequest("PageSize must be between 1 and 200.");
+                    }
+
+                    if (request.DrawAtFromUtc.HasValue
+                        && request.DrawAtToUtc.HasValue
+                        && request.DrawAtFromUtc > request.DrawAtToUtc)
+                    {
+                        return Results.BadRequest("DrawAtFromUtc must be earlier than or equal to DrawAtToUtc.");
+                    }
+
+                    RedemptionStatusFilter redemptionStatus = RedemptionStatusFilter.All;
+                    if (!string.IsNullOrWhiteSpace(request.RedemptionStatus))
+                    {
+                        if (!Enum.TryParse(request.RedemptionStatus, true, out redemptionStatus))
+                        {
+                            return Results.BadRequest("RedemptionStatus must be All, RedeemedOnly, or UnredeemedOnly.");
+                        }
+                    }
+
+                    GetWinningTicketsQuery query = new GetWinningTicketsQuery(
+                        tenantContext.TenantId,
+                        request.GameCode,
+                        request.DrawId,
+                        request.DrawGroupId,
+                        request.DrawAtFromUtc,
+                        request.DrawAtToUtc,
+                        redemptionStatus,
+                        request.Keyword,
+                        request.Page,
+                        request.PageSize);
+
+                    return await UseCaseInvoker.Send<GetWinningTicketsQuery, PagedResult<WinningTicketListItemDto>>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
+            .Produces<PagedResult<WinningTicketListItemDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .WithName("AdminGetWinningTickets");
+
+        group.MapGet(
                 "/draws/{drawId:guid}/tickets",
                 async (Guid drawId,
                     [AsParameters] GetDrawTicketsRequest request,
