@@ -4,6 +4,7 @@ using Application.Gaming.Dtos;
 using Application.Gaming.TicketClaimEvents.Claim;
 using Application.Gaming.Tickets.AvailableForBet;
 using Application.Gaming.Tickets.GetMy;
+using Application.Gaming.Tickets.GetMyWinningTickets;
 using Application.Gaming.Tickets.Place;
 using Application.Gaming.Tickets.Submit;
 using Domain.Gaming.Shared;
@@ -113,5 +114,33 @@ internal static class TicketEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("SubmitTicketNumbers");
 
+    }
+
+    public static void MapWinningTickets(RouteGroupBuilder parent)
+    {
+        RouteGroupBuilder group = parent.MapGroup("/tickets")
+            .WithTags("FE.Tickets");
+
+        group.MapGet(
+                "/winnings",
+                async ([AsParameters] GetMyWinningTicketsRequest request, ISender sender, CancellationToken ct) =>
+                {
+                    if (request.Page < 1 || request.PageSize < 1 || request.PageSize > 200)
+                    {
+                        return Results.BadRequest("Page must be >= 1 and PageSize must be between 1 and 200.");
+                    }
+
+                    var query = new GetMyWinningTicketsQuery(request.Page, request.PageSize);
+                    return await UseCaseInvoker.Send<GetMyWinningTicketsQuery, MyWinningTicketsDto>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(AuthorizationPolicyNames.Member)
+            .Produces<MyWinningTicketsDto>(StatusCodes.Status200OK)
+            .WithSummary("中獎票券")
+            .WithDescription("取得會員中獎票券清單")
+            .WithName("GetMyWinningTickets");
     }
 }
