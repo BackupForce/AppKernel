@@ -449,6 +449,28 @@ public sealed class Draw : Entity
     }
 
     /// <summary>
+    /// 手動設定中獎號碼，供後台補錄或覆寫結果。
+    /// </summary>
+    public void SetWinningNumbers(
+        LotteryNumbers winningNumbers,
+        Guid operatorUserId,
+        DateTime utcNow,
+        string? sourceNote,
+        bool isRecalculation)
+    {
+        WinningNumbersRaw = winningNumbers.ToStorageString();
+        DrawnAt = utcNow;
+        UpdatedAt = utcNow;
+
+        if (isRecalculation)
+        {
+            SettledAtUtc = null;
+        }
+
+        Raise(new DrawWinningNumbersSetDomainEvent(TenantId, Id, operatorUserId, utcNow, sourceNote, isRecalculation));
+    }
+
+    /// <summary>
     /// 手動封盤，僅記錄狀態與時間，驗證邏輯由應用層控制。
     /// </summary>
     public void CloseManually(string? reason, DateTime utcNow)
