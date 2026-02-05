@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
@@ -108,8 +109,16 @@ internal sealed class SetDrawWinningNumbersCommandHandler(
             ticketDrawRepository.UpdateRange(pendingTicketDraws);
         }
 
+
         string action = request.ForceRecalculate ? "RecalculateWinningNumbers" : "SetWinningNumbers";
-        string metadataJson = $"{{\"winningNumbers\":\"{numbersResult.Value.ToStorageString()}\",\"forceRecalculate\":{request.ForceRecalculate.ToString().ToLowerInvariant()}}}";
+
+        var metadata = new
+        {
+            winningNumbers = numbersResult.Value.ToStorageString(),
+            forceRecalculate = request.ForceRecalculate
+        };
+
+        string metadataJson = JsonSerializer.Serialize(metadata);
         AdminOperationLog log = AdminOperationLog.Create(
             tenantContext.TenantId,
             "Draw",

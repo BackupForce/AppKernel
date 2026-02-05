@@ -1,3 +1,5 @@
+using SharedKernel;
+
 namespace Domain.Gaming.Draws.Events;
 
 public sealed record DrawWinningNumbersSetDomainEvent(
@@ -6,4 +8,4 @@ public sealed record DrawWinningNumbersSetDomainEvent(
     Guid OperatorUserId,
     DateTime OccurredAtUtc,
     string? SourceNote,
-    bool IsRecalculation);
+    bool IsRecalculation) : IDomainEvent;

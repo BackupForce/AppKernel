@@ -8,6 +8,7 @@ using MediatR;
 using SharedKernel;
 using Web.Api.Common;
 using Web.Api.Endpoints.Admin.Requests;
+using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Admin;
 
