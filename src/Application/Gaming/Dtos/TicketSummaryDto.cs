@@ -9,6 +9,7 @@ namespace Application.Gaming.Dtos;
 public sealed partial record TicketSummaryDto(
     Guid TicketId,
     Guid? DrawGroupId,
+    string DrawCode,
     string GameCode,
     string? PlayTypeCode,
     TicketSubmissionStatus SubmissionStatus,

@@ -23,6 +23,7 @@ internal sealed class GetMyTicketsQueryHandler(
     private sealed record TicketRow(
         Guid TicketId,
         Guid? DrawGroupId,
+        string DrawCode,
         string GameCode,
         string? PlayTypeCode,
         TicketSubmissionStatus SubmissionStatus,
@@ -65,17 +66,20 @@ internal sealed class GetMyTicketsQueryHandler(
             SELECT
                 t.id AS TicketId,
                 t.draw_group_id AS DrawGroupId,
-                t.game_code AS GameCode,
+                d.draw_code AS DrawCode,
+                t.game_code AS GameCode,    
                 -- TODO: add gaming.ticket_lines.play_type_code and backfill from tickets for historical records.
                 l.play_type_code AS PlayTypeCode,
                 t.submission_status AS SubmissionStatus,
                 t.issued_at_utc AS IssuedAtUtc,
                 t.submitted_at_utc AS SubmittedAtUtc,
+
+                -- ExpiresAtUtc: ALWAYS based on Ticket.DrawId's close time (sealed time)
                 CASE
-                    WHEN dg.id IS NOT NULL THEN dg.grant_close_at_utc
-                    WHEN d.id IS NOT NULL THEN COALESCE(d.manual_close_at, d.sales_close_at)
+                    WHEN d_exp.id IS NOT NULL THEN COALESCE(d_exp.manual_close_at, d_exp.sales_close_at)
                     ELSE NULL
                 END AS ExpiresAtUtc,
+
                 l.line_index AS LineIndex,
                 l.numbers_raw AS Numbers,
                 td.draw_id AS DrawId,
@@ -85,7 +89,15 @@ internal sealed class GetMyTicketsQueryHandler(
             FROM gaming.tickets t
             LEFT JOIN gaming.ticket_lines l ON l.ticket_id = t.id
             LEFT JOIN gaming.ticket_draws td ON td.ticket_id = t.id
+
+            -- For ticket-draw related info (DrawAt / WinningNumbers)
             LEFT JOIN gaming.draws d ON d.id = td.draw_id
+
+            -- For expiry calculation: based on t.draw_id
+            LEFT JOIN gaming.draws d_exp
+                   ON d_exp.id = t.draw_id
+                  AND d_exp.tenant_id = t.tenant_id
+
             LEFT JOIN gaming.draw_groups dg ON dg.id = t.draw_group_id AND dg.tenant_id = t.tenant_id
             WHERE t.tenant_id = @TenantId
               AND t.member_id = @MemberId
@@ -119,6 +131,7 @@ internal sealed class GetMyTicketsQueryHandler(
                 ticketMap[row.TicketId] = new TicketSummaryDto(
                     row.TicketId,
                     row.DrawGroupId,
+                    row.DrawCode,
                     row.GameCode,
                     row.PlayTypeCode,
                     row.SubmissionStatus,

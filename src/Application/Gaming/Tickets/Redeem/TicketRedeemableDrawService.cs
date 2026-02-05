@@ -1,4 +1,5 @@
 using Application.Gaming.Tickets.Services;
+using Domain.Gaming.DrawGroups;
 using Domain.Gaming.Draws;
 using Domain.Gaming.Repositories;
 using Domain.Gaming.Shared;

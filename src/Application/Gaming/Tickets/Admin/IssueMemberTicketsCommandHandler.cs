@@ -39,6 +39,8 @@ internal sealed class IssueMemberTicketsCommandHandler(
         IssueMemberTicketsCommand request,
         CancellationToken cancellationToken)
     {
+        DateTime now = dateTimeProvider.UtcNow;
+
         // 1) 處理冪等 Key：去掉空白，空白視為 null
         string? idempotencyKey = NormalizeKey(request.IdempotencyKey);
 
@@ -85,7 +87,7 @@ internal sealed class IssueMemberTicketsCommandHandler(
             return Result.Failure<IssueMemberTicketsResult>(gameCodeResult.Error);
         }
 
-        if (!DrawEligibility.IsEligiblePrimary(draw, now))
+
         GameCode gameCode = gameCodeResult.Value;
 
         // 6) 讀取 Draw：用 request.DrawId
@@ -103,7 +105,8 @@ internal sealed class IssueMemberTicketsCommandHandler(
         }
 
         // 8) 若 Draw 已「實質封盤/關閉」-> 不允許發票（依你的 domain 規則）
-        if (draw.IsEffectivelyClosed(now))
+        //if (draw.IsEffectivelyClosed(now))
+        if (!DrawEligibility.IsEligiblePrimary(draw, now))
         {
             return Result.Failure<IssueMemberTicketsResult>(GamingErrors.DrawNotOpen);
         }
@@ -128,7 +131,6 @@ internal sealed class IssueMemberTicketsCommandHandler(
              null,
              null,
              draw.Id,
-             new[] { draw.Id },
              IssuedByType.Backoffice,
              userContext.UserId,
              request.Reason,
