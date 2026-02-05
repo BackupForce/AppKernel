@@ -226,12 +226,9 @@ public sealed class AdminTicketEndpoints : IEndpoint
                     }
 
                     RedemptionStatusFilter redemptionStatus = RedemptionStatusFilter.All;
-                    if (!string.IsNullOrWhiteSpace(request.RedemptionStatus))
+                    if (!string.IsNullOrWhiteSpace(request.RedemptionStatus) && !Enum.TryParse(request.RedemptionStatus, true, out redemptionStatus))
                     {
-                        if (!Enum.TryParse(request.RedemptionStatus, true, out redemptionStatus))
-                        {
-                            return Results.BadRequest("RedemptionStatus must be All, RedeemedOnly, or UnredeemedOnly.");
-                        }
+                        return Results.BadRequest("RedemptionStatus must be All, RedeemedOnly, or UnredeemedOnly.");
                     }
 
                     GetWinningTicketsQuery query = new GetWinningTicketsQuery(
