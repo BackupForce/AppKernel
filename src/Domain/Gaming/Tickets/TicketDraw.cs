@@ -62,6 +62,18 @@ public sealed class TicketDraw : Entity
         SettledAtUtc = utcNow;
     }
 
+    public void ResetForRecalculation(DateTime utcNow)
+    {
+        if (ParticipationStatus != TicketDrawParticipationStatus.Settled)
+        {
+            return;
+        }
+
+        ParticipationStatus = TicketDrawParticipationStatus.Active;
+        SettledAtUtc = null;
+        EvaluatedAtUtc = utcNow;
+    }
+
     public void MarkRedeemed(DateTime utcNow)
     {
         ParticipationStatus = TicketDrawParticipationStatus.Redeemed;

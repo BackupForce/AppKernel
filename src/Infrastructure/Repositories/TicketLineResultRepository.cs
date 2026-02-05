@@ -41,6 +41,20 @@ internal sealed class TicketLineResultRepository(ApplicationDbContext context) :
             .ToListAsync(cancellationToken);
     }
 
+    public async Task DeleteByDrawIdAsync(Guid tenantId, Guid drawId, CancellationToken cancellationToken = default)
+    {
+        List<TicketLineResult> results = await context.TicketLineResults
+            .Where(result => result.TenantId == tenantId && result.DrawId == drawId)
+            .ToListAsync(cancellationToken);
+
+        if (results.Count == 0)
+        {
+            return;
+        }
+
+        context.TicketLineResults.RemoveRange(results);
+    }
+
     public void Insert(TicketLineResult result)
     {
         context.TicketLineResults.Add(result);
