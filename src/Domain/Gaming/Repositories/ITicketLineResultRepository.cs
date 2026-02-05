@@ -17,5 +17,7 @@ public interface ITicketLineResultRepository
         IReadOnlyCollection<Guid> ticketIds,
         CancellationToken cancellationToken = default);
 
+    Task DeleteByDrawIdAsync(Guid tenantId, Guid drawId, CancellationToken cancellationToken = default);
+
     void Insert(TicketLineResult result);
 }

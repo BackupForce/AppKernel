@@ -126,6 +126,10 @@ public static class GamingErrors
         "Gaming.DrawNotReadyToExecute",
         "期數尚未到開獎時間。");
 
+    public static readonly Error DrawNotReadyToSetWinningNumbers = Error.Validation(
+        "Gaming.DrawNotReadyToSetWinningNumbers",
+        "期數尚未封盤，無法手動設定開獎號碼。");
+
     public static readonly Error DrawTimeInvalid = Error.Validation(
         "Gaming.DrawTimeInvalid",
         "期數時間設定不正確。");
