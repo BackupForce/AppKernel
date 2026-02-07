@@ -17,13 +17,5 @@ public sealed class FrontendEndpoints : IEndpoint
         AwardEndpoints.Map(group);
         TicketEndpoints.Map(group);
         TicketClaimEventEndpoints.Map(group);
-
-        RouteGroupBuilder meGroup = app.MapGroup("/frontend/me")
-            .WithGroupName("frontend-v1")
-            .WithMetadata(new ApiVersion(1, 0))
-            .RequireAuthorization(AuthorizationPolicyNames.Member)
-            .WithTags("Me");
-
-        TicketEndpoints.MapWinningTickets(meGroup);
     }
 }

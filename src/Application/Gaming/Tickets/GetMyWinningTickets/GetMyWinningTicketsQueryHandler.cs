@@ -33,8 +33,8 @@ internal sealed class GetMyWinningTicketsQueryHandler(
         string? PrizeCode,
         decimal? PrizeAmount);
 
-    private static IReadOnlyCollection<TicketDrawParticipationStatus> GetWinningStatuses() =>
-        new[] { TicketDrawParticipationStatus.Settled, TicketDrawParticipationStatus.Redeemed };
+    private static TicketDrawParticipationStatus[] GetWinningStatuses() =>
+       new[] { TicketDrawParticipationStatus.Settled, TicketDrawParticipationStatus.Redeemed };
 
     public async Task<Result<MyWinningTicketsDto>> Handle(
         GetMyWinningTicketsQuery request,
@@ -144,7 +144,7 @@ internal sealed class GetMyWinningTicketsQueryHandler(
             }
 
             List<MyWinningTicketDrawDto> draws = drawMap[row.TicketId];
-            MyWinningTicketDrawDto? existing = draws.FirstOrDefault(draw => draw.DrawId == row.DrawId);
+            MyWinningTicketDrawDto? existing = draws.Find(draw => draw.DrawId == row.DrawId);
 
             MyWinningTicketDrawDto candidate = new(
                 row.DrawId,
