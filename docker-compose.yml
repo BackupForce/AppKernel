@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   postgres:
-    image: postgres:16
+    image: postgres:17
     container_name: postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-appkernel}
@@ -11,7 +11,7 @@ services:
     volumes:
       - ./.containers/db:/var/lib/postgresql/data
     ports:
-      - "5432:5432" # 不想對外開 DB 就刪掉
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -27,41 +27,23 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://0.0.0.0:5000
-      ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB:-appkernel};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Pooling=true;
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=${POSTGRES_DB:-appkernel};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Pooling=true;
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
-      # 如果你程式有用 redis/seq 的設定，也建議用 env 明確注入
-      # Redis__ConnectionString: redis:6379
-      # Seq__ServerUrl: http://seq:5341
+    env_file:
+      - .env
+    
     ports:
       - "5000:5000"
-      # - "5001:5001"  # 先不要開，除非你已處理 Kestrel HTTPS 憑證
     depends_on:
       postgres:
         condition: service_healthy
-
-  migrate:
-    image: mcr.microsoft.com/dotnet/sdk:9.0
-    container_name: migrate
-    working_dir: /src
-    volumes:
-      - ./:/src
-    environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB:-appkernel};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Pooling=true;
-    depends_on:
-      postgres:
-        condition: service_healthy
-    command: >
-      bash -lc "dotnet tool install --global dotnet-ef --version 9.* &&
-                export PATH=$PATH:/root/.dotnet/tools &&
-                dotnet ef database update --project src/Infrastructure --startup-project src/Web.Api"
-    restart: "no"
 
   seq:
     image: datalust/seq:latest
     container_name: seq
     environment:
       ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_FIRSTRUN_ADMINPASSWORD}
     ports:
       - "5341:5341"
       - "18080:80"
