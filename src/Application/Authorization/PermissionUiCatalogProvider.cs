@@ -18,7 +18,7 @@ public sealed class PermissionUiCatalogProvider
             "1.0",
             new List<ScopeGroupDto>
             {
-                BuildPlatformScope(),
+                //BuildPlatformScope(),
                 BuildTenantScope()
             });
 
@@ -27,28 +27,28 @@ public sealed class PermissionUiCatalogProvider
         return catalog;
     }
 
-    private static ScopeGroupDto BuildPlatformScope()
-    {
-        ModuleGroupDto tenantsModule = new ModuleGroupDto(
-            "TENANTS",
-            "租戶管理",
-            "TENANTS:*",
-            new List<PermissionItemDto>
-            {
-                new PermissionItemDto(
-                    "TENANTS:CREATE",
-                    "建立租戶",
-                    "建立新的租戶",
-                    10,
-                    false,
-                    false)
-            });
+    //private static ScopeGroupDto BuildPlatformScope()
+    //{
+    //    ModuleGroupDto tenantsModule = new ModuleGroupDto(
+    //        "TENANTS",
+    //        "租戶管理",
+    //        "TENANTS:*",
+    //        new List<PermissionItemDto>
+    //        {
+    //            new PermissionItemDto(
+    //                "TENANTS:CREATE",
+    //                "建立租戶",
+    //                "建立新的租戶",
+    //                10,
+    //                false,
+    //                false)
+    //        });
 
-        return new ScopeGroupDto(
-            PermissionScope.Platform,
-            "平台",
-            new List<ModuleGroupDto> { tenantsModule });
-    }
+    //    return new ScopeGroupDto(
+    //        PermissionScope.Platform,
+    //        "平台",
+    //        new List<ModuleGroupDto> { tenantsModule });
+    //}
 
     private static ScopeGroupDto BuildTenantScope()
     {
@@ -197,20 +197,20 @@ public sealed class PermissionUiCatalogProvider
                     false)
             });
 
-        ModuleGroupDto pointsModule = new ModuleGroupDto(
-            "POINTS",
-            "自身點數",
-            "POINTS:ME:*",
-            new List<PermissionItemDto>
-            {
-                new PermissionItemDto(
-                    "POINTS:ME:VIEW",
-                    "檢視點數",
-                    "檢視自身點數",
-                    10,
-                    false,
-                    false)
-            });
+        //ModuleGroupDto pointsModule = new ModuleGroupDto(
+        //    "POINTS",
+        //    "自身點數",
+        //    "POINTS:ME:*",
+        //    new List<PermissionItemDto>
+        //    {
+        //        new PermissionItemDto(
+        //            "POINTS:ME:VIEW",
+        //            "檢視點數",
+        //            "檢視自身點數",
+        //            10,
+        //            false,
+        //            false)
+        //    });
 
         ModuleGroupDto rolesModule = new ModuleGroupDto(
             "ROLES",
@@ -322,7 +322,7 @@ public sealed class PermissionUiCatalogProvider
                 memberPointsModule,
                 memberAssetsModule,
                 memberAuditModule,
-                pointsModule,
+                //pointsModule,
                 rolesModule,
                 gamingModule
             });
