@@ -10,6 +10,7 @@ public interface IJwtService
         string userName,
         UserType userType,
         Guid? tenantId,
+        Guid sessionId,
         IEnumerable<string> roles,
         IEnumerable<Guid> nodeIds,
         IEnumerable<string> permissions);
@@ -19,6 +20,7 @@ public interface IJwtService
         string userName,
         UserType userType,
         Guid? tenantId,
+        Guid sessionId,
         IEnumerable<string> roles,
         IEnumerable<Guid> nodeIds,
         IEnumerable<string> permissions,

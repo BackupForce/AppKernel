@@ -114,6 +114,7 @@ internal sealed class LineLiffLoginCommandHandler(
             user.Name.ToString(),
             user.Type,
             tenantId,
+            persistenceResult.Session.Id,
             Array.Empty<string>(),
             Array.Empty<Guid>(),
             Array.Empty<string>(),

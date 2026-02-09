@@ -108,6 +108,7 @@ internal sealed class LoginCommandHandler(
             user.Name.ToString(),
             user.Type,
             user.IsPlatform() ? null : tenant.Id,
+            session.Id,
             user.Roles.Select(r => r.Name).ToArray(),
             Array.Empty<Guid>(),
             Array.Empty<string>(),

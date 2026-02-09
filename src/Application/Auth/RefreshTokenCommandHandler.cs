@@ -86,6 +86,7 @@ internal sealed class RefreshTokenCommandHandler(
             user.Name.ToString(),
             user.Type,
             user.TenantId,
+            session.Id,
             user.Roles.Select(r => r.Name).ToArray(),
             Array.Empty<Guid>(),
             Array.Empty<string>(),

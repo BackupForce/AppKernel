@@ -33,6 +33,7 @@ public class JwtService : IJwtService
          string userName,
          UserType userType,
          Guid? tenantId,
+        Guid sessionId,
          IEnumerable<string> roles,
         IEnumerable<Guid> nodeIds,
         IEnumerable<string> permissions)
@@ -42,6 +43,7 @@ public class JwtService : IJwtService
             userName,
             userType,
             tenantId,
+            sessionId,
             roles,
             nodeIds,
             permissions,
@@ -53,6 +55,7 @@ public class JwtService : IJwtService
         string userName,
         UserType userType,
         Guid? tenantId,
+        Guid sessionId,
         IEnumerable<string> roles,
         IEnumerable<Guid> nodeIds,
         IEnumerable<string> permissions,
@@ -65,7 +68,8 @@ public class JwtService : IJwtService
             new Claim(JwtClaimNames.UserType, userType.ToString()),
             new Claim(ClaimTypes.Role, string.Join(",", roles)),
             new Claim("nodes", string.Join(",", nodeIds)),
-            new Claim("permissions", string.Join(",", permissions))
+            new Claim("permissions", string.Join(",", permissions)),
+            new Claim("sid", sessionId.ToString())
         };
 
         if (tenantId.HasValue)
