@@ -1,18 +1,18 @@
 using System.Data;
 using System.Text.Json;
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Caching;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Dapper;
 using Domain.Gaming.Tickets;
 using Domain.Users;
-using Microsoft.Extensions.Caching.Distributed;
 using SharedKernel;
 
 namespace Application.Admin.Dashboard;
 
 internal sealed class GetAdminDashboardMemberMetricsQueryHandler(
-    IDistributedCache cache,
+    ICacheService cache,
     IDbConnectionFactory dbConnectionFactory,
     IDateTimeProvider dateTimeProvider,
     IUserContext userContext)
@@ -29,7 +29,7 @@ internal sealed class GetAdminDashboardMemberMetricsQueryHandler(
 
         string cacheKey = $"admin:dashboard:member-metrics:{tenantId}";
 
-        string? cached = await cache.GetStringAsync(cacheKey, cancellationToken);
+        string? cached = await cache.GetAsync<string>(cacheKey, cancellationToken);
         if (!string.IsNullOrWhiteSpace(cached))
         {
             AdminDashboardMemberMetricsDto? cachedDto = JsonSerializer.Deserialize<AdminDashboardMemberMetricsDto>(cached);
@@ -168,13 +168,10 @@ internal sealed class GetAdminDashboardMemberMetricsQueryHandler(
             onlineWindowEndUtc);
 
         string serialized = JsonSerializer.Serialize(dto);
-        await cache.SetStringAsync(
+        await cache.SetAsync(
             cacheKey,
             serialized,
-            new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
-            },
+            TimeSpan.FromSeconds(60),
             cancellationToken);
 
         return dto;

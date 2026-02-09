@@ -24,7 +24,7 @@ internal sealed class AuthSessionLastUsedUpdater(IDbConnectionFactory db)
               AND (last_used_at_utc IS NULL OR last_used_at_utc <= @thresholdUtc);
             """;
 
-        using var conn = db.GetOpenConnection();
+        using System.Data.IDbConnection conn = db.GetOpenConnection();
         int affected = await conn.ExecuteAsync(
             new CommandDefinition(
                 sql,

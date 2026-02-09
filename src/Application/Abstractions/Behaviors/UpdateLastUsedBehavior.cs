@@ -14,7 +14,7 @@ internal sealed class UpdateLastUsedBehavior<TRequest, TResponse>(
     public async Task<TResponse> Handle(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         TResponse response = await next();
 
@@ -38,7 +38,7 @@ internal sealed class UpdateLastUsedBehavior<TRequest, TResponse>(
             sessionId.Value,
             nowUtc,
             Throttle,
-            ct);
+            cancellationToken);
 
         return response;
     }
