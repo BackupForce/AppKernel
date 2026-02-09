@@ -75,6 +75,22 @@ public sealed class User : Entity
         _roles.Add(role);
     }
 
+    public void RemoveRole(Role role)
+    {
+        if (role is null)
+        {
+            return;
+        }
+
+        Role? target = _roles.Find(existingRole => existingRole.Id == role.Id);
+        if (target is null)
+        {
+            return;
+        }
+
+        _roles.Remove(target);
+    }
+
     public static User Create(
         Email email,
         Name name,
