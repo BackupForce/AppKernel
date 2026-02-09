@@ -92,6 +92,7 @@ public static class DependencyInjection
         services.AddScoped<ILottery539RngService, Lottery539RngService>();
         services.AddScoped<IServerSeedStore, ServerSeedStore>();
         services.AddScoped<IWalletLedgerService, WalletLedgerService>();
+        services.AddScoped<IAuthSessionLastUsedUpdater, AuthSessionLastUsedUpdater>();
         services.AddHttpClient();
 
         return services;
@@ -243,6 +244,7 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<ICurrentSession, CurrentSession>();
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IEntitlementChecker, EntitlementChecker>();
         services.AddScoped<IEntitlementCacheInvalidator, EntitlementCacheInvalidator>();
