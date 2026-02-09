@@ -105,6 +105,8 @@ internal sealed class LineLiffLoginCommandHandler(
                 dateTimeProvider.UtcNow);
             memberRepository.InsertActivity(log);
             await unitOfWork.SaveChangesAsync(cancellationToken);
+
+            await lineLoginPersistenceService.SyncLoginBindingProfileAsync(tenantId, lineUserId, displayName, verifyResult.PictureUrl, command.Email, cancellationToken);
         }
 
         (string Token, DateTime ExpiresAtUtc) accessToken = jwtService.IssueAccessToken(

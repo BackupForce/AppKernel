@@ -17,6 +17,14 @@ public interface ILineLoginPersistenceService
         string? ip,
         string? deviceId,
         CancellationToken cancellationToken);
+
+    Task SyncLoginBindingProfileAsync(
+       Guid tenantId,
+       string lineUserId,
+       string? displayName,
+       Uri? pictureUrl,
+       string? email,
+       CancellationToken cancellationToken);
 }
 
 public sealed record LineLoginPersistenceResult(

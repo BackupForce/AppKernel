@@ -1,4 +1,5 @@
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Data;
 using Application.Abstractions.Identity;
 using Domain.Auth;
 using Domain.Members;
@@ -91,6 +92,8 @@ internal sealed class LineLoginPersistenceService(
             lineUserId,
             cancellationToken);
 
+
+
         return result with { IsNewMember = isNewMember };
     }
 
@@ -168,7 +171,7 @@ internal sealed class LineLoginPersistenceService(
         return new LineLoginPersistenceResult(user, member, session, refreshTokenPlain, utcNow);
     }
 
-    private async Task SyncLoginBindingProfileAsync(
+    public async Task SyncLoginBindingProfileAsync(
         Guid tenantId,
         string lineUserId,
         string? displayName,
@@ -184,6 +187,8 @@ internal sealed class LineLoginPersistenceService(
             cancellationToken);
 
         binding?.SyncProfile(displayName, pictureUrl, email);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<MemberLoginCreation> CreateMemberUserAsync(
