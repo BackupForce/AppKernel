@@ -41,12 +41,9 @@ internal sealed class GetUserByIdQueryHandler(IDbConnectionFactory factory)
                     userLookup.Add(existing.Id, existing);
                 }
 
-                if (role is not null && role.RoleId != 0)
+                if (role is not null && role.RoleId != 0 && !existing.Roles.Any(existingRole => existingRole.RoleId == role.RoleId))
                 {
-                    if (!existing.Roles.Any(existingRole => existingRole.RoleId == role.RoleId))
-                    {
-                        existing.Roles.Add(role);
-                    }
+                    existing.Roles.Add(role);
                 }
 
                 return existing;
