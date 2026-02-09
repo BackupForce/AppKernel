@@ -15,7 +15,7 @@ public class UsersEndpoints : IEndpoint
     {
         RouteGroupBuilder group = app.MapGroup("/users")
             .WithGroupName("admin-v1")
-            .WithMetadata(new ApiVersion(2, 0))
+            .WithMetadata(new ApiVersion(1, 0))
             .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
             .WithTags("Users");
 

@@ -26,7 +26,7 @@ internal sealed class GetTenantUsersQueryHandler(IDbConnectionFactory factory)
             FROM users u
             WHERE u.tenant_id = @TenantId
               AND u.type = @UserType
-            """;
+            """);
 
         const string countSql = "SELECT COUNT(*) FROM ({0}) AS counted";
         string baseSql = builder.ToString();
