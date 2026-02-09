@@ -8,6 +8,7 @@ internal sealed class UpdateLastUsedBehavior<TRequest, TResponse>(
     ICurrentSession currentSession,
     IAuthSessionLastUsedUpdater updater,
     IDateTimeProvider dateTimeProvider) : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : notnull
 {
     private static readonly TimeSpan Throttle = TimeSpan.FromMinutes(1);
 
