@@ -28,6 +28,10 @@ public static class UserErrors
         "Users.RoleAssignmentNotAllowed",
         "依照使用者類型與租戶規則，禁止指派該角色。");
 
+    public static Error RoleRemovalNotAllowed(string roleName) => Error.Forbidden(
+        "Users.RoleRemovalNotAllowed",
+        $"角色 {roleName} 為系統保留角色，禁止移除。");
+
     public static Error GroupAlreadyAssigned(Guid groupId) => Error.Conflict(
         "Users.GroupAlreadyAssigned",
         $"使用者已擁有群組 (Id = {groupId})。");

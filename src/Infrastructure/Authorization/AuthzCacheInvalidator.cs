@@ -96,6 +96,11 @@ internal sealed class AuthzCacheInvalidator(
         return _database.SetAddAsync(RoleUsersKey(roleId), userId.ToString("D"));
     }
 
+    public Task UntrackRoleUserAsync(int roleId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return _database.SetRemoveAsync(RoleUsersKey(roleId), userId.ToString("D"));
+    }
+
     public Task RemoveRoleIndexAsync(int roleId, CancellationToken cancellationToken = default)
     {
         return _database.KeyDeleteAsync(RoleUsersKey(roleId));
