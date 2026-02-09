@@ -1,4 +1,6 @@
 ﻿using System.Data;
+using System.Globalization;
+using System.Text;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Dapper;
@@ -8,13 +10,13 @@ using SharedKernel;
 namespace Application.Users.GetTenantUsers;
 
 internal sealed class GetTenantUsersQueryHandler(IDbConnectionFactory factory)
-    : IQueryHandler<GetTenantUsersQuery, IReadOnlyList<TenantUserListItemDto>>
+    : IQueryHandler<GetTenantUsersQuery, PagedResult<TenantUserListItemDto>>
 {
-    public async Task<Result<IReadOnlyList<TenantUserListItemDto>>> Handle(
+    public async Task<Result<PagedResult<TenantUserListItemDto>>> Handle(
         GetTenantUsersQuery query,
         CancellationToken cancellationToken)
     {
-        const string sql =
+        var builder = new StringBuilder(
             """
             SELECT
                 u.id AS Id,
@@ -24,21 +26,28 @@ internal sealed class GetTenantUsersQueryHandler(IDbConnectionFactory factory)
             FROM users u
             WHERE u.tenant_id = @TenantId
               AND u.type = @UserType
-            ORDER BY u.name
             """;
+
+        const string countSql = "SELECT COUNT(*) FROM ({0}) AS counted";
+        string baseSql = builder.ToString();
+        string finalSql = $"{baseSql} ORDER BY u.name LIMIT @PageSize OFFSET @Offset";
+
+        var parameters = new DynamicParameters();
+        parameters.Add("TenantId", query.TenantId);
+        parameters.Add("UserType", UserType.Tenant);
+        parameters.Add("PageSize", query.PageSize);
+        parameters.Add("Offset", (query.Page - 1) * query.PageSize);
 
         using IDbConnection connection = factory.GetOpenConnection();
 
-        IReadOnlyList<TenantUserListItemDto> users = (await connection.QueryAsync<TenantUserListItemDto>(
+        IEnumerable<TenantUserListItemDto> users = await connection.QueryAsync<TenantUserListItemDto>(
+            new CommandDefinition(finalSql, parameters, cancellationToken: cancellationToken));
+        int totalCount = await connection.ExecuteScalarAsync<int>(
             new CommandDefinition(
-                sql,
-                new
-                {
-                    query.TenantId,
-                    UserType = UserType.Tenant
-                },
-                cancellationToken: cancellationToken))).ToList();
+                string.Format(CultureInfo.InvariantCulture, countSql, baseSql),
+                parameters,
+                cancellationToken: cancellationToken));
 
-        return users;
+        return PagedResult<TenantUserListItemDto>.Create(users, totalCount, query.Page, query.PageSize);
     }
 }

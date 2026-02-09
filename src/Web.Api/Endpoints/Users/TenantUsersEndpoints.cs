@@ -1,9 +1,12 @@
 ﻿using Application.Abstractions.Authorization;
+using Application.Abstractions.Data;
 using Application.Users.GetTenantUsers;
 using Asp.Versioning;
 using Domain.Security;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Web.Api.Common;
+using Web.Api.Endpoints.Users.Requests;
 
 namespace Web.Api.Endpoints.Users;
 
@@ -19,17 +22,17 @@ public sealed class TenantUsersEndpoints : IEndpoint
 
         group.MapGet(
                 "/",
-                async (Guid tenantId, ISender sender, CancellationToken ct) =>
+                async (Guid tenantId, [AsParameters] GetTenantUsersRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    GetTenantUsersQuery query = new GetTenantUsersQuery(tenantId);
-                    return await UseCaseInvoker.Send<GetTenantUsersQuery, IReadOnlyList<TenantUserListItemDto>>(
+                    GetTenantUsersQuery query = new GetTenantUsersQuery(tenantId, request.Page, request.PageSize);
+                    return await UseCaseInvoker.Send<GetTenantUsersQuery, PagedResult<TenantUserListItemDto>>(
                         query,
                         sender,
                         value => Results.Ok(value),
                         ct);
                 })
             .RequireAuthorization(Permission.Users.View.Name)
-            .Produces<IReadOnlyList<TenantUserListItemDto>>(StatusCodes.Status200OK)
+            .Produces<PagedResult<TenantUserListItemDto>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
