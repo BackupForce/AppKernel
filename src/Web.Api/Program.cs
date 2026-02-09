@@ -15,6 +15,8 @@ using Web.Api.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables();
+
 builder.Host.UseSerilog((context, loggerConfig) =>
     loggerConfig
         .ReadFrom.Configuration(context.Configuration)
@@ -63,6 +65,10 @@ if (app.Environment.IsDevelopment())
     app.ApplyMigrations();
 }
 
+//Todo: Remove duplicate Swagger setup
+app.UseSwaggerWithUi();
+app.ApplyMigrations();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
@@ -80,6 +86,8 @@ app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 
 app.UseCors(Web.Api.Common.CorsPolicyNames.Default);
+
+
 
 app.UseTenantResolution();
 

@@ -44,6 +44,14 @@ public static class AuthErrors
         "invalid_refresh_token",
         "Refresh token is invalid.");
 
+    public static readonly Error InvalidRefreshTokenSameSite = Error.Unauthorized(
+        "invalid_refresh_token",
+        "Refresh token is invalid, not same site.");
+
+    public static readonly Error InvalidRefreshTokenSessionNoFound = Error.Unauthorized(
+        "invalid_refresh_token",
+        "Refresh token is invalid, session nofound.");
+
     public static readonly Error RefreshTokenExpired = Error.Unauthorized(
         "refresh_token_expired",
         "Refresh token is expired.");

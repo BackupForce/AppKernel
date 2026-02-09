@@ -4,12 +4,13 @@ namespace Web.Api.Infrastructure;
 
 public static class OriginValidationHelper
 {
-    public static bool IsSameOrigin(HttpRequest request)
+    public static bool IsAllowedOrigin(HttpRequest request, IReadOnlyCollection<string> allowedOrigins)
     {
         string? origin = request.Headers.Origin;
         string? referer = request.Headers.Referer;
-        string host = request.Host.Value ?? string.Empty;
 
+        // 非瀏覽器情境（例如 server-to-server / curl 沒帶 Origin/Referer）
+        // 你要嚴格一點也可以改成 false
         if (string.IsNullOrWhiteSpace(origin) && string.IsNullOrWhiteSpace(referer))
         {
             return true;
@@ -17,12 +18,7 @@ public static class OriginValidationHelper
 
         if (!string.IsNullOrWhiteSpace(origin))
         {
-            if (!Uri.TryCreate(origin, UriKind.Absolute, out Uri? originUri))
-            {
-                return false;
-            }
-
-            return IsSameHost(request, originUri, host);
+            return IsInAllowedList(origin, allowedOrigins);
         }
 
         if (!string.IsNullOrWhiteSpace(referer))
@@ -32,45 +28,24 @@ public static class OriginValidationHelper
                 return false;
             }
 
-            return IsSameHost(request, refererUri, host);
+            // referer 只取 scheme://host[:port]
+            string refererOrigin = $"{refererUri.Scheme}://{refererUri.Authority}";
+            return IsInAllowedList(refererOrigin, allowedOrigins);
         }
 
         return false;
     }
 
-    public static bool IsSameHost(HttpRequest request)
+    private static bool IsInAllowedList(string origin, IReadOnlyCollection<string> allowedOrigins)
     {
-        string? origin = request.Headers.Origin;
-        string? referer = request.Headers.Referer;
-
-        if (string.IsNullOrWhiteSpace(origin) && string.IsNullOrWhiteSpace(referer))
+        // 允許清單建議用「精準 origin」，不要用 wildcard
+        foreach (string allowed in allowedOrigins)
         {
-            return true;
+            if (string.Equals(origin.TrimEnd('/'), allowed.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
         }
-
-        if (!string.IsNullOrWhiteSpace(origin)
-            && Uri.TryCreate(origin, UriKind.Absolute, out Uri? originUri))
-        {
-            return string.Equals(originUri.Host, request.Host.Host, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(originUri.Scheme, request.Scheme, StringComparison.OrdinalIgnoreCase);
-        }
-
-        if (!string.IsNullOrWhiteSpace(referer)
-            && Uri.TryCreate(referer, UriKind.Absolute, out Uri? refererUri))
-        {
-            return string.Equals(refererUri.Host, request.Host.Host, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(refererUri.Scheme, request.Scheme, StringComparison.OrdinalIgnoreCase);
-        }
-
         return false;
-    }
-
-    private static bool IsSameHost(HttpRequest request, Uri uri, string host)
-    {
-        string requestScheme = request.Scheme;
-        return string.Equals(uri.Host, request.Host.Host, StringComparison.OrdinalIgnoreCase)
-            && string.Equals(uri.Scheme, requestScheme, StringComparison.OrdinalIgnoreCase)
-            && (request.Host.Port == uri.Port || request.Host.Port is null && uri.IsDefaultPort)
-            && string.Equals(uri.Authority, host, StringComparison.OrdinalIgnoreCase);
     }
 }

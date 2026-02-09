@@ -13,6 +13,7 @@ public static class MiddlewareExtensions
 
     public static IApplicationBuilder UseTenantResolution(this IApplicationBuilder app)
     {
+
         app.UseMiddleware<TenantResolutionMiddleware>();
 
         return app;

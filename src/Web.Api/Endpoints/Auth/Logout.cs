@@ -2,6 +2,7 @@
 using Application.Auth;
 using Asp.Versioning;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using SharedKernel;
 using Web.Api.Extensions;
@@ -18,14 +19,21 @@ public sealed class Logout : IEndpoint
             HttpContext httpContext,
             ISender sender,
             IOptions<AuthTokenOptions> authTokenOptions,
+            IConfiguration configuration,
             CancellationToken cancellationToken) =>
         {
             AuthTokenOptions options = authTokenOptions.Value;
 
-            if (options.UseRefreshTokenCookie && !OriginValidationHelper.IsSameHost(httpContext.Request))
+            if (options.UseRefreshTokenCookie)
             {
-                return CustomResults.Problem(Result.Failure(AuthErrors.InvalidRefreshToken));
+                string[] allowed = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
+                if (!OriginValidationHelper.IsAllowedOrigin(httpContext.Request, allowed))
+                {
+                    return CustomResults.Problem(Result.Failure(AuthErrors.InvalidRefreshTokenSameSite));
+                }
             }
+
 
             string? refreshToken = options.UseRefreshTokenCookie
                 ? httpContext.Request.Cookies[options.RefreshCookieName]

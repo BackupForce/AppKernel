@@ -36,7 +36,7 @@ internal sealed class RefreshTokenCommandHandler(
 
         if (tokenRecord?.Session is null)
         {
-            return Result.Failure<RefreshTokenResponse>(AuthErrors.InvalidRefreshToken);
+            return Result.Failure<RefreshTokenResponse>(AuthErrors.InvalidRefreshTokenSessionNoFound);
         }
 
         AuthSession session = tokenRecord.Session;
