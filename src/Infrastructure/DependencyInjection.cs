@@ -283,6 +283,10 @@ public static class DependencyInjection
                 policy.AddRequirements(new UserTypeRequirement(
                     new[] { UserType.Platform },
                     false)));
+            options.AddPolicy(AuthorizationPolicyNames.AdminPolicy, policy =>
+                policy.AddRequirements(new UserTypeRequirement(
+                    new[] { UserType.Platform, UserType.Tenant },
+                    true)));
             options.AddPolicy(AuthorizationPolicyNames.TenantUser, policy =>
                 policy.AddRequirements(new UserTypeRequirement(
                     new[] { UserType.Tenant },
