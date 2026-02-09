@@ -22,6 +22,7 @@ public static class DependencyInjection
             config.AddOpenBehavior(typeof(ValidationPipelineBehavior<,>));
             config.AddOpenBehavior(typeof(TransactionalPipelineBehavior<,>));
             config.AddOpenBehavior(typeof(QueryCachingPipelineBehavior<,>));
+            config.AddOpenBehavior(typeof(UpdateLastUsedBehavior<,>));
         });
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
