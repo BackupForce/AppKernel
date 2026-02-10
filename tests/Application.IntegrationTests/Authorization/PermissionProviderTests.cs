@@ -161,6 +161,92 @@ public class PermissionProviderTests : BaseIntegrationTest
         result.Should().BeTrue();
     }
 
+
+    [Fact]
+    public async Task GetAllowedPermissionCodesAsync_Should_Deny_When_AllowAndDenyExistInScope()
+    {
+        var tenantId = Guid.NewGuid();
+        var tenant = Tenant.Create(tenantId, "TNF", "Tenant F");
+        DbContext.Tenants.Add(tenant);
+
+        Email email = Email.Create("user5@example.com").Value;
+        var name = new Name("User Five");
+        var user = User.Create(email, name, "hash", true, UserType.Tenant, tenantId);
+        DbContext.Users.Add(user);
+
+        var node = ResourceNode.Create("Node", "node-allow-deny", tenantId);
+        DbContext.ResourceNodes.Add(node);
+
+        DbContext.PermissionAssignments.AddRange(
+            PermissionAssignment.Create(SubjectType.User, Decision.Allow, user.Id, "tickets.read", tenantId, node.Id),
+            PermissionAssignment.Create(SubjectType.User, Decision.Deny, user.Id, "TICKETS.READ", tenantId, node.Id));
+
+        await DbContext.SaveChangesAsync();
+
+        PermissionProvider provider = CreateProvider();
+
+        IReadOnlyList<string> result = await provider.GetAllowedPermissionCodesAsync(user.Id, tenantId, node.Id, CancellationToken.None);
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetAllowedPermissionCodesAsync_Should_OnlyInclude_TenantLevel_When_NodeIdIsNull()
+    {
+        var tenantId = Guid.NewGuid();
+        var tenant = Tenant.Create(tenantId, "TNG", "Tenant G");
+        DbContext.Tenants.Add(tenant);
+
+        Email email = Email.Create("user6@example.com").Value;
+        var name = new Name("User Six");
+        var user = User.Create(email, name, "hash", true, UserType.Tenant, tenantId);
+        DbContext.Users.Add(user);
+
+        var node = ResourceNode.Create("Node", "node-tenant-level", tenantId);
+        DbContext.ResourceNodes.Add(node);
+
+        DbContext.PermissionAssignments.AddRange(
+            PermissionAssignment.Create(SubjectType.User, Decision.Allow, user.Id, "users.edit", tenantId, null),
+            PermissionAssignment.Create(SubjectType.User, Decision.Allow, user.Id, "tickets.read", tenantId, node.Id));
+
+        await DbContext.SaveChangesAsync();
+
+        PermissionProvider provider = CreateProvider();
+
+        IReadOnlyList<string> result = await provider.GetAllowedPermissionCodesAsync(user.Id, tenantId, null, CancellationToken.None);
+
+        result.Should().BeEquivalentTo(["USERS.EDIT"]);
+    }
+
+    [Fact]
+    public async Task GetAllowedPermissionCodesAsync_Should_UseCachedMatrix_When_CacheHit()
+    {
+        var tenantId = Guid.NewGuid();
+        var tenant = Tenant.Create(tenantId, "TNH", "Tenant H");
+        DbContext.Tenants.Add(tenant);
+
+        Email email = Email.Create("user7@example.com").Value;
+        var name = new Name("User Seven");
+        var user = User.Create(email, name, "hash", true, UserType.Tenant, tenantId);
+        DbContext.Users.Add(user);
+
+        DbContext.PermissionAssignments.Add(
+            PermissionAssignment.Create(SubjectType.User, Decision.Allow, user.Id, "USERS.EDIT", tenantId, null));
+
+        await DbContext.SaveChangesAsync();
+
+        PermissionProvider provider = CreateProvider();
+
+        IReadOnlyList<string> first = await provider.GetAllowedPermissionCodesAsync(user.Id, tenantId, null, CancellationToken.None);
+        first.Should().ContainSingle().Which.Should().Be("USERS.EDIT");
+
+        DbContext.PermissionAssignments.RemoveRange(DbContext.PermissionAssignments.Where(pa => pa.SubjectId == user.Id));
+        await DbContext.SaveChangesAsync();
+
+        IReadOnlyList<string> second = await provider.GetAllowedPermissionCodesAsync(user.Id, tenantId, null, CancellationToken.None);
+
+        second.Should().ContainSingle().Which.Should().Be("USERS.EDIT");
+    }
     private PermissionProvider CreateProvider()
     {
         ICacheService cacheService = ServiceProvider.GetRequiredService<ICacheService>();
