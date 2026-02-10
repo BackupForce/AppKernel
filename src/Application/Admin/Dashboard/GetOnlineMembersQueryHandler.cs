@@ -96,6 +96,7 @@ internal sealed class GetOnlineMembersQueryHandler(
         Guid UserId,
         string UserName,
         int UserType,
-        DateTime LastUsedAtUtc,
-        string? Email);
+        string? Email,
+        DateTime LastUsedAtUtc
+        );
 }

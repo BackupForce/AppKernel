@@ -1,4 +1,5 @@
 using Application.Abstractions.Authorization;
+using Application.Abstractions.Data;
 using Application.Admin.Dashboard;
 using Application.Users.RemoveRole;
 using Asp.Versioning;
@@ -34,8 +35,8 @@ public sealed class DashboardEndpoint : IEndpoint
             .Produces<AdminDashboardMemberMetricsDto>(StatusCodes.Status200OK)
             .WithName("GetAdminDashboardMemberMetrics");
 
-        app.MapGet(
-                "/admin-v1/dashboard/online-members",
+        group.MapGet(
+                "/dashboard/online-members",
                 async ([AsParameters] GetOnlineMembersRequest request, ISender sender, CancellationToken ct) =>
                 {
                     if (request.Page < 1)

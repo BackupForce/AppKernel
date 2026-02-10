@@ -89,6 +89,11 @@ public sealed record PrizeOption
             return Result.Failure<PrizeOption>(GamingErrors.PrizeRedeemValidDaysInvalid);
         }
 
+        if (payoutAmount == 0)
+        {
+            payoutAmount = cost;
+        }
+
         return new PrizeOption(prizeId, name.Trim(), cost, payoutAmount, redeemValidDays, description?.Trim());
     }
 }
