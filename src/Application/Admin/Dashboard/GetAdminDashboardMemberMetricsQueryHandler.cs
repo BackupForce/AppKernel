@@ -177,5 +177,5 @@ internal sealed class GetAdminDashboardMemberMetricsQueryHandler(
         return dto;
     }
 
-    private sealed record MetricCounts(int Today, int Week);
+    private sealed record MetricCounts(long Today, long Week);
 }
