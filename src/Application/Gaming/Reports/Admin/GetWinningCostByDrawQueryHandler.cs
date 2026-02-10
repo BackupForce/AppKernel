@@ -110,7 +110,7 @@ internal sealed class GetWinningCostByDrawQueryHandler(
             request.TenantId,
             request.DrawId,
             WinningStatuses,
-            DetailPageSize = request.DetailPageSize,
+            request.DetailPageSize,
             DetailOffset = (request.DetailPage - 1) * request.DetailPageSize
         };
 

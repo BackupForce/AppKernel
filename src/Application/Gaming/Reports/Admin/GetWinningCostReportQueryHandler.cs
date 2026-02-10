@@ -132,14 +132,7 @@ internal sealed class GetWinningCostReportQueryHandler(
 
             foreach (WinningCostPerDrawDto item in items)
             {
-                if (detailsByDraw.TryGetValue(item.DrawId, out List<WinningDetailDto>? details))
-                {
-                    item.Details = details;
-                }
-                else
-                {
-                    item.Details = Array.Empty<WinningDetailDto>();
-                }
+                item.Details = detailsByDraw.TryGetValue(item.DrawId, out List<WinningDetailDto>? details) ? details : Array.Empty<WinningDetailDto>();
             }
         }
 
@@ -224,7 +217,7 @@ internal sealed class GetWinningCostReportQueryHandler(
                     .ToList());
     }
 
-    private sealed class WinningDetailRow
+    public sealed class WinningDetailRow
     {
         public Guid DrawId { get; set; }
         public Guid TicketId { get; set; }
