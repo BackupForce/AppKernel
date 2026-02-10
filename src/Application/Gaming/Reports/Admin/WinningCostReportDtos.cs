@@ -25,7 +25,7 @@ public sealed class WinningCostPerDrawDto
 
     public int TicketCount { get; set; }
 
-    public int WinningTicketCount { get; set; }
+    public int ValidbetTicketCount { get; set; }
 
     public int WinningCount { get; set; }
 

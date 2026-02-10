@@ -43,12 +43,17 @@ internal sealed class GetOnlineMembersQueryHandler(
         const string itemsSql = """
             SELECT
                 u.id AS UserId,
+                m.id AS MemberId,
                 u.name AS UserName,
                 u.type AS UserType,
                 u.email AS Email,
                 MAX(s.last_used_at_utc) AS LastUsedAtUtc
             FROM auth_sessions s
-            JOIN users u ON u.id = s.user_id
+            JOIN users u
+                ON u.id = s.user_id
+            JOIN public.members m
+                ON m.user_id = u.id
+               AND m.tenant_id = @tenantId
             WHERE s.tenant_id = @tenantId
               AND u.tenant_id = @tenantId
               AND u.type = @memberUserType
@@ -58,10 +63,16 @@ internal sealed class GetOnlineMembersQueryHandler(
                     u.name ILIKE '%' || @q || '%' OR
                     u.email ILIKE '%' || @q || '%'
               )
-            GROUP BY u.id, u.name, u.type, u.email
+            GROUP BY
+                u.id,
+                m.id,
+                u.name,
+                u.type,
+                u.email
             ORDER BY MAX(s.last_used_at_utc) DESC
             OFFSET @offset
             LIMIT @pageSize;
+            
             """;
 
         using IDbConnection connection = dbConnectionFactory.GetOpenConnection();
@@ -83,6 +94,7 @@ internal sealed class GetOnlineMembersQueryHandler(
                 new CommandDefinition(itemsSql, parameters, cancellationToken: cancellationToken)))
             .Select(static row => new OnlineMemberDto(
                 row.UserId,
+                row.MemberId,
                 row.UserName,
                 ((UserType)row.UserType).ToString(),
                 row.LastUsedAtUtc,
@@ -94,6 +106,7 @@ internal sealed class GetOnlineMembersQueryHandler(
 
     private sealed record OnlineMemberRow(
         Guid UserId,
+        Guid MemberId,
         string UserName,
         int UserType,
         string? Email,

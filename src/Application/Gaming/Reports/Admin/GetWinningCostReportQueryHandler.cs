@@ -61,7 +61,7 @@ internal sealed class GetWinningCostReportQueryHandler(
                 p.game_code AS GameCode,
                 COALESCE(SUM(CASE WHEN td.participation_status = ANY(@WinningStatuses) THEN tlr.payout ELSE 0 END), 0) AS TotalPayout,
                 COUNT(DISTINCT t.id) AS TicketCount,
-                COUNT(DISTINCT CASE WHEN td.participation_status = ANY(@WinningStatuses) THEN t.id END) AS WinningTicketCount,
+                COUNT(DISTINCT CASE WHEN td.participation_status = ANY(@WinningStatuses) THEN t.id END) AS ValidbetTicketCount,
                 COUNT(DISTINCT CASE WHEN td.participation_status = ANY(@WinningStatuses) THEN tlr.id END) AS WinningCount
             FROM paged_draws p
             LEFT JOIN gaming.ticket_draws td
