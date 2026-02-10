@@ -1,8 +1,10 @@
-using Application.Admin.Dashboard;
 using Application.Abstractions.Authorization;
-using Application.Abstractions.Data;
+using Application.Admin.Dashboard;
+using Application.Users.RemoveRole;
+using Asp.Versioning;
+using Domain.Security;
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
+using SharedKernel;
 using Web.Api.Common;
 using Web.Api.Endpoints;
 using Web.Api.Endpoints.Admin.Requests;
@@ -13,9 +15,16 @@ public sealed class DashboardEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet(
-                "/admin-v1/dashboard/member-metrics",
-                async (ISender sender, CancellationToken ct) =>
+     
+        RouteGroupBuilder group = app.MapGroup("/tenants/{tenantId:guid}/admin")
+            .WithGroupName("admin-v1")
+            .WithMetadata(new ApiVersion(1, 0))
+            .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
+            .WithTags("Admin Users");
+
+        group.MapGet(
+                "/dashboard/member-metrics",
+               async (ISender sender, CancellationToken ct) =>
                     await UseCaseInvoker.Send<GetAdminDashboardMemberMetricsQuery, AdminDashboardMemberMetricsDto>(
                         new GetAdminDashboardMemberMetricsQuery(),
                         sender,

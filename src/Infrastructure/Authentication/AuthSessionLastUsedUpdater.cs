@@ -17,7 +17,7 @@ internal sealed class AuthSessionLastUsedUpdater(IDbConnectionFactory db)
         DateTime thresholdUtc = nowUtc - throttle;
 
         const string sql = """
-            UPDATE auth_auth_sessions
+            UPDATE auth_sessions
             SET last_used_at_utc = @nowUtc
             WHERE tenant_id = @tenantId
               AND id = @sessionId

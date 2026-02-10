@@ -1,11 +1,11 @@
 namespace Application.Admin.Dashboard;
 
 public sealed record AdminDashboardMemberMetricsDto(
-    int RegisteredToday,
-    int RegisteredThisWeek,
+    long RegisteredToday,
+    long RegisteredThisWeek,
     int OnlineMembers,
-    int ActiveToday,
-    int ActiveThisWeek,
+    long ActiveToday,
+    long ActiveThisWeek,
     DateTime TodayStartUtc,
     DateTime TodayEndUtc,
     DateTime WeekStartUtc,
