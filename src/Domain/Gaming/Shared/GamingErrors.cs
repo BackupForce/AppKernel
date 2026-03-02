@@ -318,6 +318,18 @@ public static class GamingErrors
         "Gaming.TicketDrawAlreadyRedeemed",
         "該期已兌獎。");
 
+    public static readonly Error TicketLineResultNotFound = Error.NotFound(
+        "Gaming.TicketLineResultNotFound",
+        "找不到中獎票券明細。");
+
+    public static readonly Error TicketLineResultNotRedeemable = Error.Validation(
+        "Gaming.TicketLineResultNotRedeemable",
+        "目前狀態不可兌獎。");
+
+    public static readonly Error TicketLineResultAlreadyRedeemed = Error.Conflict(
+        "Gaming.TicketLineResultAlreadyRedeemed",
+        "中獎票券明細已兌獎。");
+
     public static readonly Error TicketCannotCancelAfterDraw = Error.Validation(
         "Gaming.TicketCannotCancelAfterDraw",
         "已開獎或結算的票券無法作廢。");

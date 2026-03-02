@@ -4,6 +4,11 @@ namespace Domain.Gaming.Repositories;
 
 public interface ITicketLineResultRepository
 {
+    Task<TicketLineResult?> GetByIdAsync(
+        Guid tenantId,
+        Guid ticketLineResultId,
+        CancellationToken cancellationToken = default);
+
     Task<bool> ExistsAsync(
         Guid tenantId,
         Guid ticketId,
@@ -20,4 +25,6 @@ public interface ITicketLineResultRepository
     Task DeleteByDrawIdAsync(Guid tenantId, Guid drawId, CancellationToken cancellationToken = default);
 
     void Insert(TicketLineResult result);
+
+    void Update(TicketLineResult result);
 }

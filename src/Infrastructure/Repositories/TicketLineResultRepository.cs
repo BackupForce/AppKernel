@@ -7,6 +7,17 @@ namespace Infrastructure.Repositories;
 
 internal sealed class TicketLineResultRepository(ApplicationDbContext context) : ITicketLineResultRepository
 {
+    public async Task<TicketLineResult?> GetByIdAsync(
+        Guid tenantId,
+        Guid ticketLineResultId,
+        CancellationToken cancellationToken = default)
+    {
+        return await context.TicketLineResults
+            .FirstOrDefaultAsync(
+                result => result.TenantId == tenantId && result.Id == ticketLineResultId,
+                cancellationToken);
+    }
+
     public async Task<bool> ExistsAsync(
         Guid tenantId,
         Guid ticketId,
@@ -58,5 +69,10 @@ internal sealed class TicketLineResultRepository(ApplicationDbContext context) :
     public void Insert(TicketLineResult result)
     {
         context.TicketLineResults.Add(result);
+    }
+
+    public void Update(TicketLineResult result)
+    {
+        context.TicketLineResults.Update(result);
     }
 }
