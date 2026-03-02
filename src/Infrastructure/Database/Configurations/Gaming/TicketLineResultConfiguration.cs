@@ -25,6 +25,8 @@ internal sealed class TicketLineResultConfiguration : IEntityTypeConfiguration<T
             .IsRequired();
         builder.Property(result => result.Payout).HasColumnType("decimal(18,2)").IsRequired();
         builder.Property(result => result.SettledAtUtc).IsRequired();
+        builder.Property(result => result.RedeemedAtUtc);
+        builder.Property(result => result.RedeemedByUserId);
 
         builder.HasIndex(result => new { result.TenantId, result.TicketId, result.DrawId, result.LineIndex }).IsUnique();
     }
