@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Authorization;
+using Application.Abstractions.Data;
 using Application.Gaming.Dtos;
 using Application.Gaming.TicketClaimEvents.Claim;
 using Application.Gaming.Tickets.AvailableForBet;
@@ -64,15 +65,23 @@ internal static class TicketEndpoints
                 "/",
                 async ([AsParameters] GetMyTicketsRequest request, ISender sender, CancellationToken ct) =>
                 {
-                    var query = new GetMyTicketsQuery(request.GameCode, request.From, request.To);
-                    return await UseCaseInvoker.Send<GetMyTicketsQuery, IReadOnlyCollection<TicketSummaryDto>>(
+                    GetMyTicketsQuery query = new(
+                        request.GameCode,
+                        request.From,
+                        request.To,
+                        request.PageNumber,
+                        request.PageSize);
+
+                    return await UseCaseInvoker.Send<GetMyTicketsQuery, PagedResult<TicketSummaryDto>>(
                         query,
                         sender,
                         value => Results.Ok(value),
                         ct);
                 })
             .RequireAuthorization(AuthorizationPolicyNames.Member)
-            .Produces<IReadOnlyCollection<TicketSummaryDto>>(StatusCodes.Status200OK)
+            .Produces<PagedResult<TicketSummaryDto>>(StatusCodes.Status200OK)
+            .WithSummary("會員票券查詢")
+            .WithDescription("依遊戲代碼與時間區間查詢會員票券，並回傳分頁結果。")
             .WithName("GetMyGameTickets");
 
 
