@@ -12,7 +12,7 @@ using Application.Abstractions.Time;
 using Dapper;
 using Domain.Admin.OperationLogs;
 using Domain.Auth;
-using Domain.Gaming.Repositories;
+using Application.Abstractions.Gaming;
 using Domain.Members;
 using Domain.Security;
 using Domain.Tenants;
@@ -137,6 +137,7 @@ public static class DependencyInjection
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<ITicketDrawRepository, TicketDrawRepository>();
         services.AddScoped<ITicketLineResultRepository, TicketLineResultRepository>();
+        services.AddScoped<IAdminWinningRedemptionRepository, AdminWinningRedemptionRepository>();
         services.AddScoped<ITicketIdempotencyRepository, TicketIdempotencyRepository>();
         services.AddScoped<ITicketClaimEventRepository, TicketClaimEventRepository>();
         services.AddScoped<ITicketClaimMemberCounterRepository, TicketClaimMemberCounterRepository>();
