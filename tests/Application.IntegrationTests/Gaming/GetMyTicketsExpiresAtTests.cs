@@ -1,4 +1,5 @@
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Gaming.Dtos;
 using Application.Gaming.Tickets.GetMy;
@@ -67,13 +68,13 @@ public sealed class GetMyTicketsExpiresAtTests : BaseIntegrationTest
             new TestUserContext(userId, tenantId),
             new TestEntitlementChecker());
 
-        Result<IReadOnlyCollection<TicketSummaryDto>> result = await handler.Handle(
-            new GetMyTicketsQuery(gameCode, null, null),
+        Result<PagedResult<TicketSummaryDto>> result = await handler.Handle(
+            new GetMyTicketsQuery(gameCode, null, null, 1, 20),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
 
-        IReadOnlyCollection<TicketSummaryDto> tickets = result.Value;
+        IReadOnlyCollection<TicketSummaryDto> tickets = result.Value.Items;
 
         tickets.Single(ticket => ticket.TicketId == ticketWithGroup)
             .ExpiresAtUtc.Should().Be(groupCloseAt);

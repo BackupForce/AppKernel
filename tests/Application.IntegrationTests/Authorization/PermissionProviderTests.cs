@@ -215,7 +215,7 @@ public class PermissionProviderTests : BaseIntegrationTest
 
         IReadOnlyList<string> result = await provider.GetAllowedPermissionCodesAsync(user.Id, tenantId, null, CancellationToken.None);
 
-        result.Should().BeEquivalentTo(["USERS.EDIT"]);
+        result.Should().BeEquivalentTo("USERS.EDIT");
     }
 
     [Fact]

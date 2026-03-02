@@ -52,6 +52,7 @@ public class RefreshTokenCommandHandlerTests
             user.Name.ToString(),
             user.Type,
             user.TenantId,
+            Arg.Any<Guid>(),
             Arg.Any<IEnumerable<string>>(),
             Arg.Any<IEnumerable<Guid>>(),
             Arg.Any<IEnumerable<string>>(),
