@@ -44,7 +44,7 @@ internal static class TicketEndpoints
                         return CustomResults.Problem(Result.Failure(GamingErrors.MemberNotFound));
                     }
 
-                    var query = new GetAvailableTicketsForBetQuery(
+                    GetAvailableTicketsForBetQuery query = new GetAvailableTicketsForBetQuery(
                         tenantContext.TenantId,
                         member.Id,
                         request.DrawId,
@@ -125,22 +125,21 @@ internal static class TicketEndpoints
 
         group.MapGet(
                "/winnings",
-               async ([AsParameters] GetMyWinningTicketsRequest request, ISender sender, CancellationToken ct) =>
+               async (
+                   [FromQuery] int pageNumber,
+                   [FromQuery] int pageSize,
+                   ISender sender,
+                   CancellationToken ct) =>
                {
-                   if (request.Page < 1 || request.PageSize < 1 || request.PageSize > 200)
-                   {
-                       return Results.BadRequest("Page must be >= 1 and PageSize must be between 1 and 200.");
-                   }
-
-                   var query = new GetMyWinningTicketsQuery(request.Page, request.PageSize);
-                   return await UseCaseInvoker.Send<GetMyWinningTicketsQuery, MyWinningTicketsDto>(
+                   GetMyWinningTicketsQuery query = new GetMyWinningTicketsQuery(pageNumber, pageSize);
+                   return await UseCaseInvoker.Send<GetMyWinningTicketsQuery, PagedResult<MyWinningTicketItemDto>>(
                        query,
                        sender,
                        value => Results.Ok(value),
                        ct);
                })
            .RequireAuthorization(AuthorizationPolicyNames.Member)
-           .Produces<MyWinningTicketsDto>(StatusCodes.Status200OK)
+           .Produces<PagedResult<MyWinningTicketItemDto>>(StatusCodes.Status200OK)
            .WithSummary("中獎票券")
            .WithDescription("取得會員中獎票券清單")
            .WithName("GetMyWinningTickets");
