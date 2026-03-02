@@ -15,42 +15,36 @@ internal sealed class GetDrawWinningNumbersByUidQueryHandler(IDbConnectionFactor
         const string sql = """
             SELECT
                 d.id AS DrawId,
-                d.uid AS Uid,
                 d.draw_at AS DrawDateUtc,
-                COALESCE(ARRAY_AGG(dwn.number ORDER BY dwn.position), ARRAY[]::integer[]) AS WinningNumbers
+                d.winning_numbers_raw AS WinningNumbersRaw
             FROM gaming.draws d
-            LEFT JOIN gaming.draw_winning_numbers dwn
-                ON dwn.draw_id = d.id
-            WHERE d.uid = @Uid
-            GROUP BY d.id, d.uid, d.draw_at
+            WHERE d.id = @id
             """;
 
         using System.Data.IDbConnection connection = dbConnectionFactory.GetOpenConnection();
 
         DrawWinningNumbersDataModel? data = await connection.QuerySingleOrDefaultAsync<DrawWinningNumbersDataModel>(
             sql,
-            new { request.Uid });
+            new { request.id });
 
         if (data is null)
         {
             return Result.Failure<DrawWinningNumbersDto>(
                 Error.NotFound(
                     "Draw.NotFound",
-                    $"Draw with uid '{request.Uid}' was not found."));
+                    $"Draw with uid '{request.id}' was not found."));
         }
 
         DrawWinningNumbersDto dto = DrawWinningNumbersDto.Create(
             data.DrawId,
-            data.Uid,
             data.DrawDateUtc,
-            data.WinningNumbers);
+            data.WinningNumbersRaw);
 
         return Result.Success(dto);
     }
 
     private sealed record DrawWinningNumbersDataModel(
         Guid DrawId,
-        string Uid,
         DateTime DrawDateUtc,
-        int[] WinningNumbers);
+        string WinningNumbersRaw);
 }

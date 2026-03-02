@@ -57,7 +57,10 @@ public static class DependencyInjection
         services.Configure<CorsSettings>(
             configuration.GetSection(CorsSettings.SectionName));
 
-        services.AddCors(options => options.AddPolicy(CorsPolicyNames.Default, policyBuilder =>
+        services.AddCors(options =>
+        {
+            // 🔹 Default Policy（原本的）
+            options.AddPolicy(CorsPolicyNames.Default, policyBuilder =>
             {
                 policyBuilder
                     .WithOrigins([.. corsSettings.AllowedOrigins])
@@ -72,8 +75,17 @@ public static class DependencyInjection
                 {
                     policyBuilder.DisallowCredentials();
                 }
-            }));
+            });
 
+            // 🔹 新增 Public Policy（完全開放）
+            options.AddPolicy(CorsPolicyNames.Public, policyBuilder =>
+            {
+                policyBuilder
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
 
         return services;
     }
