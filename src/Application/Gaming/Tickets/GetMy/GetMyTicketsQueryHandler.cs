@@ -1,15 +1,16 @@
-﻿using Application.Abstractions.Authentication;
+using System.Data;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Abstractions.Messaging;
 using Application.Gaming.Dtos;
-using Domain.Members;
 using Dapper;
-using SharedKernel;
-using Domain.Gaming.Rules;
 using Domain.Gaming.Catalog;
+using Domain.Gaming.Rules;
 using Domain.Gaming.Shared;
 using Domain.Gaming.Tickets;
+using Domain.Members;
+using SharedKernel;
 
 namespace Application.Gaming.Tickets.GetMy;
 
@@ -18,8 +19,10 @@ internal sealed class GetMyTicketsQueryHandler(
     IMemberRepository memberRepository,
     ITenantContext tenantContext,
     IUserContext userContext,
-    IEntitlementChecker entitlementChecker) : IQueryHandler<GetMyTicketsQuery, IReadOnlyCollection<TicketSummaryDto>>
+    IEntitlementChecker entitlementChecker) : IQueryHandler<GetMyTicketsQuery, PagedResult<TicketSummaryDto>>
 {
+    private const int MaxPageSize = 100;
+
     private sealed record TicketRow(
         Guid TicketId,
         Guid? DrawGroupId,
@@ -37,14 +40,34 @@ internal sealed class GetMyTicketsQueryHandler(
         DateTime? DrawAt,
         string? WinningNumbers);
 
-    public async Task<Result<IReadOnlyCollection<TicketSummaryDto>>> Handle(
+    public async Task<Result<PagedResult<TicketSummaryDto>>> Handle(
         GetMyTicketsQuery request,
         CancellationToken cancellationToken)
     {
+        if (request.PageNumber < 1)
+        {
+            return Result.Failure<PagedResult<TicketSummaryDto>>(
+                Error.Validation("GetMyTickets.InvalidPageNumber", "PageNumber must be greater than or equal to 1."));
+        }
+
+        if (request.PageSize <= 0)
+        {
+            return Result.Failure<PagedResult<TicketSummaryDto>>(
+                Error.Validation("GetMyTickets.InvalidPageSize", "PageSize must be greater than 0."));
+        }
+
+        int pageSize = request.PageSize;
+        if (pageSize > MaxPageSize)
+        {
+            pageSize = MaxPageSize;
+        }
+
+        int offset = (request.PageNumber - 1) * pageSize;
+
         Result<GameCode> gameCodeResult = GameCode.Create(request.GameCode);
         if (gameCodeResult.IsFailure)
         {
-            return Result.Failure<IReadOnlyCollection<TicketSummaryDto>>(gameCodeResult.Error);
+            return Result.Failure<PagedResult<TicketSummaryDto>>(gameCodeResult.Error);
         }
 
         Result entitlementResult = await entitlementChecker.EnsureGameEnabledAsync(
@@ -53,72 +76,91 @@ internal sealed class GetMyTicketsQueryHandler(
             cancellationToken);
         if (entitlementResult.IsFailure)
         {
-            return Result.Failure<IReadOnlyCollection<TicketSummaryDto>>(entitlementResult.Error);
+            return Result.Failure<PagedResult<TicketSummaryDto>>(entitlementResult.Error);
         }
 
         Member? member = await memberRepository.GetByUserIdAsync(tenantContext.TenantId, userContext.UserId, cancellationToken);
         if (member is null)
         {
-            return Result.Failure<IReadOnlyCollection<TicketSummaryDto>>(GamingErrors.MemberNotFound);
+            return Result.Failure<PagedResult<TicketSummaryDto>>(GamingErrors.MemberNotFound);
         }
 
-        const string sql = """
-            SELECT
-                t.id AS TicketId,
-                t.draw_group_id AS DrawGroupId,
-                d.draw_code AS DrawCode,
-                t.game_code AS GameCode,    
-                -- TODO: add gaming.ticket_lines.play_type_code and backfill from tickets for historical records.
-                l.play_type_code AS PlayTypeCode,
-                t.submission_status AS SubmissionStatus,
-                t.issued_at_utc AS IssuedAtUtc,
-                t.submitted_at_utc AS SubmittedAtUtc,
+        const string countSql = """
+            SELECT COUNT(*)
+            FROM gaming.tickets t
+            WHERE t.tenant_id = @TenantId
+              AND t.member_id = @MemberId
+              AND t.game_code = @GameCode::varchar(32)
+              AND (@From::timestamptz IS NULL OR t.issued_at_utc >= @From::timestamptz)
+              AND (@To::timestamptz IS NULL OR t.issued_at_utc <= @To::timestamptz)
+            """;
 
-                -- ExpiresAtUtc: ALWAYS based on Ticket.DrawId's close time (sealed time)
+        const string dataSql = """
+            WITH paged_tickets AS (
+                SELECT
+                    t.id,
+                    t.draw_group_id,
+                    t.game_code,
+                    t.submission_status,
+                    t.issued_at_utc,
+                    t.submitted_at_utc,
+                    t.draw_id,
+                    t.tenant_id
+                FROM gaming.tickets t
+                WHERE t.tenant_id = @TenantId
+                  AND t.member_id = @MemberId
+                  AND t.game_code = @GameCode::varchar(32)
+                  AND (@From::timestamptz IS NULL OR t.issued_at_utc >= @From::timestamptz)
+                  AND (@To::timestamptz IS NULL OR t.issued_at_utc <= @To::timestamptz)
+                ORDER BY t.issued_at_utc DESC
+                OFFSET @Offset
+                LIMIT @PageSize
+            )
+            SELECT
+                pt.id AS TicketId,
+                pt.draw_group_id AS DrawGroupId,
+                d.draw_code AS DrawCode,
+                pt.game_code AS GameCode,
+                l.play_type_code AS PlayTypeCode,
+                pt.submission_status AS SubmissionStatus,
+                pt.issued_at_utc AS IssuedAtUtc,
+                pt.submitted_at_utc AS SubmittedAtUtc,
                 CASE
                     WHEN d_exp.id IS NOT NULL THEN COALESCE(d_exp.manual_close_at, d_exp.sales_close_at)
                     ELSE NULL
                 END AS ExpiresAtUtc,
-
                 l.line_index AS LineIndex,
                 l.numbers_raw AS Numbers,
                 td.draw_id AS DrawId,
                 td.participation_status AS ParticipationStatus,
                 d.draw_at AS DrawAt,
                 d.winning_numbers_raw AS WinningNumbers
-            FROM gaming.tickets t
-            LEFT JOIN gaming.ticket_lines l ON l.ticket_id = t.id
-            LEFT JOIN gaming.ticket_draws td ON td.ticket_id = t.id
-
-            -- For ticket-draw related info (DrawAt / WinningNumbers)
+            FROM paged_tickets pt
+            LEFT JOIN gaming.ticket_lines l ON l.ticket_id = pt.id
+            LEFT JOIN gaming.ticket_draws td ON td.ticket_id = pt.id
             LEFT JOIN gaming.draws d ON d.id = td.draw_id
-
-            -- For expiry calculation: based on t.draw_id
             LEFT JOIN gaming.draws d_exp
-                   ON d_exp.id = t.draw_id
-                  AND d_exp.tenant_id = t.tenant_id
-
-            LEFT JOIN gaming.draw_groups dg ON dg.id = t.draw_group_id AND dg.tenant_id = t.tenant_id
-            WHERE t.tenant_id = @TenantId
-              AND t.member_id = @MemberId
-              AND t.game_code = @GameCode::varchar(32)
-              AND (@From::timestamptz IS NULL OR t.issued_at_utc >= @From::timestamptz)
-              AND (@To::timestamptz IS NULL OR t.issued_at_utc <= @To::timestamptz)
-            ORDER BY t.issued_at_utc DESC
+                   ON d_exp.id = pt.draw_id
+                  AND d_exp.tenant_id = pt.tenant_id
+            ORDER BY pt.issued_at_utc DESC
             """;
 
-        using System.Data.IDbConnection connection = dbConnectionFactory.GetOpenConnection();
+        DynamicParameters parameters = new DynamicParameters();
+        parameters.Add("TenantId", tenantContext.TenantId);
+        parameters.Add("MemberId", member.Id);
+        parameters.Add("GameCode", gameCodeResult.Value.Value);
+        parameters.Add("From", request.From);
+        parameters.Add("To", request.To);
+        parameters.Add("Offset", offset);
+        parameters.Add("PageSize", pageSize);
+
+        using IDbConnection connection = dbConnectionFactory.GetOpenConnection();
+
+        int totalCount = await connection.ExecuteScalarAsync<int>(
+            new CommandDefinition(countSql, parameters, cancellationToken: cancellationToken));
 
         IEnumerable<TicketRow> rows = await connection.QueryAsync<TicketRow>(
-            sql,
-            new
-            {
-                tenantContext.TenantId,
-                MemberId = member.Id,
-                GameCode = gameCodeResult.Value.Value,
-                request.From,
-                request.To
-            });
+            new CommandDefinition(dataSql, parameters, cancellationToken: cancellationToken));
 
         Dictionary<Guid, TicketSummaryDto> ticketMap = new Dictionary<Guid, TicketSummaryDto>();
         Dictionary<Guid, List<TicketLineSummaryDto>> lineMap = new Dictionary<Guid, List<TicketLineSummaryDto>>();
@@ -144,10 +186,13 @@ internal sealed class GetMyTicketsQueryHandler(
                 drawMap[row.TicketId] = new List<TicketDrawSummaryDto>();
             }
 
-            if (row.LineIndex.HasValue && !string.IsNullOrWhiteSpace(row.Numbers)
-                && lineMap[row.TicketId].TrueForAll(item => item.LineIndex != row.LineIndex.Value))
+            if (row.LineIndex.HasValue && !string.IsNullOrWhiteSpace(row.Numbers))
             {
-                lineMap[row.TicketId].Add(new TicketLineSummaryDto(row.LineIndex.Value, row.Numbers));
+                bool hasLine = lineMap[row.TicketId].TrueForAll(item => item.LineIndex != row.LineIndex.Value);
+                if (hasLine)
+                {
+                    lineMap[row.TicketId].Add(new TicketLineSummaryDto(row.LineIndex.Value, row.Numbers));
+                }
             }
 
             if (row.DrawId.HasValue && row.ParticipationStatus.HasValue && row.DrawAt.HasValue)
@@ -165,7 +210,8 @@ internal sealed class GetMyTicketsQueryHandler(
                     }
                 }
 
-                if (drawMap[row.TicketId].TrueForAll(item => item.DrawId != row.DrawId.Value))
+                bool hasDraw = drawMap[row.TicketId].TrueForAll(item => item.DrawId != row.DrawId.Value);
+                if (hasDraw)
                 {
                     drawMap[row.TicketId].Add(new TicketDrawSummaryDto(
                         row.DrawId.Value,
@@ -185,6 +231,12 @@ internal sealed class GetMyTicketsQueryHandler(
             result.Add(ticket);
         }
 
-        return result;
+        PagedResult<TicketSummaryDto> pagedResult = PagedResult<TicketSummaryDto>.Create(
+            result,
+            totalCount,
+            request.PageNumber,
+            pageSize);
+
+        return pagedResult;
     }
 }
