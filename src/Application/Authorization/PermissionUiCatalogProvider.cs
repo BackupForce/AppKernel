@@ -309,7 +309,28 @@ public sealed class PermissionUiCatalogProvider
                     "更新期數允許票種",
                     80,
                     true,
-                    false)
+                    false),
+                new PermissionItemDto(
+                    "admin.gaming.winning-numbers.read",
+                    "檢視開獎號碼",
+                    "後台檢視開獎號碼",
+                    90,
+                    false,
+                    false),
+                new PermissionItemDto(
+                    "admin.gaming.winnings.read",
+                    "檢視中獎兌獎",
+                    "後台查詢中獎與兌獎清單",
+                    100,
+                    false,
+                    false),
+                new PermissionItemDto(
+                    "admin.gaming.winnings.redeem",
+                    "執行兌獎",
+                    "後台執行中獎兌獎",
+                    110,
+                    true,
+                    false),
             });
 
         return new ScopeGroupDto(

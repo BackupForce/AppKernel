@@ -179,6 +179,9 @@ public sealed class Permission
         public static readonly Permission TicketClaimEventDisable = new(234, "gaming.ticket-claim-event.disable", "停用領券活動", PermissionScope.Tenant);
         public static readonly Permission TicketClaimEventEnd = new(235, "gaming.ticket-claim-event.end", "結束領券活動", PermissionScope.Tenant);
         public static readonly Permission TicketClaimEventClaimRead = new(236, "gaming.ticket-claim-event.claim.read", "檢視領券紀錄", PermissionScope.Tenant);
+        public static readonly Permission WinningNumbersRead = new(237, "admin.gaming.winning-numbers.read", "後台檢視開獎號碼", PermissionScope.Tenant);
+        public static readonly Permission WinningsRead = new(238, "admin.gaming.winnings.read", "後台檢視中獎兌獎資料", PermissionScope.Tenant);
+        public static readonly Permission WinningsRedeem = new(239, "admin.gaming.winnings.redeem", "後台執行中獎兌獎", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {
@@ -205,7 +208,10 @@ public sealed class Permission
             TicketClaimEventActivate,
             TicketClaimEventDisable,
             TicketClaimEventEnd,
-            TicketClaimEventClaimRead
+            TicketClaimEventClaimRead,
+            WinningNumbersRead,
+            WinningsRead,
+            WinningsRedeem
         };
     }
 
