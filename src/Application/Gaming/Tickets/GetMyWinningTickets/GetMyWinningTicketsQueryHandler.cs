@@ -1,5 +1,4 @@
 using System.Data;
-using System.Linq;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
@@ -15,8 +14,10 @@ internal sealed class GetMyWinningTicketsQueryHandler(
     IDbConnectionFactory dbConnectionFactory,
     IMemberRepository memberRepository,
     ITenantContext tenantContext,
-    IUserContext userContext) : IQueryHandler<GetMyWinningTicketsQuery, MyWinningTicketsDto>
+    IUserContext userContext) : IQueryHandler<GetMyWinningTicketsQuery, PagedResult<MyWinningTicketItemDto>>
 {
+    private const int MaxPageSize = 100;
+
     private sealed record WinningTicketRow(
         Guid TicketId,
         string GameCode,
@@ -33,25 +34,65 @@ internal sealed class GetMyWinningTicketsQueryHandler(
         string? PrizeCode,
         decimal? PrizeAmount);
 
-    private static TicketDrawParticipationStatus[] GetWinningStatuses() =>
-       new[] { TicketDrawParticipationStatus.Settled, TicketDrawParticipationStatus.Redeemed };
-
-    public async Task<Result<MyWinningTicketsDto>> Handle(
+    public async Task<Result<PagedResult<MyWinningTicketItemDto>>> Handle(
         GetMyWinningTicketsQuery request,
         CancellationToken cancellationToken)
     {
+        if (request.PageNumber < 1)
+        {
+            return Result.Failure<PagedResult<MyWinningTicketItemDto>>(
+                Error.Validation(
+                    "GetMyWinningTickets.InvalidPageNumber",
+                    "PageNumber must be greater than or equal to 1."));
+        }
+
+        if (request.PageSize <= 0)
+        {
+            return Result.Failure<PagedResult<MyWinningTicketItemDto>>(
+                Error.Validation(
+                    "GetMyWinningTickets.InvalidPageSize",
+                    "PageSize must be greater than 0."));
+        }
+
+        int pageSize = request.PageSize;
+        if (pageSize > MaxPageSize)
+        {
+            pageSize = MaxPageSize;
+        }
+
+        int offset = (request.PageNumber - 1) * pageSize;
+
         Member? member = await memberRepository.GetByUserIdAsync(
             tenantContext.TenantId,
             userContext.UserId,
             cancellationToken);
         if (member is null)
         {
-            return Result.Failure<MyWinningTicketsDto>(GamingErrors.MemberNotFound);
+            return Result.Failure<PagedResult<MyWinningTicketItemDto>>(GamingErrors.MemberNotFound);
         }
 
-        IReadOnlyCollection<TicketDrawParticipationStatus> winningStatuses = GetWinningStatuses();
+        int[] winningStatuses =
+        [
+            (int)TicketDrawParticipationStatus.Settled,
+            (int)TicketDrawParticipationStatus.Redeemed
+        ];
 
-        const string sql = """
+        const string countSql = """
+            SELECT COUNT(DISTINCT t.id)
+            FROM gaming.tickets t
+            JOIN gaming.ticket_draws td
+                ON td.ticket_id = t.id
+               AND td.tenant_id = t.tenant_id
+            JOIN gaming.ticket_line_results tlr
+                ON tlr.ticket_id = t.id
+               AND tlr.draw_id = td.draw_id
+               AND tlr.tenant_id = t.tenant_id
+            WHERE t.tenant_id = @TenantId
+              AND t.member_id = @MemberId
+              AND td.participation_status = ANY(@WinningStatuses)
+            """;
+
+        const string dataSql = """
             SELECT
                 t.id AS TicketId,
                 t.game_code AS GameCode,
@@ -92,41 +133,27 @@ internal sealed class GetMyWinningTicketsQueryHandler(
             WHERE t.tenant_id = @TenantId
               AND t.member_id = @MemberId
               AND td.participation_status = ANY(@WinningStatuses)
-            ORDER BY d.draw_at DESC, t.issued_at_utc DESC
-            OFFSET @Offset LIMIT @Limit
+            ORDER BY t.issued_at_utc DESC
+            OFFSET @Offset LIMIT @PageSize
             """;
 
-        const string countSql = """
-            SELECT COUNT(DISTINCT t.id)
-            FROM gaming.tickets t
-            JOIN gaming.ticket_draws td
-                ON td.ticket_id = t.id
-               AND td.tenant_id = t.tenant_id
-            JOIN gaming.ticket_line_results tlr
-                ON tlr.ticket_id = t.id
-               AND tlr.draw_id = td.draw_id
-               AND tlr.tenant_id = t.tenant_id
-            WHERE t.tenant_id = @TenantId
-              AND t.member_id = @MemberId
-              AND td.participation_status = ANY(@WinningStatuses)
-            """;
-
-        var parameters = new
-        {
-            tenantContext.TenantId,
-            MemberId = member.Id,
-            WinningStatuses = winningStatuses.Select(status => (int)status).ToArray(),
-            Offset = (request.Page - 1) * request.PageSize,
-            Limit = request.PageSize
-        };
+        DynamicParameters parameters = new DynamicParameters();
+        parameters.Add("TenantId", tenantContext.TenantId);
+        parameters.Add("MemberId", member.Id);
+        parameters.Add("WinningStatuses", winningStatuses);
+        parameters.Add("Offset", offset);
+        parameters.Add("PageSize", pageSize);
 
         using IDbConnection connection = dbConnectionFactory.GetOpenConnection();
 
-        IEnumerable<WinningTicketRow> rows = await connection.QueryAsync<WinningTicketRow>(sql, parameters);
-        int totalCount = await connection.ExecuteScalarAsync<int>(countSql, parameters);
+        int totalCount = await connection.ExecuteScalarAsync<int>(
+            new CommandDefinition(countSql, parameters, cancellationToken: cancellationToken));
 
-        Dictionary<Guid, MyWinningTicketItemDto> ticketMap = new();
-        Dictionary<Guid, List<MyWinningTicketDrawDto>> drawMap = new();
+        IEnumerable<WinningTicketRow> rows = await connection.QueryAsync<WinningTicketRow>(
+            new CommandDefinition(dataSql, parameters, cancellationToken: cancellationToken));
+
+        Dictionary<Guid, MyWinningTicketItemDto> ticketMap = new Dictionary<Guid, MyWinningTicketItemDto>();
+        Dictionary<Guid, List<MyWinningTicketDrawDto>> drawMap = new Dictionary<Guid, List<MyWinningTicketDrawDto>>();
 
         foreach (WinningTicketRow row in rows)
         {
@@ -146,7 +173,7 @@ internal sealed class GetMyWinningTicketsQueryHandler(
             List<MyWinningTicketDrawDto> draws = drawMap[row.TicketId];
             MyWinningTicketDrawDto? existing = draws.Find(draw => draw.DrawId == row.DrawId);
 
-            MyWinningTicketDrawDto candidate = new(
+            MyWinningTicketDrawDto candidate = new MyWinningTicketDrawDto(
                 row.DrawId,
                 row.DrawCode,
                 row.DrawAtUtc,
@@ -160,21 +187,29 @@ internal sealed class GetMyWinningTicketsQueryHandler(
             {
                 draws.Add(candidate);
             }
-            else if ((row.PrizeAmount ?? 0m) > (existing.PrizeAmount ?? 0m))
+            else
             {
-                int index = draws.IndexOf(existing);
-                draws[index] = candidate;
+                if ((row.PrizeAmount ?? 0m) > (existing.PrizeAmount ?? 0m))
+                {
+                    int index = draws.IndexOf(existing);
+                    draws[index] = candidate;
+                }
             }
         }
 
-        List<MyWinningTicketItemDto> items = new();
+        List<MyWinningTicketItemDto> items = new List<MyWinningTicketItemDto>();
         foreach (KeyValuePair<Guid, MyWinningTicketItemDto> entry in ticketMap)
         {
             IReadOnlyList<MyWinningTicketDrawDto> draws = drawMap[entry.Key];
             items.Add(entry.Value with { Draws = draws });
         }
 
-        MyWinningTicketsDto result = new(items, request.Page, request.PageSize, totalCount);
-        return result;
+        PagedResult<MyWinningTicketItemDto> pagedResult = PagedResult<MyWinningTicketItemDto>.Create(
+            items,
+            totalCount,
+            request.PageNumber,
+            pageSize);
+
+        return Result.Success(pagedResult);
     }
 }
