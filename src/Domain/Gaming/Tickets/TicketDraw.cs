@@ -76,6 +76,16 @@ public sealed class TicketDraw : Entity
 
     public void MarkRedeemed(DateTime utcNow)
     {
+        if (ParticipationStatus == TicketDrawParticipationStatus.Redeemed || RedeemedAtUtc.HasValue)
+        {
+            throw new InvalidOperationException("TicketDraw.MarkRedeemed.AlreadyRedeemed");
+        }
+
+        if (ParticipationStatus != TicketDrawParticipationStatus.Settled)
+        {
+            throw new InvalidOperationException("TicketDraw.MarkRedeemed.NotRedeemable");
+        }
+
         ParticipationStatus = TicketDrawParticipationStatus.Redeemed;
         RedeemedAtUtc = utcNow;
     }

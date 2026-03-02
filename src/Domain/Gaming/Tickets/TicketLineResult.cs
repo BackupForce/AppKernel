@@ -1,5 +1,6 @@
 using Domain.Gaming.Rules;
 using Domain.Gaming.Shared;
+using Domain.Gaming.Tickets.Events;
 using SharedKernel;
 
 namespace Domain.Gaming.Tickets;
@@ -43,6 +44,10 @@ public sealed class TicketLineResult : Entity
 
     public DateTime SettledAtUtc { get; private set; }
 
+    public DateTime? RedeemedAtUtc { get; private set; }
+
+    public Guid? RedeemedByUserId { get; private set; }
+
     public static TicketLineResult Create(
         Guid tenantId,
         Guid ticketId,
@@ -53,5 +58,23 @@ public sealed class TicketLineResult : Entity
         DateTime settledAtUtc)
     {
         return new TicketLineResult(Guid.NewGuid(), tenantId, ticketId, drawId, lineIndex, prizeTier, payout, settledAtUtc);
+    }
+
+    public void Redeem(Guid userId, DateTime redeemedAtUtc)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new InvalidOperationException("TicketLineResult.Redeem.UserIdRequired");
+        }
+
+        if (RedeemedAtUtc.HasValue || RedeemedByUserId.HasValue)
+        {
+            throw new InvalidOperationException("TicketLineResult.Redeem.AlreadyRedeemed");
+        }
+
+        RedeemedAtUtc = redeemedAtUtc;
+        RedeemedByUserId = userId;
+
+        Raise(new TicketLineRedeemedDomainEvent(Id, TicketId, DrawId, userId, redeemedAtUtc));
     }
 }
