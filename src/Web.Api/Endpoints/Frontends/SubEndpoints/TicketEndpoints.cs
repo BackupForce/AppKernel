@@ -11,6 +11,7 @@ using Application.Gaming.Tickets.Submit;
 using Domain.Gaming.Shared;
 using Domain.Members;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using SharedKernel;
 using Web.Api.Common;
 using Web.Api.Endpoints.Frontends.Requests;
@@ -126,12 +127,11 @@ internal static class TicketEndpoints
         group.MapGet(
                "/winnings",
                async (
-                   [FromQuery] int pageNumber,
-                   [FromQuery] int pageSize,
+                   [AsParameters] GetMyWinningTicketsRequest request,
                    ISender sender,
                    CancellationToken ct) =>
                {
-                   GetMyWinningTicketsQuery query = new GetMyWinningTicketsQuery(pageNumber, pageSize);
+                   GetMyWinningTicketsQuery query = new GetMyWinningTicketsQuery(request.PageNumber, request.PageSize);
                    return await UseCaseInvoker.Send<GetMyWinningTicketsQuery, PagedResult<MyWinningTicketItemDto>>(
                        query,
                        sender,
