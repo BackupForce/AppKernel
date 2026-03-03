@@ -23,6 +23,10 @@ internal sealed class GetAdminWinningsByDrawIdQueryHandler(IDbConnectionFactory 
                 tlr.id AS WinningId,
                 tlr.ticket_id AS TicketId,
                 tlr.draw_id AS DrawId,
+                m.member_no AS MemberNumber,
+                m.display_name AS MemberDisplayName,
+                d.draw_code AS DrawCode,
+                ppi.prize_name_snapshot AS PrizeName,
                 d.draw_at AS DrawDateUtc,
                 tlr.payout AS PayoutAmount,
                 td.participation_status AS Status,
@@ -30,6 +34,9 @@ internal sealed class GetAdminWinningsByDrawIdQueryHandler(IDbConnectionFactory 
                 tlr.redeemed_by_user_id AS RedeemedByUserId,
                 u.name AS RedeemedByUserName
             FROM gaming.ticket_line_results tlr
+            JOIN gaming.tickets t
+                ON t.id = tlr.ticket_id
+               AND t.tenant_id = tlr.tenant_id
             JOIN gaming.ticket_draws td
                 ON td.tenant_id = tlr.tenant_id
                AND td.ticket_id = tlr.ticket_id
@@ -37,6 +44,13 @@ internal sealed class GetAdminWinningsByDrawIdQueryHandler(IDbConnectionFactory 
             JOIN gaming.draws d
                 ON d.id = tlr.draw_id
                AND d.tenant_id = tlr.tenant_id
+            LEFT JOIN members m
+                ON m.id = t.member_id
+               AND m.tenant_id = t.tenant_id
+            LEFT JOIN gaming.draw_prize_pool_items ppi
+                ON ppi.draw_id = tlr.draw_id
+               AND ppi.tier = tlr.prize_tier
+               AND ppi.tenant_id = tlr.tenant_id
             LEFT JOIN users u
                 ON u.id = tlr.redeemed_by_user_id
             WHERE tlr.tenant_id = @TenantId
@@ -54,6 +68,10 @@ internal sealed class GetAdminWinningsByDrawIdQueryHandler(IDbConnectionFactory 
                  AND (
                     CAST(tlr.ticket_id AS text) ILIKE @Keyword
                     OR CAST(tlr.id AS text) ILIKE @Keyword
+                    OR COALESCE(m.member_no, '') ILIKE @Keyword
+                    OR COALESCE(m.display_name, '') ILIKE @Keyword
+                    OR COALESCE(d.draw_code, '') ILIKE @Keyword
+                    OR COALESCE(ppi.prize_name_snapshot, '') ILIKE @Keyword
                     OR COALESCE(u.name, '') ILIKE @Keyword
                  )
                 """);
