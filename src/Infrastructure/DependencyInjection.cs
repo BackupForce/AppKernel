@@ -12,7 +12,7 @@ using Application.Abstractions.Time;
 using Dapper;
 using Domain.Admin.OperationLogs;
 using Domain.Auth;
-using Application.Abstractions.Gaming;
+using Domain.Gaming.Repositories;
 using Domain.Members;
 using Domain.Security;
 using Domain.Tenants;
@@ -45,6 +45,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using OpenTelemetry.Metrics;
@@ -52,7 +53,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using SharedKernel;
 using StackExchange.Redis;
-using Microsoft.Extensions.Options;
 
 namespace Infrastructure;
 
