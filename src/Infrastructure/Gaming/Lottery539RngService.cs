@@ -84,7 +84,7 @@ internal sealed class Lottery539RngService : ILottery539RngService
         return hmac.ComputeHash(messageBytes);
     }
 
-    private static void ShuffleInPlace(IList<int> numbers, string serverSeed, string derivedInput, int startIndex)
+    private static void ShuffleInPlace(List<int> numbers, string serverSeed, string derivedInput, int startIndex)
     {
         int entropyIndex = startIndex;
 
