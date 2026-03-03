@@ -7,4 +7,9 @@ public sealed record MemberListItemDto(
     string DisplayName,
     short Status,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    string? ProfileRealName,
+    short? ProfileGender,
+    string? ProfilePhoneNumber,
+    bool? ProfilePhoneVerified,
+    DateTime? ProfileUpdatedAtUtc);

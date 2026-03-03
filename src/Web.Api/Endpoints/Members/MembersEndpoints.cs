@@ -76,8 +76,10 @@ public sealed class MembersEndpoints : IEndpoint
                 ([AsParameters] SearchMembersRequest request, ISender sender, CancellationToken ct) =>
                 {
                     SearchMembersQuery query = new SearchMembersQuery(
+                        request.Keyword,
                         request.MemberNo,
                         request.DisplayName,
+                        request.PhoneNumber,
                         request.Status,
                         request.UserId,
                         request.Page,
@@ -91,6 +93,8 @@ public sealed class MembersEndpoints : IEndpoint
                 })
             .RequireAuthorization(Permission.Members.Read.Name)
             .Produces<PagedResult<MemberListItemDto>>(StatusCodes.Status200OK)
+            .WithSummary("Search members")
+            .WithDescription("Supports filtering by member no, display name, status, user id, keyword (name/email/phone), and phone number.")
             .WithName("SearchMembers");
 
         group.MapPut(
