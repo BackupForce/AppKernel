@@ -41,21 +41,29 @@ internal sealed class Lottery539RngService : ILottery539RngService
     public Lottery539RngResult GenerateWinningNumbers(Guid drawId, string serverSeed)
     {
         string derivedInput = drawId.ToString("N");
-        HashSet<int> numbers = new HashSet<int>();
+        var numberSet = new HashSet<int>();
+        var numbers = new List<int>(capacity: 5);
         int index = 0;
 
         // 以序號遞增，確保輸入可重現並穩定生成 5-of-39 不重複號碼。
-        while (numbers.Count < 5)
+        while (numberSet.Count < 5)
         {
             string message = $"{derivedInput}:{index}";
             byte[] hmacBytes = ComputeHmac(serverSeed, message);
             int value = BitConverter.ToInt32(hmacBytes, 0);
             int number = Math.Abs(value % 39) + 1;
-            numbers.Add(number);
+
+            if (numberSet.Add(number))
+            {
+                numbers.Add(number);
+            }
+
             index++;
         }
 
-        Result<LotteryNumbers> result = LotteryNumbers.Create(numbers);
+        ShuffleInPlace(numbers, serverSeed, derivedInput, index);
+
+        Result<LotteryNumbers> result = LotteryNumbers.CreateFromRng(numbers);
         if (result.IsFailure)
         {
             throw new InvalidOperationException("RNG numbers invalid.");
@@ -74,5 +82,26 @@ internal sealed class Lottery539RngService : ILottery539RngService
 
         using HMACSHA256 hmac = new HMACSHA256(key);
         return hmac.ComputeHash(messageBytes);
+    }
+
+    private static void ShuffleInPlace(IList<int> numbers, string serverSeed, string derivedInput, int startIndex)
+    {
+        int entropyIndex = startIndex;
+
+        for (int i = numbers.Count - 1; i > 0; i--)
+        {
+            string message = $"{derivedInput}:shuffle:{entropyIndex}";
+            byte[] hmacBytes = ComputeHmac(serverSeed, message);
+            int j = (int)(BitConverter.ToUInt32(hmacBytes, 0) % (uint)(i + 1));
+
+            if (i == j)
+            {
+                entropyIndex++;
+                continue;
+            }
+
+            (numbers[i], numbers[j]) = (numbers[j], numbers[i]);
+            entropyIndex++;
+        }
     }
 }
