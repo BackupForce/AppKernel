@@ -32,6 +32,19 @@ public sealed class LotteryNumbers : IEquatable<LotteryNumbers>
     /// </remarks>
     public static Result<LotteryNumbers> Create(IEnumerable<int> numbers)
     {
+        return CreateInternal(numbers, sortNumbers: true);
+    }
+
+    /// <summary>
+    /// 建立由 RNG 產生的號碼組合，保留既有抽出順序。
+    /// </summary>
+    public static Result<LotteryNumbers> CreateFromRng(IEnumerable<int> numbers)
+    {
+        return CreateInternal(numbers, sortNumbers: false);
+    }
+
+    private static Result<LotteryNumbers> CreateInternal(IEnumerable<int> numbers, bool sortNumbers)
+    {
         if (numbers is null)
         {
             return Result.Failure<LotteryNumbers>(GamingErrors.LotteryNumbersRequired);
@@ -54,7 +67,10 @@ public sealed class LotteryNumbers : IEquatable<LotteryNumbers>
             return Result.Failure<LotteryNumbers>(GamingErrors.LotteryNumbersDuplicated);
         }
 
-        normalized.Sort();
+        if (sortNumbers)
+        {
+            normalized.Sort();
+        }
 
         return new LotteryNumbers(normalized);
     }
