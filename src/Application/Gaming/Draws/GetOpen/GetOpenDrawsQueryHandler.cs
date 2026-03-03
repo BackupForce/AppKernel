@@ -54,7 +54,7 @@ internal sealed class GetOpenDrawsQueryHandler(
             WHERE
                 @Status IS NULL
                 OR effective_status = @Status
-            ORDER BY sales_open_at ASC;
+            ORDER BY sales_open_at DESC;
             """;
 
         using System.Data.IDbConnection connection = dbConnectionFactory.GetOpenConnection();
