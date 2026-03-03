@@ -28,13 +28,26 @@ internal sealed class SearchMembersQueryHandler(
                 m.display_name AS DisplayName,
                 m.status AS Status,
                 m.created_at AS CreatedAt,
-                m.updated_at AS UpdatedAt
+                m.updated_at AS UpdatedAt,
+                mp.real_name AS ProfileRealName,
+                mp.gender AS ProfileGender,
+                mp.phone_number AS ProfilePhoneNumber,
+                mp.phone_verified AS ProfilePhoneVerified,
+                mp.updated_at_utc AS ProfileUpdatedAtUtc
             FROM members m
+            LEFT JOIN member_profiles mp ON mp.member_id = m.id
+            LEFT JOIN users u ON u.id = m.user_id
             WHERE m.tenant_id = @TenantId
             """);
 
         var parameters = new DynamicParameters();
         parameters.Add("TenantId", tenantContext.TenantId);
+
+        if (!string.IsNullOrWhiteSpace(request.Keyword))
+        {
+            builder.Append(" AND (m.display_name ILIKE @Keyword OR u.email ILIKE @Keyword OR mp.phone_number ILIKE @Keyword)");
+            parameters.Add("Keyword", $"%{request.Keyword}%");
+        }
 
         if (!string.IsNullOrWhiteSpace(request.MemberNo))
         {
@@ -46,6 +59,12 @@ internal sealed class SearchMembersQueryHandler(
         {
             builder.Append(" AND m.display_name ILIKE @DisplayName");
             parameters.Add("DisplayName", $"%{request.DisplayName}%");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            builder.Append(" AND mp.phone_number ILIKE @PhoneNumber");
+            parameters.Add("PhoneNumber", $"%{request.PhoneNumber}%");
         }
 
         if (request.Status.HasValue)
