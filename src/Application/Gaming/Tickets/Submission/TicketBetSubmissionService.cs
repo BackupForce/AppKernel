@@ -1,4 +1,3 @@
-using System.Data;
 using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Domain.Gaming.Catalog;
@@ -130,8 +129,6 @@ internal sealed class TicketBetSubmissionService(
 
         TicketLine line = ticket.Lines.Single();
 
-        using IDbTransaction transaction = await unitOfWork.BeginTransactionAsync();
-
         bool updated = await ticketRepository.TryMarkSubmittedAsync(
             tenantId,
             ticket.Id,
@@ -155,7 +152,6 @@ internal sealed class TicketBetSubmissionService(
         ticketDrawRepository.Insert(ticketDraw);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        transaction.Commit();
 
         return new TicketBetSubmissionResult(
             ticket.Id,
