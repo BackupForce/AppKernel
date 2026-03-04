@@ -185,6 +185,7 @@ public sealed class Permission
         public static readonly Permission WinningNumbersRead = new(237, "ADMIN.GAMING.WINNING-NUMBERS.READ", "後台檢視開獎號碼", PermissionScope.Tenant);
         public static readonly Permission WinningsRead = new(238, "ADMIN.GAMING.WINNINGS.READ", "後台檢視中獎兌獎資料", PermissionScope.Tenant);
         public static readonly Permission WinningsRedeem = new(239, "ADMIN.GAMING.WINNINGS.REDEEM", "後台執行中獎兌獎", PermissionScope.Tenant);
+        public static readonly Permission WinningRedeemedRead = new(240, "Gaming.Winning.Redeemed.Read", "後台依兌換時間檢視已兌獎資料", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {
@@ -214,7 +215,8 @@ public sealed class Permission
             TicketClaimEventClaimRead,
             WinningNumbersRead,
             WinningsRead,
-            WinningsRedeem
+            WinningsRedeem,
+            WinningRedeemedRead
         };
     }
 
