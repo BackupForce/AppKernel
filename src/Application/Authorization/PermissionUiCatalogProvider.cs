@@ -331,6 +331,13 @@ public sealed class PermissionUiCatalogProvider
                     110,
                     true,
                     false),
+                new PermissionItemDto(
+                    "Gaming.Winning.Redeemed.Read",
+                    "依兌換時間查詢已兌獎",
+                    "後台依兌換時間區間查詢已兌獎資料",
+                    120,
+                    false,
+                    false),
             });
 
         return new ScopeGroupDto(
