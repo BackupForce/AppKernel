@@ -48,7 +48,8 @@ public sealed class AdminTicketClaimEventEndpoints : IEndpoint
                         request.PerMemberQuota,
                         scopeType,
                         request.ScopeId,
-                        request.TicketTemplateId);
+                        request.TicketTemplateId,
+                        request.AllowedTagIds);
 
                     return await UseCaseInvoker.Send<CreateTicketClaimEventCommand, Guid>(
                         command,
@@ -80,7 +81,8 @@ public sealed class AdminTicketClaimEventEndpoints : IEndpoint
                         request.PerMemberQuota,
                         scopeType,
                         request.ScopeId,
-                        request.TicketTemplateId);
+                        request.TicketTemplateId,
+                        request.AllowedTagIds);
 
                     return await UseCaseInvoker.Send<UpdateTicketClaimEventCommand>(command, sender, ct);
                 })
