@@ -51,19 +51,19 @@ internal sealed class UpdateTicketClaimEventCommandHandler(
             return updateResult;
         }
 
-        IReadOnlyCollection<Guid> allowedTagIds = request.AllowedTagIds?
+        Guid[] allowedTagIds = request.AllowedTagIds?
             .Where(id => id != Guid.Empty)
             .Distinct()
             .ToArray() ?? Array.Empty<Guid>();
 
-        if (allowedTagIds.Count > 0)
+        if (allowedTagIds.Length > 0)
         {
             IReadOnlyCollection<MemberTag> tags = await memberTagCatalogRepository.GetByIdsAsync(
                 request.TenantId,
                 allowedTagIds,
                 cancellationToken);
 
-            if (tags.Count != allowedTagIds.Count)
+            if (tags.Count != allowedTagIds.Length)
             {
                 return Result.Failure(GamingErrors.MemberTagNotFound);
             }

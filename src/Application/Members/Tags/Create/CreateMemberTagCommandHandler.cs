@@ -21,7 +21,7 @@ internal sealed class CreateMemberTagCommandHandler(
             return Result.Failure<Guid>(GamingErrors.MemberTagTenantMismatch);
         }
 
-        string normalizedCode = request.TagCode.Trim().ToLowerInvariant();
+        string normalizedCode = request.TagCode.Trim().ToUpperInvariant();
         if (string.IsNullOrWhiteSpace(normalizedCode) || normalizedCode.Length > 64)
         {
             return Result.Failure<Guid>(GamingErrors.MemberTagCodeInvalid);
