@@ -34,6 +34,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<MemberActivityLog> MemberActivityLogs { get; set; }
     public DbSet<MemberProfile> MemberProfiles { get; set; }
     public DbSet<MemberAddress> MemberAddresses { get; set; }
+    public DbSet<MemberTag> MemberTags { get; set; }
+    public DbSet<MemberTagBinding> MemberTagBindings { get; set; }
     public DbSet<Draw> Draws { get; set; }
     public DbSet<DrawTemplate> DrawTemplates { get; set; }
     public DbSet<DrawTemplatePlayType> DrawTemplatePlayTypes { get; set; }
@@ -47,6 +49,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<TicketClaimEvent> TicketClaimEvents { get; set; }
     public DbSet<TicketClaimMemberCounter> TicketClaimMemberCounters { get; set; }
     public DbSet<TicketClaimRecord> TicketClaimRecords { get; set; }
+    public DbSet<TicketClaimEventTagRule> TicketClaimEventTagRules { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<TicketLine> TicketLines { get; set; }
     public DbSet<TicketDraw> TicketDraws { get; set; }

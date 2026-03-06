@@ -8,7 +8,8 @@ public sealed record CreateTicketClaimEventRequest(
     int PerMemberQuota,
     string ScopeType,
     Guid ScopeId,
-    Guid? TicketTemplateId);
+    Guid? TicketTemplateId,
+    IReadOnlyCollection<Guid>? AllowedTagIds);
 
 public sealed record UpdateTicketClaimEventRequest(
     string Name,
@@ -18,7 +19,8 @@ public sealed record UpdateTicketClaimEventRequest(
     int PerMemberQuota,
     string ScopeType,
     Guid ScopeId,
-    Guid? TicketTemplateId);
+    Guid? TicketTemplateId,
+    IReadOnlyCollection<Guid>? AllowedTagIds);
 
 public sealed record ListTicketClaimEventsRequest(
     string? Status,

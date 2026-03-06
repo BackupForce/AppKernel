@@ -58,6 +58,29 @@ internal sealed class GetActiveTicketClaimEventsForMemberQueryHandler(
               AND e.status = @Status
               AND e.starts_at_utc <= @NowUtc
               AND @NowUtc < e.ends_at_utc
+              AND (
+                    NOT EXISTS (
+                        SELECT 1
+                        FROM gaming.ticket_claim_event_tag_rules etr
+                        JOIN public.member_tags_catalog tc
+                          ON tc.id = etr.tag_id
+                         AND tc.tenant_id = etr.tenant_id
+                         AND tc.is_active = TRUE
+                        WHERE etr.tenant_id = e.tenant_id
+                          AND etr.event_id = e.id)
+                    OR EXISTS (
+                        SELECT 1
+                        FROM gaming.ticket_claim_event_tag_rules etr
+                        JOIN public.member_tag_bindings mtb
+                          ON mtb.tenant_id = etr.tenant_id
+                         AND mtb.tag_id = etr.tag_id
+                        JOIN public.member_tags_catalog tc
+                          ON tc.id = etr.tag_id
+                         AND tc.tenant_id = etr.tenant_id
+                         AND tc.is_active = TRUE
+                        WHERE etr.tenant_id = e.tenant_id
+                          AND etr.event_id = e.id
+                          AND mtb.member_id = @MemberId))
             ORDER BY e.starts_at_utc ASC, e.created_at_utc DESC
             """;
 

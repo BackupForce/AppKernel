@@ -278,6 +278,34 @@ public static class GamingErrors
         "Gaming.TicketClaimEventStatusInvalid",
         "活動狀態不正確。");
 
+    public static readonly Error MemberTagNotFound = Error.NotFound(
+        "Gaming.MemberTagNotFound",
+        "找不到會員標籤。");
+
+    public static readonly Error MemberTagInactive = Error.Validation(
+        "Gaming.MemberTagInactive",
+        "會員標籤已停用。");
+
+    public static readonly Error MemberTagCodeDuplicated = Error.Validation(
+        "Gaming.MemberTagCodeDuplicated",
+        "會員標籤代碼已存在。");
+
+    public static readonly Error MemberTagCodeInvalid = Error.Validation(
+        "Gaming.MemberTagCodeInvalid",
+        "會員標籤代碼格式不正確。");
+
+    public static readonly Error MemberTagDisplayNameInvalid = Error.Validation(
+        "Gaming.MemberTagDisplayNameInvalid",
+        "會員標籤名稱格式不正確。");
+
+    public static readonly Error MemberTagTenantMismatch = Error.Validation(
+        "Gaming.MemberTagTenantMismatch",
+        "會員標籤租戶不一致。");
+
+    public static readonly Error TicketClaimEventMemberTagNotEligible = Error.Validation(
+        "Gaming.TicketClaimEventMemberTagNotEligible",
+        "會員標籤不符合活動資格。");
+
     public static readonly Error TicketAlreadySubmitted = Error.Validation(
         "Gaming.TicketAlreadySubmitted",
         "票券已提交。");
