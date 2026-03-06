@@ -27,6 +27,9 @@ internal sealed class ClaimTicketFromEventCommandHandler(
     IDrawRepository drawRepository,
     ITicketTemplateRepository ticketTemplateRepository,
     IMemberRepository memberRepository,
+    ITicketClaimEventTagRuleRepository ticketClaimEventTagRuleRepository,
+    IMemberTagBindingRepository memberTagBindingRepository,
+    IMemberTagCatalogRepository memberTagCatalogRepository,
     TicketIssuanceService ticketIssuanceService,
     IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
@@ -82,6 +85,12 @@ internal sealed class ClaimTicketFromEventCommandHandler(
         if (canClaim.IsFailure)
         {
             return Result.Failure<TicketClaimResult>(canClaim.Error);
+        }
+
+        Result tagEligibilityResult = await EnsureMemberTagEligibilityAsync(ticketClaimEvent, member, cancellationToken);
+        if (tagEligibilityResult.IsFailure)
+        {
+            return Result.Failure<TicketClaimResult>(tagEligibilityResult.Error);
         }
 
         TicketClaimMemberCounter? counter = await ticketClaimMemberCounterRepository.GetByIdForUpdateAsync(
@@ -293,6 +302,50 @@ internal sealed class ClaimTicketFromEventCommandHandler(
             "TicketClaimEvent",
             null,
             now);
+    }
+
+    private async Task<Result> EnsureMemberTagEligibilityAsync(
+        TicketClaimEvent ticketClaimEvent,
+        Member member,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyCollection<Guid> eventTagIds = await ticketClaimEventTagRuleRepository.GetTagIdsByEventIdAsync(
+            tenantContext.TenantId,
+            ticketClaimEvent.Id,
+            cancellationToken);
+
+        if (eventTagIds.Count == 0)
+        {
+            return Result.Success();
+        }
+
+        IReadOnlyCollection<MemberTag> eventTags = await memberTagCatalogRepository.GetByIdsAsync(
+            tenantContext.TenantId,
+            eventTagIds,
+            cancellationToken);
+
+        HashSet<Guid> activeEventTagIds = eventTags
+            .Where(tag => tag.IsActive)
+            .Select(tag => tag.Id)
+            .ToHashSet();
+
+        if (activeEventTagIds.Count == 0)
+        {
+            return Result.Success();
+        }
+
+        IReadOnlyCollection<Guid> memberTagIds = await memberTagBindingRepository.GetTagIdsByMemberIdAsync(
+            tenantContext.TenantId,
+            member.Id,
+            cancellationToken);
+
+        bool matched = memberTagIds.Any(tagId => activeEventTagIds.Contains(tagId));
+        if (!matched)
+        {
+            return Result.Failure(GamingErrors.TicketClaimEventMemberTagNotEligible);
+        }
+
+        return Result.Success();
     }
 
     private static string? NormalizeKey(string? key)

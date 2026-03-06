@@ -12,4 +12,5 @@ public sealed record CreateTicketClaimEventCommand(
     int PerMemberQuota,
     TicketClaimEventScopeType ScopeType,
     Guid ScopeId,
-    Guid? TicketTemplateId) : ICommand<Guid>;
+    Guid? TicketTemplateId,
+    IReadOnlyCollection<Guid>? AllowedTagIds) : ICommand<Guid>;

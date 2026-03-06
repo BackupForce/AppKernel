@@ -122,6 +122,8 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserLoginBindingReader, UserLoginBindingReader>();
         services.AddScoped<IMemberRepository, MemberRepository>();
+        services.AddScoped<IMemberTagCatalogRepository, MemberTagCatalogRepository>();
+        services.AddScoped<IMemberTagBindingRepository, MemberTagBindingRepository>();
         services.AddScoped<IMemberProfileRepository, MemberProfileRepository>();
         services.AddScoped<IMemberAddressRepository, MemberAddressRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
@@ -140,6 +142,7 @@ public static class DependencyInjection
         services.AddScoped<IAdminWinningRedemptionRepository, AdminWinningRedemptionRepository>();
         services.AddScoped<ITicketIdempotencyRepository, TicketIdempotencyRepository>();
         services.AddScoped<ITicketClaimEventRepository, TicketClaimEventRepository>();
+        services.AddScoped<ITicketClaimEventTagRuleRepository, TicketClaimEventTagRuleRepository>();
         services.AddScoped<ITicketClaimMemberCounterRepository, TicketClaimMemberCounterRepository>();
         services.AddScoped<ITicketClaimRecordRepository, TicketClaimRecordRepository>();
         services.AddScoped<ITicketTemplateRepository, TicketTemplateRepository>();
