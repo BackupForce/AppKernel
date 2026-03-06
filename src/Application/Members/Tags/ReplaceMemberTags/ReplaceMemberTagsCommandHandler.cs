@@ -30,10 +30,10 @@ internal sealed class ReplaceMemberTagsCommandHandler(
             return Result.Failure(GamingErrors.MemberNotFound);
         }
 
-        IReadOnlyCollection<Guid> tagIds = request.TagIds
+        List<Guid> tagIds = request.TagIds
             .Where(id => id != Guid.Empty)
             .Distinct()
-            .ToArray();
+            .ToList();
 
         if (tagIds.Count > 0)
         {

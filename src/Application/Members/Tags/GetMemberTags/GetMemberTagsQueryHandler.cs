@@ -46,6 +46,6 @@ internal sealed class GetMemberTagsQueryHandler(
             .Select(tag => new MemberTagDto(tag.Id, tag.TagCode, tag.DisplayName, tag.IsActive, tag.CreatedAtUtc, tag.UpdatedAtUtc))
             .ToArray();
 
-        return result;
+        return Result.Success(result);
     }
 }

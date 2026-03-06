@@ -13,6 +13,7 @@ using Domain.Gaming.Shared;
 using Domain.Gaming.TicketClaimEvents;
 using Domain.Members;
 using FluentAssertions;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
@@ -383,7 +384,11 @@ public sealed class TicketClaimEventClaimTests : BaseIntegrationTest
         ITicketRepository ticketRepository = scope.ServiceProvider.GetRequiredService<ITicketRepository>();
         IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-        TicketIssuanceService ticketIssuanceService = new(ticketRepository);
+        IMemberTagBindingRepository memberTagBindingRepository = scope.ServiceProvider.GetRequiredService<IMemberTagBindingRepository>();
+        IMemberTagCatalogRepository memberTagCatalogRepository = scope.ServiceProvider.GetRequiredService<IMemberTagCatalogRepository>();
+        ITicketClaimEventTagRuleRepository ticketClaimEventTagRuleRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimEventTagRuleRepository>();
+
+            TicketIssuanceService ticketIssuanceService = new(ticketRepository);
 
         ClaimTicketFromEventCommandHandler handler = new(
             ticketClaimEventRepository,
@@ -394,6 +399,9 @@ public sealed class TicketClaimEventClaimTests : BaseIntegrationTest
             drawRepository,
             ticketTemplateRepository,
             memberRepository,
+            ticketClaimEventTagRuleRepository,
+            memberTagBindingRepository,
+            memberTagCatalogRepository,
             ticketIssuanceService,
             unitOfWork,
             new FixedDateTimeProvider(now),
