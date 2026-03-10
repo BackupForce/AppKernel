@@ -15,6 +15,7 @@ public sealed class FrontendEndpoints : IEndpoint
             .WithTags("Me");
 
         AwardEndpoints.Map(group);
+        DrawEndpoints.Map(group);
         TicketEndpoints.Map(group);
         TicketClaimEventEndpoints.Map(group);
     }
