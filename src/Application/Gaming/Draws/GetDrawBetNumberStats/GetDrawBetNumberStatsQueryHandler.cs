@@ -51,7 +51,7 @@ internal sealed class GetDrawBetNumberStatsQueryHandler(
             sql,
             new
             {
-                TenantId = tenantContext.TenantId,
+                tenantContext.TenantId,
                 request.DrawId,
                 SubmittedStatus = TicketSubmissionStatus.Submitted
             },
