@@ -7,6 +7,7 @@ using Application.IntegrationTests.Infrastructure;
 using Domain.Gaming.Catalog;
 using Domain.Gaming.DrawGroups;
 using Domain.Gaming.Draws;
+using Domain.Gaming.TicketClaimEvents;
 using Domain.Gaming.Tickets;
 using Domain.Members;
 using Domain.Users;
@@ -84,6 +85,48 @@ public sealed class GetMyTicketsExpiresAtTests : BaseIntegrationTest
             .ExpiresAtUtc.Should().Be(autoSalesCloseAt);
         tickets.Single(ticket => ticket.TicketId == ticketWithoutDraw)
             .ExpiresAtUtc.Should().BeNull();
+    }
+
+
+    [Fact]
+    public async Task Handle_Should_Return_ClaimEventName_And_Keep_ItemCount()
+    {
+        DateTime now = new DateTime(2024, 3, 2, 9, 0, 0, DateTimeKind.Utc);
+        string gameCode = "539";
+
+        (Guid tenantId, Guid userId, Guid memberId) = await SeedMemberAsync(now);
+
+        Guid ticketWithClaimEvent = await InsertTicketAsync(tenantId, memberId, gameCode, now.AddMinutes(-30), null);
+        Guid ticketWithoutClaimEvent = await InsertTicketAsync(tenantId, memberId, gameCode, now.AddMinutes(-20), null);
+
+        await InsertClaimEventRecordAsync(
+            tenantId,
+            memberId,
+            ticketWithClaimEvent,
+            "新手領券活動",
+            now.AddMinutes(-10));
+
+        await using AsyncServiceScope scope = ServiceProvider.CreateAsyncScope();
+
+        var handler = new GetMyTicketsQueryHandler(
+            scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>(),
+            scope.ServiceProvider.GetRequiredService<IMemberRepository>(),
+            new TestTenantContext(tenantId),
+            new TestUserContext(userId, tenantId),
+            new TestEntitlementChecker());
+
+        Result<PagedResult<TicketSummaryDto>> result = await handler.Handle(
+            new GetMyTicketsQuery(gameCode, null, null, 1, 20),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Items.Should().HaveCount(2);
+
+        result.Value.Items.Single(item => item.TicketId == ticketWithClaimEvent)
+            .ClaimEventName.Should().Be("新手領券活動");
+
+        result.Value.Items.Single(item => item.TicketId == ticketWithoutClaimEvent)
+            .ClaimEventName.Should().BeNull();
     }
 
     private async Task<(Guid tenantId, Guid userId, Guid memberId)> SeedMemberAsync(DateTime now)
@@ -234,6 +277,71 @@ public sealed class GetMyTicketsExpiresAtTests : BaseIntegrationTest
             """);
 
         return ticketId;
+    }
+
+
+    private async Task InsertClaimEventRecordAsync(
+        Guid tenantId,
+        Guid memberId,
+        Guid ticketId,
+        string eventName,
+        DateTime now)
+    {
+        Guid eventId = Guid.NewGuid();
+        string ticketIdsJson = $"[\"{ticketId}\"]";
+        await DbContext.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO gaming.ticket_claim_events (
+                id,
+                tenant_id,
+                name,
+                starts_at_utc,
+                ends_at_utc,
+                status,
+                total_quota,
+                total_claimed,
+                per_member_quota,
+                scope_type,
+                scope_id,
+                ticket_template_id,
+                created_at_utc,
+                updated_at_utc)
+            VALUES (
+                {eventId},
+                {tenantId},
+                {eventName},
+                {now.AddDays(-1)},
+                {now.AddDays(1)},
+                {(int)TicketClaimEventStatus.Active},
+                {100},
+                {1},
+                {1},
+                {(int)TicketClaimEventScopeType.SingleDraw},
+                {Guid.NewGuid()},
+                NULL,
+                {now},
+                {now});
+            """);
+
+        await DbContext.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO gaming.ticket_claim_records (
+                id,
+                tenant_id,
+                event_id,
+                member_id,
+                quantity,
+                idempotency_key,
+                issued_ticket_ids,
+                claimed_at_utc)
+            VALUES (
+                {Guid.NewGuid()},
+                {tenantId},
+                {eventId},
+                {memberId},
+                {1},
+                NULL,
+                {ticketIdsJson},
+                {now});
+            """);
     }
 
     private async Task InsertTicketDrawAsync(Guid tenantId, Guid ticketId, Guid drawId, DateTime createdAtUtc)
