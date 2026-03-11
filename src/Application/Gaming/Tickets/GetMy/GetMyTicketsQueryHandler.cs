@@ -33,6 +33,7 @@ internal sealed class GetMyTicketsQueryHandler(
         DateTime IssuedAtUtc,
         DateTime? SubmittedAtUtc,
         DateTime? ExpiresAtUtc,
+        string? ClaimEventName,
         int? LineIndex,
         string? Numbers,
         Guid? DrawId,
@@ -129,6 +130,7 @@ internal sealed class GetMyTicketsQueryHandler(
                     WHEN d_exp.id IS NOT NULL THEN COALESCE(d_exp.manual_close_at, d_exp.sales_close_at)
                     ELSE NULL
                 END AS ExpiresAtUtc,
+                tce.name AS ClaimEventName,
                 l.line_index AS LineIndex,
                 l.numbers_raw AS Numbers,
                 td.draw_id AS DrawId,
@@ -136,6 +138,18 @@ internal sealed class GetMyTicketsQueryHandler(
                 d.draw_at AS DrawAt,
                 d.winning_numbers_raw AS WinningNumbers
             FROM paged_tickets pt
+            LEFT JOIN LATERAL (
+                SELECT tce.name
+                FROM gaming.ticket_claim_records tcr
+                JOIN gaming.ticket_claim_events tce
+                  ON tce.tenant_id = tcr.tenant_id
+                 AND tce.id = tcr.event_id
+                WHERE tcr.tenant_id = pt.tenant_id
+                  AND tcr.member_id = @MemberId
+                  AND tcr.issued_ticket_ids @> to_jsonb(ARRAY[pt.id::text])
+                ORDER BY tcr.claimed_at_utc DESC
+                LIMIT 1
+            ) tce ON TRUE
             LEFT JOIN gaming.ticket_lines l ON l.ticket_id = pt.id
             LEFT JOIN gaming.ticket_draws td ON td.ticket_id = pt.id
             LEFT JOIN gaming.draws d ON d.id = td.draw_id
@@ -180,6 +194,7 @@ internal sealed class GetMyTicketsQueryHandler(
                     row.IssuedAtUtc,
                     row.SubmittedAtUtc,
                     row.ExpiresAtUtc,
+                    row.ClaimEventName,
                     Array.Empty<TicketLineSummaryDto>(),
                     Array.Empty<TicketDrawSummaryDto>());
                 lineMap[row.TicketId] = new List<TicketLineSummaryDto>();
