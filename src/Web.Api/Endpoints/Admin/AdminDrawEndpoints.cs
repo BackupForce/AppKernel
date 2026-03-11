@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Application.Abstractions.Authorization;
+using Application.Gaming.Draws.GetDrawBetNumberStats;
 using Application.Gaming.Draws.SetWinningNumbers;
 using Asp.Versioning;
 using Domain.Gaming.Shared;
@@ -45,6 +46,21 @@ public sealed class AdminDrawEndpoints : IEndpoint
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AdminSetDrawWinningNumbers");
+
+        group.MapGet(
+                "/draws/{drawId:guid}/bet-number-stats",
+                async (Guid drawId, ISender sender, CancellationToken ct) =>
+                {
+                    GetDrawBetNumberStatsQuery query = new(drawId);
+                    return await UseCaseInvoker.Send<GetDrawBetNumberStatsQuery, IReadOnlyCollection<DrawBetNumberStatDto>>(
+                        query,
+                        sender,
+                        value => Results.Ok(value),
+                        ct);
+                })
+            .RequireAuthorization(Permission.Gaming.WinningNumbersRead.Name)
+            .Produces<IReadOnlyCollection<DrawBetNumberStatDto>>(StatusCodes.Status200OK)
+            .WithName("AdminGetDrawBetNumberStats");
     }
 
     private static (string? Raw, IReadOnlyCollection<int>? Numbers, Result? Error) ResolveWinningNumbers(JsonElement input)
