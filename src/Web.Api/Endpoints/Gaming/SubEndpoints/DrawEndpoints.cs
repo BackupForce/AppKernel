@@ -5,6 +5,7 @@ using Application.Gaming.Draws.AllowedTicketTemplates.Update;
 using Application.Gaming.Draws.Create;
 using Application.Gaming.Draws.Execute;
 using Application.Gaming.Draws.GetById;
+using Application.Gaming.Draws.GetCurrentDrawHotBalls;
 using Application.Gaming.Draws.GetOpen;
 using Application.Gaming.Draws.ManualClose;
 using Application.Gaming.Draws.PrizePool;
@@ -259,5 +260,23 @@ internal static class DrawEndpoints
             .Produces<DrawPrizePoolValidationDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ValidateGameDrawPrizePool");
+
+
+        group.MapGet(
+               "/current/hot-balls",
+               async (ISender sender, CancellationToken ct) =>
+               {
+                   GetCurrentDrawHotBallsQuery query = new();
+
+                   return await UseCaseInvoker.Send<GetCurrentDrawHotBallsQuery, IReadOnlyCollection<HotBallDto>>(
+                       query,
+                       sender,
+                       value => Results.Ok(new { items = value }),
+                       ct);
+               })
+           .Produces(StatusCodes.Status200OK)
+           .WithSummary("當前期別熱球統計")
+           .WithDescription("取得當前期別每顆球號的下注次數排名。")
+           .WithName("GetCurrentDrawHotBalls");
     }
 }

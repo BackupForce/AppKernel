@@ -30,27 +30,23 @@ internal sealed class GetCurrentDrawHotBallsQueryHandler(
                 SELECT d.id
                 FROM gaming.draws d
                 WHERE d.tenant_id = @TenantId
-                  AND d.status <> 4
-                  AND d.is_manually_closed = FALSE
-                  AND @NowUtc >= d.sales_open_at
-                  AND @NowUtc < d.sales_close_at
                 ORDER BY d.sales_open_at DESC
                 LIMIT 1
             ),
             line_numbers AS (
-                SELECT CAST(TRIM(number_token) AS INTEGER) AS number
+                SELECT
+                    unnest(string_to_array(tl.numbers_raw, ','))::int AS number
                 FROM current_draw cd
                 JOIN gaming.ticket_draws td
-                  ON td.draw_id = cd.id
-                 AND td.tenant_id = @TenantId
+                    ON td.draw_id = cd.id
+                   AND td.tenant_id = @TenantId
                 JOIN gaming.tickets t
-                  ON t.id = td.ticket_id
-                 AND t.tenant_id = @TenantId
+                    ON t.id = td.ticket_id
+                   AND t.tenant_id = @TenantId
+                   AND t.submission_status = @SubmittedStatus
                 JOIN gaming.ticket_lines tl
-                  ON tl.ticket_id = t.id
-                CROSS JOIN LATERAL regexp_split_to_table(tl.numbers_raw, ',') AS number_token
-                WHERE t.submission_status = @SubmittedStatus
-                  AND td.participation_status = ANY(@ValidParticipationStatuses)
+                    ON tl.ticket_id = t.id
+                WHERE td.participation_status = ANY(@ValidParticipationStatuses)
             )
             SELECT
                 ln.number AS Number,
@@ -66,7 +62,7 @@ internal sealed class GetCurrentDrawHotBallsQueryHandler(
             sql,
             new
             {
-                TenantId = tenantContext.TenantId,
+                tenantContext.TenantId,
                 NowUtc = dateTimeProvider.UtcNow,
                 SubmittedStatus = TicketSubmissionStatus.Submitted,
                 ValidParticipationStatuses
