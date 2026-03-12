@@ -36,6 +36,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<MemberAddress> MemberAddresses { get; set; }
     public DbSet<MemberTag> MemberTags { get; set; }
     public DbSet<MemberTagBinding> MemberTagBindings { get; set; }
+    public DbSet<MemberNoCounter> MemberNoCounters { get; set; }
     public DbSet<Draw> Draws { get; set; }
     public DbSet<DrawTemplate> DrawTemplates { get; set; }
     public DbSet<DrawTemplatePlayType> DrawTemplatePlayTypes { get; set; }

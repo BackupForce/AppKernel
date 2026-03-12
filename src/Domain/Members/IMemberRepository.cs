@@ -10,6 +10,8 @@ public interface IMemberRepository
 
     Task<bool> IsMemberNoUniqueAsync(Guid tenantId, string memberNo, CancellationToken cancellationToken = default);
 
+    Task<int> GetNextMemberNoSequenceAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
     Task<bool> IsUserIdUniqueAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);
 
     Task<MemberPointBalance?> GetPointBalanceAsync(Guid memberId, CancellationToken cancellationToken = default);
