@@ -91,6 +91,7 @@ internal sealed class GetActiveTicketClaimEventsForMemberQueryHandler(
             new
             {
                 request.TenantId,
+                request.MemberId,
                 Status = TicketClaimEventStatus.Active,
                 NowUtc = nowUtc
             },
