@@ -273,7 +273,7 @@ internal sealed class LineLoginPersistenceService(
     {
         string memberNo = await memberNoGenerator.GenerateAsync(
             tenantId,
-            MemberNoGenerationMode.TenantPrefix,
+            MemberNoGenerationMode.LetterDigit,
             cancellationToken);
         DateTime utcNow = dateTimeProvider.UtcNow;
         Result<Member> memberResult = Member.Create(tenantId, userId, memberNo, displayName, utcNow);

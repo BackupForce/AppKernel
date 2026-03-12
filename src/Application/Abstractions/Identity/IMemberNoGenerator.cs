@@ -10,6 +10,5 @@ public interface IMemberNoGenerator
 
 public enum MemberNoGenerationMode
 {
-    TenantPrefix,
-    Timestamp
+    LetterDigit
 }

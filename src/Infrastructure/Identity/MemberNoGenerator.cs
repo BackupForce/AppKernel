@@ -1,15 +1,12 @@
-using System.Security.Cryptography;
 using Application.Abstractions.Identity;
 using Domain.Members;
-using SharedKernel;
 
 namespace Infrastructure.Identity;
 
-internal sealed class MemberNoGenerator(
-    IMemberRepository memberRepository,
-    IDateTimeProvider dateTimeProvider) : IMemberNoGenerator
+internal sealed class MemberNoGenerator(IMemberRepository memberRepository) : IMemberNoGenerator
 {
-    private const int MaxAttempts = 50;
+    private const int Base = 99999;
+    private const int MaxCapacity = 26 * Base;
 
     public async Task<string> GenerateAsync(
         Guid tenantId,
@@ -21,38 +18,36 @@ internal sealed class MemberNoGenerator(
             throw new ArgumentException("TenantId cannot be empty.", nameof(tenantId));
         }
 
-        for (int attempt = 1; attempt <= MaxAttempts; attempt++)
+        if (mode != MemberNoGenerationMode.LetterDigit)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            string candidate = mode switch
-            {
-                MemberNoGenerationMode.Timestamp =>
-                    // e.g. MBR-20260120153045-1A2B3C
-                    $"MBR-{dateTimeProvider.UtcNow:yyyyMMddHHmmss}-{RandomNumberGenerator.GetHexString(3)}",
-
-                MemberNoGenerationMode.TenantPrefix =>
-                    // e.g. A1B2C30042 (tenant prefix 6 chars + 4 digits)
-                    $"{tenantId.ToString("N")[..6].ToUpperInvariant()}{RandomNumberGenerator.GetInt32(0, 10000):0000}",
-
-                _ => throw new ArgumentOutOfRangeException(
-                    nameof(mode),
-                    mode,
-                    "Unsupported member number generation mode.")
-            };
-
-            bool isUnique = await memberRepository.IsMemberNoUniqueAsync(
-                tenantId,
-                candidate,
-                cancellationToken);
-
-            if (isUnique)
-            {
-                return candidate;
-            }
+            throw new ArgumentOutOfRangeException(
+                nameof(mode),
+                mode,
+                "Unsupported member number generation mode.");
         }
 
-        throw new InvalidOperationException(
-            $"Failed to generate a unique member number after {MaxAttempts} attempts. TenantId={tenantId:D}, Mode={mode}.");
+        int sequence = await memberRepository.GetNextMemberNoSequenceAsync(tenantId, cancellationToken);
+
+        return FormatSequence(sequence);
+    }
+
+    internal static string FormatSequence(int sequence)
+    {
+        if (sequence <= 0)
+        {
+            throw new InvalidOperationException($"Invalid member number sequence value: {sequence}.");
+        }
+
+        if (sequence > MaxCapacity)
+        {
+            throw new InvalidOperationException($"Member number capacity exceeded. Sequence={sequence}, MaxCapacity={MaxCapacity}.");
+        }
+
+        int index = sequence - 1;
+        int letterIndex = index / Base;
+        int number = (index % Base) + 1;
+        char letter = (char)('A' + letterIndex);
+
+        return $"{letter}{number:00000}";
     }
 }

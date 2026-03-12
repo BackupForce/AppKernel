@@ -35,7 +35,7 @@ internal sealed class CreateMemberCommandHandler(
         string memberNo = string.IsNullOrWhiteSpace(request.MemberNo)
             ? await memberNoGenerator.GenerateAsync(
                 tenantId,
-                MemberNoGenerationMode.Timestamp,
+                MemberNoGenerationMode.LetterDigit,
                 cancellationToken)
             : request.MemberNo!;
 
