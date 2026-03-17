@@ -1,18 +1,4 @@
-﻿
-using Application.Abstractions.Data;
-using Application.Users.AssignRole;
-using Application.Users.Create;
-using Application.Users.GetById;
-using Application.Users.GetTenantUsers;
-using Application.Users.RemoveRole;
-using Domain.Security;
-using MediatR;
-using SharedKernel;
-using Web.Api.Common;
-using Web.Api.Endpoints.Admin.Users.Endpoints;
-using Web.Api.Endpoints.Users.Requests;
-using Web.Api.Extensions;
-using Web.Api.Infrastructure;
+﻿using Web.Api.Endpoints.Admin.Users.Endpoints;
 
 namespace Web.Api.Endpoints.Admin.Users;
 

@@ -5,8 +5,6 @@ using Application.Users.GetTenantUsers;
 using Domain.Security;
 using MediatR;
 using Web.Api.Common;
-using Web.Api.Endpoints.Admin.Roles.Requests;
-using Web.Api.Endpoints.Users.Requests;
 
 namespace Web.Api.Endpoints.Admin.Users.Endpoints;
 

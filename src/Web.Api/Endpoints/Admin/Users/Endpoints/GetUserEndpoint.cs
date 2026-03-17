@@ -1,9 +1,6 @@
-﻿using Application.Users.Create;
-using Application.Users.GetById;
-using Domain.Security;
+﻿using Application.Users.GetById;
 using MediatR;
 using Web.Api.Common;
-using Web.Api.Endpoints.Admin.Roles.Requests;
 
 namespace Web.Api.Endpoints.Admin.Users.Endpoints;
 

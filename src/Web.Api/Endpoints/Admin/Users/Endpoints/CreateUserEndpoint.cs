@@ -2,7 +2,6 @@
 using Domain.Security;
 using MediatR;
 using Web.Api.Common;
-using Web.Api.Endpoints.Admin.Roles.Requests;
 
 namespace Web.Api.Endpoints.Admin.Users.Endpoints;
 

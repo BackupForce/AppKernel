@@ -1,11 +1,9 @@
 ﻿using Application.Abstractions.Data;
-using Application.Users.Create;
 using Application.Users.GetTenantUsers;
 using Domain.Security;
 using MediatR;
 using Web.Api.Common;
-using Web.Api.Endpoints.Admin.Roles.Requests;
-using Web.Api.Endpoints.Users.Requests;
+using Web.Api.Endpoints.Admin.Users.Requests;
 
 namespace Web.Api.Endpoints.Admin.Users.Endpoints;
 
