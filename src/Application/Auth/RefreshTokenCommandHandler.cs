@@ -68,6 +68,11 @@ internal sealed class RefreshTokenCommandHandler(
             return Result.Failure<RefreshTokenResponse>(AuthErrors.SessionRevoked);
         }
 
+        if (!user.IsEnabled)
+        {
+            return Result.Failure<RefreshTokenResponse>(AuthErrors.SessionRevoked);
+        }
+
         string newRefreshToken = refreshTokenGenerator.GenerateToken();
         string newRefreshTokenHash = refreshTokenHasher.Hash(newRefreshToken);
 

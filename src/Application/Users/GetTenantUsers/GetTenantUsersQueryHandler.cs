@@ -22,7 +22,8 @@ internal sealed class GetTenantUsersQueryHandler(IDbConnectionFactory factory)
                 u.id AS Id,
                 u.name AS Name,
                 u.email AS Email,
-                u.type AS UserType
+                u.type AS UserType,
+                u.is_enabled AS IsEnabled
             FROM users u
             WHERE u.tenant_id = @TenantId
               AND u.type = @UserType

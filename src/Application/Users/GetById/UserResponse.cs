@@ -10,6 +10,8 @@ public sealed record UserResponse
 
     public bool HasPublicProfile { get; init; }
 
+    public bool IsEnabled { get; init; }
+
     public List<UserRoleDto> Roles { get; set; } = new();
 }
 

@@ -22,6 +22,8 @@ public sealed class User : Entity
         Type = type;
         TenantId = tenantId;
         NormalizedEmail = NormalizeForLookup(email.Value);
+        IsEnabled = true;
+        DisabledAtUtc = null;
 
         EnsureTypeInvariant(type, tenantId);
     }
@@ -52,6 +54,10 @@ public sealed class User : Entity
     public UserType Type { get; private set; }
 
     public Guid? TenantId { get; private set; }
+
+    public bool IsEnabled { get; private set; }
+
+    public DateTime? DisabledAtUtc { get; private set; }
 
     public void ResetPassword(string passwordHash)
     {
@@ -254,6 +260,28 @@ public sealed class User : Entity
     public bool HasLogin(LoginProvider provider)
     {
         return _loginBindings.Any(binding => binding.Provider == provider);
+    }
+
+    public void Disable(DateTime utcNow)
+    {
+        if (!IsEnabled)
+        {
+            return;
+        }
+
+        IsEnabled = false;
+        DisabledAtUtc = utcNow;
+    }
+
+    public void Enable()
+    {
+        if (IsEnabled)
+        {
+            return;
+        }
+
+        IsEnabled = true;
+        DisabledAtUtc = null;
     }
 
     public LoginBinding? GetLogin(LoginProvider provider)

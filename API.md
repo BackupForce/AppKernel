@@ -571,38 +571,37 @@
 
 ## 使用者 (Users) – 管理後台
 
-- **路由前綴**：`/api/v{version}/users`
-- **API 版本**：端點標記為 `v2.0`，但目前全域版本集合僅註冊 v1；若要呼叫請將 `{version}` 設為 `2`. 【F:src/Web.Api/Program.cs†L34-L44】【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L14-L35】
-- **授權**：需登入；指派角色端點需 `users:update` 權限，其餘端點未額外標註權限（若有後續授權策略請依部署設定）。【F:src/Domain/Security/Permission.cs†L13-L33】【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L14-L63】
+- **路由前綴**：`/api/v1/tenants/{tenantId}/admin/users`
+- **授權**：需 TenantUser 身分，並依端點要求 `users:*` 權限。 【F:src/Web.Api/Endpoints/Admin/AdminEndpoints.cs†L14-L22】【F:src/Domain/Security/Permission.cs†L29-L44】
+- **啟用/停用行為**：使用者改為停用/啟用，不做軟刪除；停用後不可登入，且查詢回應會帶 `isEnabled` 欄位供前端顯示狀態。 【F:src/Domain/Users/User.cs†L58-L60】【F:src/Domain/Users/User.cs†L265-L282】【F:src/Infrastructure/Repositories/UserRepository.cs†L33-L40】【F:src/Application/Users/GetById/GetUserByIdQueryHandler.cs†L20-L60】
 
-### GET `/api/v2/users/{id}`
-- **路徑參數**：`id` (GUID)
+### GET `/api/v1/tenants/{tenantId}/admin/users`
+- **權限**：`users:view`
+- **Query**：`page`（預設 1）、`pageSize`（預設 20）
 - **成功回應**
   ```json
   {
-    "id": "guid",
-    "email": "user@example.com",
-    "name": "User Name",
-    "hasPublicProfile": true
+    "items": [
+      {
+        "id": "guid",
+        "name": "User Name",
+        "email": "user@example.com",
+        "userType": 1,
+        "isEnabled": true
+      }
+    ],
+    "page": 1,
+    "pageSize": 20,
+    "totalCount": 1
   }
   ```
-- **描述**：依 ID 取得使用者摘要，找不到時回傳 404。 【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L19-L29】【F:src/Application/Users/GetById/UserResponse.cs†L5-L16】
+- **描述**：取得租戶使用者清單，包含啟用狀態。 【F:src/Web.Api/Endpoints/Admin/Users/Endpoints/GetUsersEndpoint.cs†L15-L33】【F:src/Application/Users/GetTenantUsers/GetTenantUsersQueryHandler.cs†L21-L52】
 
-### POST `/api/v2/users`
-- **請求體**
-  ```json
-  {
-    "email": "user@example.com",
-    "name": "User Name",
-    "password": "string",
-    "hasPublicProfile": false,
-    "userType": "string|null",
-    "tenantId": "guid|null"
-  }
-  ```
-- **成功回應**：新使用者的 GUID。驗證失敗時回 400。 【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L31-L43】【F:src/Application/Users/Create/CreateUserRequest.cs†L3-L8】
+### GET `/api/v1/tenants/{tenantId}/admin/users/{id}`
+- **成功回應**：使用者基本資料、角色清單與 `isEnabled`。
+- **描述**：依 ID 取得單一使用者。 【F:src/Web.Api/Endpoints/Admin/Users/Endpoints/GetUserEndpoint.cs†L14-L29】【F:src/Application/Users/GetById/GetUserByIdQueryHandler.cs†L20-L60】
 
-### POST `/api/v2/users/tenant`
+### POST `/api/v1/tenants/{tenantId}/admin/users`
 - **權限**：`users:create`
 - **請求體**
   ```json
@@ -613,19 +612,34 @@
     "hasPublicProfile": false
   }
   ```
-- **成功回應**：新租戶使用者的 GUID。驗證失敗時回 400。 【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L63-L79】【F:src/Application/Users/Create/CreateTenantUserRequest.cs†L3-L7】
+- **成功回應**：新使用者 GUID。 【F:src/Web.Api/Endpoints/Admin/Users/Endpoints/CreateUserEndpoint.cs†L13-L33】
 
-### POST `/api/v2/users/{userId}/roles/{roleId}`
-- **權限**：`users:update`
-- **路徑參數**：`userId` (GUID)、`roleId` (int)
-- **成功回應**
+### POST `/api/v1/tenants/{tenantId}/admin/users/{id}/reset-password`
+- **權限**：`users:reset-password`
+- **請求體**
   ```json
-  {
-    "userId": "guid",
-    "roleIds": [1, 2, 3]
-  }
+  { "newPassword": "string" }
   ```
-- **描述**：替使用者指派角色，若使用者或角色不存在回 404，已存在角色回 409。 【F:src/Web.Api/Endpoints/Users/UsersEndpoints.cs†L45-L63】【F:src/Application/Users/AssignRole/AssignRoleToUserResultDto.cs†L1-L3】
+- **成功回應**：`200 OK`。 【F:src/Web.Api/Endpoints/Admin/Users/Endpoints/ResetUserPasswordEndpoint.cs†L11-L24】
+
+### POST `/api/v1/tenants/{tenantId}/admin/users/{id}/disable`
+- **權限**：`users:update`
+- **成功回應**：`200 OK`
+- **描述**：停用使用者（冪等）；停用後登入流程會拒絕該帳號。 【F:src/Web.Api/Endpoints/Admin/Users/Endpoints/DisableUserEndpoint.cs†L10-L20】【F:src/Application/Users/Activation/DisableUserCommandHandler.cs†L14-L26】【F:src/Infrastructure/Repositories/UserRepository.cs†L33-L40】
+
+### POST `/api/v1/tenants/{tenantId}/admin/users/{id}/enable`
+- **權限**：`users:update`
+- **成功回應**：`200 OK`
+- **描述**：重新啟用使用者（冪等）。 【F:src/Web.Api/Endpoints/Admin/Users/Endpoints/EnableUserEndpoint.cs†L10-L20】【F:src/Application/Users/Activation/EnableUserCommandHandler.cs†L13-L25】
+
+### POST `/api/v1/tenants/{tenantId}/admin/users/{userId}/roles/{roleId}`
+- **權限**：`users:update`
+- **成功回應**：更新後角色 ID 清單。 【F:src/Web.Api/Endpoints/Admin/Users/Endpoints/AssignRoleToUserEndpoint.cs†L15-L34】
+
+### DELETE `/api/v1/tenants/{tenantId}/admin/users/{userId}/roles/{roleName}`
+- **權限**：`users:update`
+- **成功回應**：`204 No Content`。
+- **描述**：移除使用者角色。 【F:src/Web.Api/Endpoints/Admin/Users/Endpoints/RemoveUserRoleEndpoint.cs†L19-L37】
 
 ## 角色 (Roles) – 管理後台
 
