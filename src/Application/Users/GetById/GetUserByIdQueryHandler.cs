@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Text.Json;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Dapper;
@@ -10,6 +11,8 @@ namespace Application.Users.GetById;
 internal sealed class GetUserByIdQueryHandler(IDbConnectionFactory factory)
     : IQueryHandler<GetUserByIdQuery, UserResponse>
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task<Result<UserResponse>> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
     {
         const string sql =
@@ -19,45 +22,64 @@ internal sealed class GetUserByIdQueryHandler(IDbConnectionFactory factory)
                 u.email AS Email,
                 u.name AS Name,
                 u.has_public_profile AS HasPublicProfile,
-                r.id AS RoleId,
-                r.name AS RoleName
+                COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'RoleId', r.id,
+                            'RoleName', r.name
+                        )
+                    ) FILTER (WHERE r.id IS NOT NULL),
+                    '[]'::json
+                )::text AS RolesJson
             FROM users u
             LEFT JOIN role_user ru ON ru.users_id = u.id
             LEFT JOIN role r ON r.id = ru.roles_id
             WHERE u.id = @UserId
+            GROUP BY u.id, u.email, u.name, u.has_public_profile
             """;
 
         using IDbConnection connection = factory.GetOpenConnection();
 
-        Dictionary<Guid, UserResponse> userLookup = new();
+        UserDataModel? data = await connection.QuerySingleOrDefaultAsync<UserDataModel>(sql, query);
 
-        await connection.QueryAsync<UserResponse, UserRoleDto, UserResponse>(
-            sql,
-            (user, role) =>
-            {
-                if (!userLookup.TryGetValue(user.Id, out UserResponse? existing))
-                {
-                    existing = user;
-                    userLookup.Add(existing.Id, existing);
-                }
-
-                if (role is not null && role.RoleId != 0 && !existing.Roles.Any(existingRole => existingRole.RoleId == role.RoleId))
-                {
-                    existing.Roles.Add(role);
-                }
-
-                return existing;
-            },
-            query,
-            splitOn: "RoleId");
-
-        UserResponse? user = userLookup.Values.FirstOrDefault();
-
-        if (user is null)
+        if (data is null)
         {
             return Result.Failure<UserResponse>(UserErrors.NotFound(query.UserId));
         }
 
-        return user;
+        List<UserRoleDto> roles = DeserializeRoles(data.RolesJson);
+
+        return new UserResponse
+        {
+            Id = data.Id,
+            Email = data.Email,
+            Name = data.Name,
+            HasPublicProfile = data.HasPublicProfile,
+            Roles = roles
+        };
     }
+
+    private static List<UserRoleDto> DeserializeRoles(string? rolesJson)
+    {
+        if (string.IsNullOrWhiteSpace(rolesJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<UserRoleDto>>(rolesJson, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private sealed record UserDataModel(
+        Guid Id,
+        string Email,
+        string Name,
+        bool HasPublicProfile,
+        string RolesJson);
 }
