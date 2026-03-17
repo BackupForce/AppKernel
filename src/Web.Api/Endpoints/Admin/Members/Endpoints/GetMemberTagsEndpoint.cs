@@ -20,7 +20,7 @@ public static class GetMemberTagsEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapGet(
-                "/members/{memberId:guid}/tags",
+                "/{memberId:guid}/tags",
                 async (Guid tenantId, Guid memberId, ISender sender, CancellationToken ct) =>
                 {
                     GetMemberTagsQuery query = new(tenantId, memberId);
@@ -30,7 +30,7 @@ public static class GetMemberTagsEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Members.Read.Name)
+            .RequireAuthorization(Permission.Members.View.Name)
             .Produces<IReadOnlyCollection<MemberTagDto>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithName("AdminGetMemberTags");

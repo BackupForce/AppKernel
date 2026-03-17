@@ -6,9 +6,9 @@ using Application.Gaming.Dtos;
 using Domain.Security;
 using MediatR;
 using Web.Api.Common;
-using Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Requests;
+using Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Requests;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Endpoints;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Endpoints;
 
 public static class GetDrawTemplatesEndpoint
 {
@@ -16,7 +16,7 @@ public static class GetDrawTemplatesEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapGet(
-                "/draw-templates",
+                "/",
                 async ([AsParameters] GetDrawTemplatesRequest request, ISender sender, CancellationToken ct) =>
                 {
                     var query = new GetDrawTemplatesQuery(request.GameCode, request.IsActive);

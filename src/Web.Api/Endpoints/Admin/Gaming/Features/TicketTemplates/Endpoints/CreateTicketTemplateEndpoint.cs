@@ -5,9 +5,9 @@ using Application.Gaming.TicketTemplates.GetList;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Web.Api.Common;
-using Web.Api.Endpoints.Admin.Gaming.Features.Deprecated.TicketTemplates.Requests;
+using Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Requests;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.Deprecated.TicketTemplates.Endpoints;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Endpoints;
 
 public static class CreateTicketTemplateEndpoint
 {

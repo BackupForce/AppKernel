@@ -4,9 +4,9 @@ using Application.Gaming.DrawTemplates.Update;
 using Domain.Security;
 using MediatR;
 using Web.Api.Common;
-using Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Requests;
+using Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Requests;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Endpoints;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Endpoints;
 
 public static class UpdateDrawTemplateEndpoint
 {
@@ -14,7 +14,7 @@ public static class UpdateDrawTemplateEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapPut(
-                "/draw-templates/{templateId:guid}",
+                "/{templateId:guid}",
                 async (Guid templateId, UpdateDrawTemplateRequest request, ISender sender, CancellationToken ct) =>
                 {
                     var command = new UpdateDrawTemplateCommand(

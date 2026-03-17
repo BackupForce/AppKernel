@@ -59,9 +59,10 @@ internal static class DrawEndpoints
         //HotBalls
         group.MapGetCurrentDrawHotBallsEndpoint();
 
-
+        group.MapGetDrawBetNumberStatsEndpoint();
         group.MapSetDrawWinningNumbersEndpoint();
-
+        group.MapGetWinningsByDrawIdEndpoint();
+        
         //Tickets
         group.MapGetDrawTicketsEndpoint();
     }

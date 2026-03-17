@@ -35,7 +35,7 @@ public static class GetMembersEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Members.Read.Name)
+            .RequireAuthorization(Permission.Members.View.Name)
             .Produces<PagedResult<MemberListItemDto>>(StatusCodes.Status200OK)
             .WithSummary("Search members")
             .WithDescription("Supports filtering by member no, display name, status, user id, keyword (name/email/phone), and phone number.")

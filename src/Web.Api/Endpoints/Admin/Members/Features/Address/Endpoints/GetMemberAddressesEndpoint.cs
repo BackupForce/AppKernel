@@ -24,7 +24,7 @@ public static class GetMemberAddressesEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Members.Read.Name)
+            .RequireAuthorization(Permission.Members.View.Name)
             .Produces<IReadOnlyList<MemberAddressDto>>(StatusCodes.Status200OK)
             .WithName("AdminGetMemberAddresses");
     }

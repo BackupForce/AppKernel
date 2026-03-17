@@ -31,7 +31,7 @@ using Web.Api.Infrastructure;
 //                        value => Results.Ok(value),
 //                        ct);
 //                })
-//            .RequireAuthorization(Permission.Members.Read.Name)
+//            .RequireAuthorization(Permission.Members.View.Name)
 //            .Produces<MemberDetailDto>(StatusCodes.Status200OK)
 //            .ProducesProblem(StatusCodes.Status404NotFound)
 //            .WithName("AdminGetMemberById");

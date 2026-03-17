@@ -20,7 +20,7 @@ public static class ReplaceMemberTagsEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapPut(
-                "/members/{memberId:guid}/tags",
+                "/{memberId:guid}/tags",
                 async (Guid tenantId, Guid memberId, ReplaceMemberTagsRequest request, ISender sender, CancellationToken ct) =>
                 {
                     ReplaceMemberTagsCommand command = new(tenantId, memberId, request.TagIds ?? Array.Empty<Guid>());

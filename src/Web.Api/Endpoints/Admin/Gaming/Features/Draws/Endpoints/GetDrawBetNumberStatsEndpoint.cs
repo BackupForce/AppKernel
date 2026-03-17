@@ -16,7 +16,7 @@ public static class GetDrawBetNumberStatsEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapGet(
-                "/draws/{drawId:guid}/bet-number-stats",
+                "/{drawId:guid}/bet-number-stats",
                 async (Guid drawId, ISender sender, CancellationToken ct) =>
                 {
                     GetDrawBetNumberStatsQuery query = new(drawId);

@@ -1,6 +1,6 @@
 using Domain.Gaming.TicketTemplates;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.Deprecated.TicketTemplates.Requests;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Requests;
 
 /// <summary>
 /// 更新票種模板的 API 請求資料。

@@ -8,7 +8,7 @@ using MediatR;
 using Web.Api.Common;
 using Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Requests;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Endpoints;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Endpoints;
 
 public static class GetDrawTemplateDetailEndpoint
 {
@@ -16,7 +16,7 @@ public static class GetDrawTemplateDetailEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapGet(
-                "/draw-templates/{templateId:guid}",
+                "/{templateId:guid}",
                 async (Guid templateId, ISender sender, CancellationToken ct) =>
                 {
                     var query = new GetDrawTemplateDetailQuery(templateId);

@@ -8,9 +8,9 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Pipelines.Sockets.Unofficial.Arenas;
 using Web.Api.Common;
-using Web.Api.Endpoints.Admin.Gaming.Features.Deprecated.TicketTemplates.Endpoints;
+using Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Endpoints;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.Deprecated.TicketTemplates;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates;
 
 internal static class TicketTemplateEndpoints
 {

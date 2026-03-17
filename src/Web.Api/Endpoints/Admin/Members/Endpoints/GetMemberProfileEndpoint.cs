@@ -27,7 +27,7 @@ public static class GetMemberProfileEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Members.Read.Name)
+            .RequireAuthorization(Permission.Members.View.Name)
             .Produces<MemberProfileDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithName("AdminGetMemberProfile");

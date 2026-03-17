@@ -12,20 +12,17 @@ using Domain.Security;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Web.Api.Common;
+using Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Endpoints;
 using Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Endpoints;
-using Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Requests;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates;
 
-public sealed class DrawTemplateEndpoints : IEndpoint
+internal static class DrawTemplateEndpoints
 {
-    public void MapEndpoint(IEndpointRouteBuilder app)
+    public static void Map(RouteGroupBuilder parent)
     {
-        RouteGroupBuilder group = app.MapGroup("/tenants/{tenantId:guid}/admin/gaming")
-            .WithGroupName("admin-v1")
-            .WithMetadata(new ApiVersion(1, 0))
-            .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
-            .WithTags("Admin Gaming Templates");
+        RouteGroupBuilder group = parent.MapGroup("/draw-templates")
+            .WithTags("Gaming.DrawTemplates");
 
         //CQRS
         group.MapCreateDrawTemplateEndpoint();

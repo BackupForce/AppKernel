@@ -1,4 +1,4 @@
-namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Requests;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Requests;
 
 public sealed record CreateDrawTemplateRequest(
     string GameCode,

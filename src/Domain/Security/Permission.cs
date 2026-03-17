@@ -49,14 +49,14 @@ public sealed class Permission
     public static class Members
     {
         public static readonly Permission All = new(10, "MEMBERS:*", "會員模組所有權限", PermissionScope.Tenant);
-        public static readonly Permission Read = new(11, "MEMBERS:READ", "檢視會員資料", PermissionScope.Tenant);
+        public static readonly Permission View = new(11, "MEMBERS:VIEW", "檢視會員資料", PermissionScope.Tenant);
         public static readonly Permission Create = new(12, "MEMBERS:CREATE", "建立會員", PermissionScope.Tenant);
         public static readonly Permission Update = new(13, "MEMBERS:UPDATE", "修改會員資料", PermissionScope.Tenant);
         public static readonly Permission Suspend = new(14, "MEMBERS:SUSPEND", "停權會員", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {
-            All, Read, Create, Update, Suspend
+            All, View, Create, Update, Suspend
         };
     }
 
@@ -182,10 +182,10 @@ public sealed class Permission
         public static readonly Permission TicketClaimEventEnd = new(235, "GAMING.TICKET-CLAIM-EVENT.END", "結束領券活動", PermissionScope.Tenant);
         public static readonly Permission TicketClaimEventClaimRead = new(236, "GAMING.TICKET-CLAIM-EVENT.CLAIM.READ", "檢視領券紀錄", PermissionScope.Tenant);
 
-        public static readonly Permission WinningNumbersRead = new(237, "ADMIN.GAMING.WINNING-NUMBERS.READ", "後台檢視開獎號碼", PermissionScope.Tenant);
-        public static readonly Permission WinningsRead = new(238, "ADMIN.GAMING.WINNINGS.READ", "後台檢視中獎兌獎資料", PermissionScope.Tenant);
-        public static readonly Permission WinningsRedeem = new(239, "ADMIN.GAMING.WINNINGS.REDEEM", "後台執行中獎兌獎", PermissionScope.Tenant);
-        public static readonly Permission WinningRedeemedRead = new(240, "Gaming.Winning.Redeemed.Read", "後台依兌換時間檢視已兌獎資料", PermissionScope.Tenant);
+        public static readonly Permission WinningNumbersRead = new(237, "GAMING.WINNING-NUMBERS.READ", "後台檢視開獎號碼", PermissionScope.Tenant);
+        public static readonly Permission WinningsRead = new(238, "GAMING.WINNINGS.READ", "後台檢視中獎兌獎資料", PermissionScope.Tenant);
+        public static readonly Permission WinningsRedeem = new(239, "GAMING.WINNINGS.REDEEM", "後台執行中獎兌獎", PermissionScope.Tenant);
+        public static readonly Permission WinningRedeemedRead = new(240, "GAMING.WINNING.REDEEMED.READ", "後台依兌換時間檢視已兌獎資料", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {

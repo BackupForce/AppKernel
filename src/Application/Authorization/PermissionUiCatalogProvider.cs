@@ -95,6 +95,43 @@ public sealed class PermissionUiCatalogProvider
                     false)
             });
 
+        ModuleGroupDto rolesModule = new ModuleGroupDto(
+            "ROLES",
+            "角色管理",
+            "ROLES:*",
+            new List<PermissionItemDto>
+            {
+                new PermissionItemDto(
+                    "ROLES:VIEW",
+                    "檢視角色",
+                    "檢視角色",
+                    10,
+                    false,
+                    false),
+                new PermissionItemDto(
+                    "ROLES:CREATE",
+                    "建立角色",
+                    "建立角色",
+                    20,
+                    false,
+                    false),
+                new PermissionItemDto(
+                    "ROLES:UPDATE",
+                    "更新角色",
+                    "更新角色",
+                    30,
+                    false,
+                    false),
+                new PermissionItemDto(
+                    "ROLES:DELETE",
+                    "刪除角色",
+                    "刪除角色",
+                    40,
+                    true,
+                    false)
+            });
+
+
         ModuleGroupDto membersModule = new ModuleGroupDto(
             "MEMBERS",
             "會員管理",
@@ -102,7 +139,7 @@ public sealed class PermissionUiCatalogProvider
             new List<PermissionItemDto>
             {
                 new PermissionItemDto(
-                    "MEMBERS:READ",
+                    "MEMBERS:VIEW",
                     "檢視會員",
                     "檢視會員資料",
                     10,
@@ -212,41 +249,6 @@ public sealed class PermissionUiCatalogProvider
         //            false)
         //    });
 
-        ModuleGroupDto rolesModule = new ModuleGroupDto(
-            "ROLES",
-            "角色管理",
-            "ROLES:*",
-            new List<PermissionItemDto>
-            {
-                new PermissionItemDto(
-                    "ROLES:VIEW",
-                    "檢視角色",
-                    "檢視角色",
-                    10,
-                    false,
-                    false),
-                new PermissionItemDto(
-                    "ROLES:CREATE",
-                    "建立角色",
-                    "建立角色",
-                    20,
-                    false,
-                    false),
-                new PermissionItemDto(
-                    "ROLES:UPDATE",
-                    "更新角色",
-                    "更新角色",
-                    30,
-                    false,
-                    false),
-                new PermissionItemDto(
-                    "ROLES:DELETE",
-                    "刪除角色",
-                    "刪除角色",
-                    40,
-                    true,
-                    false)
-            });
 
         ModuleGroupDto gamingModule = new ModuleGroupDto(
             "GAMING",
@@ -311,28 +313,28 @@ public sealed class PermissionUiCatalogProvider
                     true,
                     false),
                 new PermissionItemDto(
-                    "ADMIN.GAMING.WINNING-NUMBERS.READ",
+                    "GAMING.WINNING-NUMBERS.READ",
                     "檢視開獎號碼",
                     "後台檢視開獎號碼",
                     90,
                     false,
                     false),
                 new PermissionItemDto(
-                    "ADMIN.GAMING.WINNINGS.READ",
+                    "GAMING.WINNINGS.READ",
                     "檢視中獎兌獎",
                     "後台查詢中獎與兌獎清單",
                     100,
                     false,
                     false),
                 new PermissionItemDto(
-                    "ADMIN.GAMING.WINNINGS.REDEEM",
+                    "GAMING.WINNINGS.REDEEM",
                     "執行兌獎",
                     "後台執行中獎兌獎",
                     110,
                     true,
                     false),
                 new PermissionItemDto(
-                    "Gaming.Winning.Redeemed.Read",
+                    "GAMING.WINNING.REDEEMED.READ",
                     "依兌換時間查詢已兌獎",
                     "後台依兌換時間區間查詢已兌獎資料",
                     120,
@@ -346,12 +348,12 @@ public sealed class PermissionUiCatalogProvider
             new List<ModuleGroupDto>
             {
                 usersModule,
+                rolesModule,
                 membersModule,
                 //memberPointsModule,
                 //memberAssetsModule,
                 memberAuditModule,
                 //pointsModule,
-                rolesModule,
                 gamingModule
             });
     }

@@ -7,7 +7,7 @@ using MediatR;
 using Web.Api.Common;
 using Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Requests;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Endpoints;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Endpoints;
 
 public static class ActivateDrawTemplateEndpoint
 {
@@ -15,7 +15,7 @@ public static class ActivateDrawTemplateEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapPost(
-                "/draw-templates/{templateId:guid}/activate",
+                "/{templateId:guid}/activate",
                 async (Guid templateId, ISender sender, CancellationToken ct) =>
                 {
                     var command = new ActivateDrawTemplateCommand(templateId);

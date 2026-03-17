@@ -20,7 +20,7 @@ public static class GetWinningsByDrawIdEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapGet(
-                "/draws/{drawId:guid}/winnings",
+                "/{drawId:guid}/winnings",
                 async (Guid drawId,
                     [AsParameters] GetAdminWinningsByDrawRequest request,
                     ITenantContext tenantContext,

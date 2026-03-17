@@ -18,7 +18,7 @@ public static class SetDrawWinningNumbersEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapPost(
-                "/draws/{drawId:guid}/winning-numbers",
+                "/{drawId:guid}/winning-numbers",
                 async (Guid drawId, SetDrawWinningNumbersRequest request, ISender sender, CancellationToken ct) =>
                 {
                     (string? raw, IReadOnlyCollection<int>? numbers, Result? error) = ResolveWinningNumbers(request.WinningNumbers);

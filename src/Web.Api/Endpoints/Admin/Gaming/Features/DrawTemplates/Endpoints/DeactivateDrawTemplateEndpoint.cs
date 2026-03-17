@@ -8,7 +8,7 @@ using MediatR;
 using Web.Api.Common;
 using Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Requests;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Endpoints;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Endpoints;
 
 public static class DeactivateDrawTemplateEndpoint
 {
@@ -16,7 +16,7 @@ public static class DeactivateDrawTemplateEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapPost(
-                "/draw-templates/{templateId:guid}/deactivate",
+                "/{templateId:guid}/deactivate",
                 async (Guid templateId, ISender sender, CancellationToken ct) =>
                 {
                     var command = new DeactivateDrawTemplateCommand(templateId);

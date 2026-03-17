@@ -6,7 +6,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Web.Api.Common;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.Deprecated.TicketTemplates.Endpoints;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Endpoints;
 
 public static class ActivateTicketTemplateEndpoint
 {

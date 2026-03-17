@@ -3,9 +3,9 @@ using Application.Gaming.DrawTemplates.Create;
 using Domain.Security;
 using MediatR;
 using Web.Api.Common;
-using Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Requests;
+using Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Requests;
 
-namespace Web.Api.Endpoints.Admin.Gaming.Features.TicketTemplates.Endpoints;
+namespace Web.Api.Endpoints.Admin.Gaming.Features.DrawTemplates.Endpoints;
 
 public static class CreateDrawTemplateEndpoint
 {
@@ -13,7 +13,7 @@ public static class CreateDrawTemplateEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapPost(
-                "/draw-templates",
+                "/",
                 async (CreateDrawTemplateRequest request, ISender sender, CancellationToken ct) =>
                 {
                     var command = new CreateDrawTemplateCommand(
