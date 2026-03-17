@@ -45,7 +45,7 @@ internal sealed class MemberNoGenerator(IMemberRepository memberRepository) : IM
 
         int index = sequence - 1;
         int letterIndex = index / Base;
-        int number = (index % Base) + 1;
+        int number = index % Base + 1;
         char letter = (char)('A' + letterIndex);
 
         return $"{letter}{number:00000}";

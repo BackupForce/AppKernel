@@ -131,56 +131,56 @@ public sealed class PermissionUiCatalogProvider
                     false)
             });
 
-        ModuleGroupDto memberPointsModule = new ModuleGroupDto(
-            "MEMBER_POINTS",
-            "會員點數",
-            "MEMBER_POINTS:*",
-            new List<PermissionItemDto>
-            {
-                new PermissionItemDto(
-                    "MEMBER_POINTS:READ",
-                    "檢視會員點數",
-                    "檢視會員點數",
-                    10,
-                    false,
-                    false),
-                new PermissionItemDto(
-                    "MEMBER_POINTS:ADJUST",
-                    "調整會員點數",
-                    "人工調整會員點數",
-                    20,
-                    false,
-                    false),
-                new PermissionItemDto(
-                    "MEMBER_POINTS:TRANSFER",
-                    "點數轉帳",
-                    "會員點數轉帳",
-                    30,
-                    false,
-                    false)
-            });
+        //ModuleGroupDto memberPointsModule = new ModuleGroupDto(
+        //    "MEMBER_POINTS",
+        //    "會員點數",
+        //    "MEMBER_POINTS:*",
+        //    new List<PermissionItemDto>
+        //    {
+        //        new PermissionItemDto(
+        //            "MEMBER_POINTS:READ",
+        //            "檢視會員點數",
+        //            "檢視會員點數",
+        //            10,
+        //            false,
+        //            false),
+        //        new PermissionItemDto(
+        //            "MEMBER_POINTS:ADJUST",
+        //            "調整會員點數",
+        //            "人工調整會員點數",
+        //            20,
+        //            false,
+        //            false),
+        //        new PermissionItemDto(
+        //            "MEMBER_POINTS:TRANSFER",
+        //            "點數轉帳",
+        //            "會員點數轉帳",
+        //            30,
+        //            false,
+        //            false)
+        //    });
 
-        ModuleGroupDto memberAssetsModule = new ModuleGroupDto(
-            "MEMBER_ASSETS",
-            "會員資產",
-            "MEMBER_ASSETS:*",
-            new List<PermissionItemDto>
-            {
-                new PermissionItemDto(
-                    "MEMBER_ASSETS:READ",
-                    "檢視會員資產",
-                    "檢視會員資產",
-                    10,
-                    false,
-                    false),
-                new PermissionItemDto(
-                    "MEMBER_ASSETS:ADJUST",
-                    "調整會員資產",
-                    "調整會員資產",
-                    20,
-                    false,
-                    false)
-            });
+        //ModuleGroupDto memberAssetsModule = new ModuleGroupDto(
+        //    "MEMBER_ASSETS",
+        //    "會員資產",
+        //    "MEMBER_ASSETS:*",
+        //    new List<PermissionItemDto>
+        //    {
+        //        new PermissionItemDto(
+        //            "MEMBER_ASSETS:READ",
+        //            "檢視會員資產",
+        //            "檢視會員資產",
+        //            10,
+        //            false,
+        //            false),
+        //        new PermissionItemDto(
+        //            "MEMBER_ASSETS:ADJUST",
+        //            "調整會員資產",
+        //            "調整會員資產",
+        //            20,
+        //            false,
+        //            false)
+        //    });
 
         ModuleGroupDto memberAuditModule = new ModuleGroupDto(
             "MEMBER_AUDIT",
@@ -347,8 +347,8 @@ public sealed class PermissionUiCatalogProvider
             {
                 usersModule,
                 membersModule,
-                memberPointsModule,
-                memberAssetsModule,
+                //memberPointsModule,
+                //memberAssetsModule,
                 memberAuditModule,
                 //pointsModule,
                 rolesModule,

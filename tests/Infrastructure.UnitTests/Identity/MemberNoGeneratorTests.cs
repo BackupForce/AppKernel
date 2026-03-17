@@ -31,7 +31,7 @@ public sealed class MemberNoGeneratorTests
     [Fact]
     public void FormatSequence_Should_Throw_WhenCapacityExceeded()
     {
-        Action act = () => MemberNoGenerator.FormatSequence((26 * 99999) + 1);
+        Action act = () => MemberNoGenerator.FormatSequence(26 * 99999 + 1);
 
         act.Should().Throw<InvalidOperationException>();
     }

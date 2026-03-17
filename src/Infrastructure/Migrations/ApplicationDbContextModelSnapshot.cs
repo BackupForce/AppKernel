@@ -1784,6 +1784,23 @@ namespace Infrastructure.Migrations
                     b.ToTable("member_asset_ledger", "public");
                 });
 
+            modelBuilder.Entity("Domain.Members.MemberNoCounter", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<int>("LastValue")
+                        .HasColumnType("integer")
+                        .HasColumnName("last_value");
+
+                    b.HasKey("TenantId")
+                        .HasName("pk_member_no_counters");
+
+                    b.ToTable("member_no_counters", "public");
+                });
+
             modelBuilder.Entity("Domain.Members.MemberPointBalance", b =>
                 {
                     b.Property<Guid>("MemberId")

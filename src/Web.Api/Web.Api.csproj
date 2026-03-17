@@ -35,7 +35,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Endpoints\Roles\" />
+    <Folder Include="Endpoints\Admin\Dashboard\Requests\" />
+    <Folder Include="Endpoints\Admin\Gaming\Features\Entitlements\Requests\" />
+    <Folder Include="Endpoints\Admin\Roles\Features\" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1development_1json__JsonSchema="https://www.schemastore.org/babelrc.json" /></VisualStudio></ProjectExtensions>

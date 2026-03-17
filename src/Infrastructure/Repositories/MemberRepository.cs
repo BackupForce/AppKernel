@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using Application.Abstractions.Data;
 using Dapper;
 using Domain.Members;
 using Infrastructure.Database;
