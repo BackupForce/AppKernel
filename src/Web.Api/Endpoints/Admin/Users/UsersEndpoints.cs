@@ -27,6 +27,7 @@ internal static class UsersEndpoints
         group.MapCreateUserEndpoint();
         group.MapGetUserEndpoint();
         group.MapGetUsersEndpoint();
+        group.MapResetUserPasswordEndpoint();
 
         //Role management
         group.MapAssignRoleToUserEndpoint();
