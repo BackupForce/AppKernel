@@ -18,9 +18,11 @@ internal sealed class GetUserByEmailQueryHandler(IDbConnectionFactory factory)
                 u.id AS Id,
                 u.email AS Email,
                 u.name AS Name,
-                u.has_public_profile AS HasPublicProfile
+                u.has_public_profile AS HasPublicProfile,
+                u.is_enabled AS IsEnabled
             FROM users u
-            WHERE u.id = @Email
+            WHERE u.email = @Email
+              AND u.is_enabled = TRUE
             """;
 
         using IDbConnection connection = factory.GetOpenConnection();

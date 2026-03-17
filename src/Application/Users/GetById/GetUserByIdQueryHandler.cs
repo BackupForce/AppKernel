@@ -22,6 +22,7 @@ internal sealed class GetUserByIdQueryHandler(IDbConnectionFactory factory)
                 u.email AS Email,
                 u.name AS Name,
                 u.has_public_profile AS HasPublicProfile,
+                u.is_enabled AS IsEnabled,
                 COALESCE(
                     json_agg(
                         json_build_object(
@@ -55,6 +56,7 @@ internal sealed class GetUserByIdQueryHandler(IDbConnectionFactory factory)
             Email = data.Email,
             Name = data.Name,
             HasPublicProfile = data.HasPublicProfile,
+            IsEnabled = data.IsEnabled,
             Roles = roles
         };
     }
@@ -81,5 +83,6 @@ internal sealed class GetUserByIdQueryHandler(IDbConnectionFactory factory)
         string Email,
         string Name,
         bool HasPublicProfile,
+        bool IsEnabled,
         string RolesJson);
 }

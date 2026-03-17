@@ -35,7 +35,8 @@ internal sealed class UserRepository(ApplicationDbContext context) : IUserReposi
             .FirstOrDefaultAsync(
             user => user.TenantId == tenantId
                 && user.Type == UserType.Tenant
-                && user.NormalizedEmail == normalizedEmail,
+                && user.NormalizedEmail == normalizedEmail
+                && user.IsEnabled,
             cancellationToken);
     }
 

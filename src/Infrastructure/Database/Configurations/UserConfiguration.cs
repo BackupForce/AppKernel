@@ -29,6 +29,13 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.TenantId)
             .HasColumnName("tenant_id");
 
+        builder.Property(u => u.IsEnabled)
+            .HasColumnName("is_enabled")
+            .HasDefaultValue(true);
+
+        builder.Property(u => u.DisabledAtUtc)
+            .HasColumnName("disabled_at_utc");
+
         builder.HasIndex(u => u.TenantId);
 
         builder.HasMany(u => u.LoginBindings)

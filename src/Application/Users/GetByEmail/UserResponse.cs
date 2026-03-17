@@ -9,4 +9,6 @@ public sealed record UserResponse
     public string Name { get; init; }
 
     public bool HasPublicProfile { get; init; }
+
+    public bool IsEnabled { get; init; }
 }
