@@ -53,6 +53,11 @@ public sealed class User : Entity
 
     public Guid? TenantId { get; private set; }
 
+    public void ResetPassword(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+    }
+
     public bool HasRole(int roleId)
     {
         // 中文註解：檢查使用者是否已經擁有指定角色。
