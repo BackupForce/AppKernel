@@ -38,7 +38,7 @@ internal sealed class AddRolePermissionsCommandHandler(
                 continue;
             }
 
-            existingCodes.Add(permission.Name.Trim().ToUpperInvariant());
+            existingCodes.Add(PermissionCatalog.NormalizeCode(permission.Name));
         }
 
         HashSet<string> requestedCodes = new HashSet<string>(StringComparer.Ordinal);
@@ -46,7 +46,7 @@ internal sealed class AddRolePermissionsCommandHandler(
         {
             if (!string.IsNullOrWhiteSpace(code))
             {
-                requestedCodes.Add(code.Trim().ToUpperInvariant());
+                requestedCodes.Add(PermissionCatalog.NormalizeCode(code));
             }
         }
 

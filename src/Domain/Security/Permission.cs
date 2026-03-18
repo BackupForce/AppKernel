@@ -33,7 +33,7 @@ public sealed class Permission
         public static readonly Permission Create = new(2, "USERS:CREATE", "建立使用者", PermissionScope.Tenant);
         public static readonly Permission Update = new(3, "USERS:UPDATE", "修改使用者", PermissionScope.Tenant);
         public static readonly Permission Delete = new(4, "USERS:DELETE", "刪除使用者", PermissionScope.Tenant);
-        public static readonly Permission ResetPassword = new(5, "USERS:RESET-PASSWORD", "重設密碼", PermissionScope.Tenant);
+        public static readonly Permission ResetPassword = new(5, "USERS:RESET_PASSWORD", "重設密碼", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {
@@ -156,40 +156,60 @@ public sealed class Permission
     public static class Gaming
     {
         public static readonly Permission All = new(200, "GAMING:*", "遊戲模組所有權限", PermissionScope.Tenant);
+        public static readonly Permission DrawAll = new(203, "GAMING:DRAW:*", "期數所有權限", PermissionScope.Tenant);
+        public static readonly Permission DrawGroupAll = new(204, "GAMING:DRAW_GROUP:*", "期數群組所有權限", PermissionScope.Tenant);
+        public static readonly Permission TicketAll = new(205, "GAMING:TICKET:*", "票券所有權限", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventAll = new(206, "GAMING:TICKET_CLAIM_EVENT:*", "領券活動所有權限", PermissionScope.Tenant);
+        public static readonly Permission WinningsAll = new(207, "GAMING:WINNINGS:*", "中獎兌獎所有權限", PermissionScope.Tenant);
+
         public static readonly Permission CatalogView = new(201, "GAMING:CATALOG:VIEW", "檢視遊戲目錄", PermissionScope.Tenant);
         public static readonly Permission EntitlementManage = new(202, "GAMING:ENTITLEMENT:MANAGE", "管理租戶遊戲啟用", PermissionScope.Tenant);
+
         public static readonly Permission DrawCreate = new(210, "GAMING:DRAW:CREATE", "建立期數", PermissionScope.Tenant);
         public static readonly Permission DrawExecute = new(211, "GAMING:DRAW:EXECUTE", "執行開獎", PermissionScope.Tenant);
         public static readonly Permission DrawSettle = new(212, "GAMING:DRAW:SETTLE", "結算開獎", PermissionScope.Tenant);
-        public static readonly Permission DrawManualClose = new(213, "GAMING:DRAW:MANUAL-CLOSE", "手動封盤", PermissionScope.Tenant);
+        public static readonly Permission DrawManualClose = new(213, "GAMING:DRAW:MANUAL_CLOSE", "手動封盤", PermissionScope.Tenant);
         public static readonly Permission DrawReopen = new(214, "GAMING:DRAW:REOPEN", "重新開盤", PermissionScope.Tenant);
-        public static readonly Permission DrawUpdateAllowedTemplates = new(215, "GAMING:DRAW:UPDATE-ALLOWED-TEMPLATES", "更新期數允許票種", PermissionScope.Tenant);
-        public static readonly Permission DrawTemplateManage = new(216, "GAMING:DRAW-TEMPLATE:MANAGE", "管理期數模板", PermissionScope.Tenant);
-        public static readonly Permission DrawGroupRead = new(220, "GAMING.DRAWGROUP.READ", "檢視期數群組", PermissionScope.Tenant);
-        public static readonly Permission DrawGroupCreate = new(221, "GAMING.DRAWGROUP.CREATE", "建立期數群組", PermissionScope.Tenant);
-        public static readonly Permission DrawGroupUpdate = new(222, "GAMING.DRAWGROUP.UPDATE", "更新期數群組", PermissionScope.Tenant);
-        public static readonly Permission DrawGroupActivate = new(223, "GAMING.DRAWGROUP.ACTIVATE", "啟用期數群組", PermissionScope.Tenant);
-        public static readonly Permission DrawGroupEnd = new(224, "GAMING.DRAWGROUP.END", "結束期數群組", PermissionScope.Tenant);
-        public static readonly Permission DrawGroupDelete = new(225, "GAMING.DRAWGROUP.DELETE", "刪除期數群組", PermissionScope.Tenant);
+        public static readonly Permission DrawUpdateAllowedTemplates = new(215, "GAMING:DRAW:UPDATE_ALLOWED_TEMPLATES", "更新期數允許票種", PermissionScope.Tenant);
+        public static readonly Permission DrawTemplateManage = new(216, "GAMING:DRAW_TEMPLATE:MANAGE", "管理期數模板", PermissionScope.Tenant);
+        public static readonly Permission DrawManage = new(217, "GAMING:DRAW:MANAGE", "管理期數", PermissionScope.Tenant);
 
-        public static readonly Permission DrawGroupDrawManage = new(226, "GAMING.DRAWGROUP.DRAW.MANAGE", "管理期數群組期數", PermissionScope.Tenant);
+        public static readonly Permission DrawGroupRead = new(220, "GAMING:DRAW_GROUP:READ", "檢視期數群組", PermissionScope.Tenant);
+        public static readonly Permission DrawGroupCreate = new(221, "GAMING:DRAW_GROUP:CREATE", "建立期數群組", PermissionScope.Tenant);
+        public static readonly Permission DrawGroupUpdate = new(222, "GAMING:DRAW_GROUP:UPDATE", "更新期數群組", PermissionScope.Tenant);
+        public static readonly Permission DrawGroupActivate = new(223, "GAMING:DRAW_GROUP:ACTIVATE", "啟用期數群組", PermissionScope.Tenant);
+        public static readonly Permission DrawGroupEnd = new(224, "GAMING:DRAW_GROUP:END", "結束期數群組", PermissionScope.Tenant);
+        public static readonly Permission DrawGroupDelete = new(225, "GAMING:DRAW_GROUP:DELETE", "刪除期數群組", PermissionScope.Tenant);
+        public static readonly Permission DrawGroupDrawManage = new(226, "GAMING:DRAW_GROUP_DRAW:MANAGE", "管理期數群組期數", PermissionScope.Tenant);
+        public static readonly Permission DrawGroupManage = new(227, "GAMING:DRAW_GROUP:MANAGE", "管理期數群組", PermissionScope.Tenant);
 
-        public static readonly Permission TicketClaimEventRead = new(230, "GAMING.TICKET-CLAIM-EVENT.READ", "檢視領券活動", PermissionScope.Tenant);
-        public static readonly Permission TicketClaimEventCreate = new(231, "GAMING.TICKET-CLAIM-EVENT.CREATE", "建立領券活動", PermissionScope.Tenant);
-        public static readonly Permission TicketClaimEventUpdate = new(232, "GAMING.TICKET-CLAIM-EVENT.UPDATE", "更新領券活動", PermissionScope.Tenant);
-        public static readonly Permission TicketClaimEventActivate = new(233, "GAMING.TICKET-CLAIM-EVENT.ACTIVATE", "啟用領券活動", PermissionScope.Tenant);
-        public static readonly Permission TicketClaimEventDisable = new(234, "GAMING.TICKET-CLAIM-EVENT.DISABLE", "停用領券活動", PermissionScope.Tenant);
-        public static readonly Permission TicketClaimEventEnd = new(235, "GAMING.TICKET-CLAIM-EVENT.END", "結束領券活動", PermissionScope.Tenant);
-        public static readonly Permission TicketClaimEventClaimRead = new(236, "GAMING.TICKET-CLAIM-EVENT.CLAIM.READ", "檢視領券紀錄", PermissionScope.Tenant);
+        public static readonly Permission TicketRead = new(228, "GAMING:TICKET:READ", "後台查詢票券", PermissionScope.Tenant);
+        public static readonly Permission TicketPlace = new(229, "GAMING:TICKET:PLACE", "後台代客下注", PermissionScope.Tenant);
+        public static readonly Permission TicketCancel = new(241, "GAMING:TICKET:CANCEL", "後台取消票券", PermissionScope.Tenant);
+        public static readonly Permission TicketManage = new(242, "GAMING:TICKET:MANAGE", "管理票券", PermissionScope.Tenant);
 
-        public static readonly Permission WinningNumbersRead = new(237, "GAMING.WINNING-NUMBERS.READ", "後台檢視開獎號碼", PermissionScope.Tenant);
-        public static readonly Permission WinningsRead = new(238, "GAMING.WINNINGS.READ", "後台檢視中獎兌獎資料", PermissionScope.Tenant);
-        public static readonly Permission WinningsRedeem = new(239, "GAMING.WINNINGS.REDEEM", "後台執行中獎兌獎", PermissionScope.Tenant);
-        public static readonly Permission WinningRedeemedRead = new(240, "GAMING.WINNING.REDEEMED.READ", "後台依兌換時間檢視已兌獎資料", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventRead = new(230, "GAMING:TICKET_CLAIM_EVENT:READ", "檢視領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventCreate = new(231, "GAMING:TICKET_CLAIM_EVENT:CREATE", "建立領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventUpdate = new(232, "GAMING:TICKET_CLAIM_EVENT:UPDATE", "更新領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventActivate = new(233, "GAMING:TICKET_CLAIM_EVENT:ACTIVATE", "啟用領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventDisable = new(234, "GAMING:TICKET_CLAIM_EVENT:DISABLE", "停用領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventEnd = new(235, "GAMING:TICKET_CLAIM_EVENT:END", "結束領券活動", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventClaimRead = new(236, "GAMING:TICKET_CLAIM_EVENT_CLAIM:READ", "檢視領券紀錄", PermissionScope.Tenant);
+        public static readonly Permission TicketClaimEventManage = new(243, "GAMING:TICKET_CLAIM_EVENT:MANAGE", "管理領券活動", PermissionScope.Tenant);
+
+        public static readonly Permission WinningNumbersRead = new(237, "GAMING:WINNING_NUMBERS:READ", "後台檢視開獎號碼", PermissionScope.Tenant);
+        public static readonly Permission WinningsRead = new(238, "GAMING:WINNINGS:READ", "後台檢視中獎兌獎資料", PermissionScope.Tenant);
+        public static readonly Permission WinningsRedeem = new(239, "GAMING:WINNINGS:REDEEM", "後台執行中獎兌獎", PermissionScope.Tenant);
+        public static readonly Permission WinningRedeemedRead = new(240, "GAMING:WINNING_REDEEMED:READ", "後台依兌換時間檢視已兌獎資料", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {
             All,
+            DrawAll,
+            DrawGroupAll,
+            TicketAll,
+            TicketClaimEventAll,
+            WinningsAll,
             CatalogView,
             EntitlementManage,
             DrawCreate,
@@ -199,6 +219,7 @@ public sealed class Permission
             DrawReopen,
             DrawUpdateAllowedTemplates,
             DrawTemplateManage,
+            DrawManage,
             DrawGroupRead,
             DrawGroupCreate,
             DrawGroupUpdate,
@@ -206,6 +227,11 @@ public sealed class Permission
             DrawGroupEnd,
             DrawGroupDelete,
             DrawGroupDrawManage,
+            DrawGroupManage,
+            TicketRead,
+            TicketPlace,
+            TicketCancel,
+            TicketManage,
             TicketClaimEventRead,
             TicketClaimEventCreate,
             TicketClaimEventUpdate,
@@ -213,6 +239,7 @@ public sealed class Permission
             TicketClaimEventDisable,
             TicketClaimEventEnd,
             TicketClaimEventClaimRead,
+            TicketClaimEventManage,
             WinningNumbersRead,
             WinningsRead,
             WinningsRedeem,
@@ -221,14 +248,14 @@ public sealed class Permission
     }
 
     /// <summary>
-    /// 票券後台操作權限定義
+    /// 票券後台操作權限定義（舊模組，保留以兼容既有代碼）
     /// </summary>
     public static class Tickets
     {
-        public static readonly Permission All = new(260, "tickets:*", "票券後台所有權限", PermissionScope.Tenant);
-        public static readonly Permission Issue = new(261, "tickets.issue", "後台發放票券", PermissionScope.Tenant);
-        public static readonly Permission PlaceBet = new(262, "tickets.placeBet", "後台代客下注", PermissionScope.Tenant);
-        public static readonly Permission Read = new(263, "tickets.read", "後台查詢票券", PermissionScope.Tenant);
+        public static readonly Permission All = new(260, "TICKETS:*", "票券後台所有權限", PermissionScope.Tenant);
+        public static readonly Permission Issue = new(261, "TICKETS:ISSUE", "後台發放票券", PermissionScope.Tenant);
+        public static readonly Permission PlaceBet = new(262, "TICKETS:PLACE_BET", "後台代客下注", PermissionScope.Tenant);
+        public static readonly Permission Read = new(263, "TICKETS:READ", "後台查詢票券", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {
@@ -242,7 +269,7 @@ public sealed class Permission
     public static Permission CreateForRole(string name, string description, int roleId)
     {
         // 中文註解：建立屬於角色的權限，描述預設為空字串以符合資料表不允許 null 的限制。
-        string normalizedName = string.IsNullOrWhiteSpace(name) ? string.Empty : name.Trim().ToUpperInvariant();
+        string normalizedName = PermissionCatalog.NormalizeCode(name);
         string normalizedDescription = description ?? string.Empty;
         PermissionScope scope = PermissionCatalog.ResolveScope(normalizedName);
         return new Permission

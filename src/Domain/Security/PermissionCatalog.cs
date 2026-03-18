@@ -21,7 +21,7 @@ public static class PermissionCatalog
                 continue;
             }
 
-            string normalizedCode = permission.Name.Trim().ToUpperInvariant();
+            string normalizedCode = NormalizeCode(permission.Name);
             codes.Add(normalizedCode);
         }
 
@@ -39,7 +39,7 @@ public static class PermissionCatalog
                 continue;
             }
 
-            string normalizedCode = permission.Name.Trim().ToUpperInvariant();
+            string normalizedCode = NormalizeCode(permission.Name);
             scopes[normalizedCode] = permission.Scope;
         }
 
@@ -102,7 +102,20 @@ public static class PermissionCatalog
             return false;
         }
 
-        string normalizedCode = permissionCode.Trim().ToUpperInvariant();
+        string normalizedCode = NormalizeCode(permissionCode);
         return PermissionScopes.TryGetValue(normalizedCode, out scope);
+    }
+
+    public static string NormalizeCode(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return string.Empty;
+        }
+
+        string normalized = code.Trim().ToUpperInvariant();
+        normalized = normalized.Replace('.', ':');
+        normalized = normalized.Replace('-', '_');
+        return normalized;
     }
 }

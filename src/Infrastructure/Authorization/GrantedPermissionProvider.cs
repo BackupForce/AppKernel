@@ -98,7 +98,7 @@ internal sealed class GrantedPermissionProvider : IGrantedPermissionProvider
                 continue;
             }
 
-            string normalized = permission.Trim().ToUpperInvariant();
+            string normalized = PermissionCatalog.NormalizeCode(permission);
             target.Add(normalized);
         }
     }

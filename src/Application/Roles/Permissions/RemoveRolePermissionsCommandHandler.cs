@@ -35,7 +35,7 @@ internal sealed class RemoveRolePermissionsCommandHandler(
         {
             if (!string.IsNullOrWhiteSpace(code))
             {
-                codes.Add(code.Trim().ToUpperInvariant());
+                codes.Add(PermissionCatalog.NormalizeCode(code));
             }
         }
 

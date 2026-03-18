@@ -138,14 +138,14 @@ public class RootUserSeeder : IDataSeeder
                 continue;
             }
 
-            existingCodes.Add(permission.Name.Trim().ToUpperInvariant());
+            existingCodes.Add(PermissionCatalog.NormalizeCode(permission.Name));
         }
 
         List<string> expectedCodes = PermissionCatalog.AllPermissionCodes
             .Where(code =>
                 PermissionCatalog.TryGetScope(code, out PermissionScope resolvedScope)
                 && resolvedScope == scope)
-            .Select(code => code.Trim().ToUpperInvariant())
+            .Select(code => PermissionCatalog.NormalizeCode(code))
             .ToList();
 
         List<Permission> toAdd = new List<Permission>();
