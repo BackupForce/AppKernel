@@ -21,7 +21,7 @@ public static class SettleDrawEndpoint
                     var command = new SettleDrawCommand(drawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
+            .RequireAuthorization(Permission.GamingDraw.Settle.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("SettleGameDraw");

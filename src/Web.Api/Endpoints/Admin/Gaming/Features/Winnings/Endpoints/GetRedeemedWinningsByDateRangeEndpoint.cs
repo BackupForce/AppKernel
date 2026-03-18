@@ -53,7 +53,7 @@ public static class GetRedeemedWinningsByDateRangeEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.WinningRedeemedRead.Name)
+            .RequireAuthorization(Permission.GamingWinnings.RedeemedRead.Name)
             .Produces<PagedResult<RedeemedWinningListItemDto>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AdminGetRedeemedWinningsByDateRange");

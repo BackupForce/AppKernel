@@ -18,7 +18,7 @@ public static class EndDrawGroupEndpoint
                     var command = new EndDrawGroupCommand(tenantId, drawGroupId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawGroupEnd.Name)
+            .RequireAuthorization(Permission.GamingDrawGroup.End.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("EndDrawGroup");

@@ -23,7 +23,7 @@ public static class CloseDrawManuallyEndpoint
                     var command = new CloseDrawManuallyCommand(drawId, request.Reason);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawManualClose.Name)
+            .RequireAuthorization(Permission.GamingDraw.ManualClose.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("CloseGameDrawManually");

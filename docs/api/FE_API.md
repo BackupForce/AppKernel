@@ -151,12 +151,12 @@
 | Members | GET | `/api/v1/members/{id}/activity` | JWT + Policy(TenantUser) + Permission `MEMBER_AUDIT:READ` | `MemberActivityRequest`(query) | `PagedResult<MemberActivityLogDto>` | 操作歷程。 |
 | Reports | GET | `/api/v1/tenants/{tenantId}/reports/daily` | JWT + Policy(TenantUser) | Query: `date` | `DailyReportResponse` | 依租戶時區計算。 |
 | Gaming | POST | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws` | JWT + Policy(TenantUser) | `CreateDrawRequest` | `Guid` | 建立期數。 |
-| Admin Gaming | POST | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | `CreateDrawTemplateRequest` | `Guid` | 建立期數模板。 |
-| Admin Gaming | PUT | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | `UpdateDrawTemplateRequest` | N/A | 更新期數模板。 |
-| Admin Gaming | POST | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}/activate` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | N/A | N/A | 啟用期數模板。 |
-| Admin Gaming | POST | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}/deactivate` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | N/A | N/A | 停用期數模板。 |
-| Admin Gaming | GET | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | `GetDrawTemplatesRequest`(query) | `DrawTemplateSummaryDto[]` | 期數模板列表。 |
-| Admin Gaming | GET | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW-TEMPLATE:MANAGE` | N/A | `DrawTemplateDetailDto` | 期數模板詳情。 |
+| Admin Gaming | POST | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW_TEMPLATE_MANAGE` | `CreateDrawTemplateRequest` | `Guid` | 建立期數模板。 |
+| Admin Gaming | PUT | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW_TEMPLATE_MANAGE` | `UpdateDrawTemplateRequest` | N/A | 更新期數模板。 |
+| Admin Gaming | POST | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}/activate` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW_TEMPLATE_MANAGE` | N/A | N/A | 啟用期數模板。 |
+| Admin Gaming | POST | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}/deactivate` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW_TEMPLATE_MANAGE` | N/A | N/A | 停用期數模板。 |
+| Admin Gaming | GET | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW_TEMPLATE_MANAGE` | `GetDrawTemplatesRequest`(query) | `DrawTemplateSummaryDto[]` | 期數模板列表。 |
+| Admin Gaming | GET | `/api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}` | JWT + Policy(TenantUser) + Permission `GAMING:DRAW_TEMPLATE_MANAGE` | N/A | `DrawTemplateDetailDto` | 期數模板詳情。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws` | None | `GetDrawsRequest`(query) | `DrawSummaryDto[]` | 取得期數列表（允許匿名）。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/draws/selling/options` | None | `GetSellingDrawOptionsRequest`(query) | `DrawSellingOptionDto[]` | 可售票期數下拉選項。 |
 | Gaming | GET | `/api/v1/tenants/{tenantId}/gaming/lottery539/draws/{drawId}` | None | N/A | `DrawDetailDto` | 取得期數詳情（允許匿名）。 |
@@ -1220,10 +1220,10 @@ WHERE draw_code = '';
 
 ### Admin Gaming - Draw Templates
 
-> 路由皆位於 `/api/v1/tenants/{tenantId}/admin/gaming/...`，需 JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`。
+> 路由皆位於 `/api/v1/tenants/{tenantId}/admin/gaming/...`，需 JWT + Policy `TenantUser` + Permission `GAMING:DRAW_TEMPLATE_MANAGE`。
 
 #### [POST] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates - 建立期數模板
-**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW_TEMPLATE_MANAGE`
 
 **Request**
 - Body `CreateDrawTemplateRequest`
@@ -1275,7 +1275,7 @@ curl -X POST "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/admi
 ---
 
 #### [PUT] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId} - 更新期數模板
-**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW_TEMPLATE_MANAGE`
 
 **Request**
 - Body `UpdateDrawTemplateRequest`
@@ -1292,7 +1292,7 @@ curl -X POST "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/admi
 ---
 
 #### [POST] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}/activate - 啟用期數模板
-**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW_TEMPLATE_MANAGE`
 
 **Response**
 - 200: `OK`
@@ -1300,7 +1300,7 @@ curl -X POST "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/admi
 ---
 
 #### [POST] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId}/deactivate - 停用期數模板
-**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW_TEMPLATE_MANAGE`
 
 **Response**
 - 200: `OK`
@@ -1308,7 +1308,7 @@ curl -X POST "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/admi
 ---
 
 #### [GET] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates - 期數模板列表
-**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW_TEMPLATE_MANAGE`
 
 **Request**
 - Query: `gameCode` (string?), `isActive` (bool?)
@@ -1319,7 +1319,7 @@ curl -X POST "$BASE_URL/api/v1/tenants/22222222-2222-2222-2222-222222222222/admi
 ---
 
 #### [GET] /api/v1/tenants/{tenantId}/admin/gaming/draw-templates/{templateId} - 期數模板詳情
-**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW-TEMPLATE:MANAGE`
+**Auth:** JWT + Policy `TenantUser` + Permission `GAMING:DRAW_TEMPLATE_MANAGE`
 
 **Response**
 - 200: `DrawTemplateDetailDto`

@@ -26,7 +26,7 @@ public static class GetTicketClaimEventEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.TicketClaimEventRead.Name)
+            .RequireAuthorization(Permission.GamingTicketClaimEvent.Read.Name)
             .Produces<TicketClaimEventDetailDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithName("AdminGetTicketClaimEvent");

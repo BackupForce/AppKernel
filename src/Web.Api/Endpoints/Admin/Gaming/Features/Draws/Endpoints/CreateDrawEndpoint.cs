@@ -28,7 +28,7 @@ public static class CreateDrawEndpoint
                          value => Results.Ok(value),
                          ct);
                  })
-             .RequireAuthorization(Permission.Gaming.DrawCreate.Name)
+             .RequireAuthorization(Permission.GamingDraw.Create.Name)
              .Produces<Guid>(StatusCodes.Status200OK)
              .ProducesProblem(StatusCodes.Status400BadRequest)
              .WithName("CreateGameDraw");

@@ -33,7 +33,7 @@ public static class GetDrawGroupsEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawGroupRead.Name)
+            .RequireAuthorization(Permission.GamingDrawGroup.Read.Name)
             .Produces<PagedResult<DrawGroupSummaryDto>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ListDrawGroups");

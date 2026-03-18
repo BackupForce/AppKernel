@@ -56,7 +56,7 @@ public sealed class AdminWinningCostReportEndpoints : IEndpoint
                         ct);
                 })
             // TODO: replace with dedicated report permission when permission catalog is extended.
-            .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
+            .RequireAuthorization(Permission.GamingDraw.Settle.Name)
             .Produces<WinningCostReportPageDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AdminGetWinningCostReport");
@@ -98,7 +98,7 @@ public sealed class AdminWinningCostReportEndpoints : IEndpoint
                         ct);
                 })
             // TODO: replace with dedicated report permission when permission catalog is extended.
-            .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
+            .RequireAuthorization(Permission.GamingDraw.Settle.Name)
             .Produces<WinningCostPerDrawDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
