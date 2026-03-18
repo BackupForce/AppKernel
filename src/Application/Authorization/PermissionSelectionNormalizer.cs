@@ -1,3 +1,5 @@
+using Domain.Security;
+
 ﻿namespace Application.Authorization;
 
 // 中文註解：用來整理角色勾選的權限，避免 master 與 child 同時存在。
@@ -53,6 +55,6 @@ public sealed class PermissionSelectionNormalizer
         // 中文註解：權限代碼一律使用大寫格式。
         return string.IsNullOrWhiteSpace(code)
             ? string.Empty
-            : code.Trim().ToUpperInvariant();
+            : PermissionCatalog.NormalizeCode(code);
     }
 }

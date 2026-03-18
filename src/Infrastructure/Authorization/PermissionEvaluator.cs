@@ -87,6 +87,6 @@ public sealed class PermissionEvaluator : IPermissionEvaluator
 
     private static string NormalizePermissionCode(string permissionCode)
     {
-        return permissionCode.Trim().ToUpperInvariant();
+        return PermissionCatalog.NormalizeCode(permissionCode);
     }
 }

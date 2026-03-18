@@ -97,7 +97,7 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
             return Task.FromResult<Role?>(null);
         }
 
-        string normalizedCode = code.Trim().ToUpperInvariant();
+        string normalizedCode = PermissionCatalog.NormalizeCode(code);
         IQueryable<Role> query = ApplyTenantFilter(context.Set<Role>(), tenantId);
 
         return query.FirstOrDefaultAsync(
@@ -144,8 +144,7 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
 
         HashSet<string> targets = permissionCodes
             .Where(code => !string.IsNullOrWhiteSpace(code))
-            .Select(code => code.Trim())
-            .Select(code => code.ToUpperInvariant())
+            .Select(code => PermissionCatalog.NormalizeCode(code))
             .ToHashSet(StringComparer.Ordinal);
 
         if (targets.Count == 0)
@@ -164,7 +163,7 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
 
         List<Permission> toRemove = permissionsForRole
             .Where(permission => permission.Name != null
-                && targets.Contains(permission.Name.Trim().ToUpperInvariant()))
+                && targets.Contains(PermissionCatalog.NormalizeCode(permission.Name)))
             .ToList();
 
         if (toRemove.Count == 0)

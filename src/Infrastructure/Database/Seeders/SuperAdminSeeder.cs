@@ -35,7 +35,7 @@ public sealed class SuperAdminSeeder
             .Where(code =>
                 PermissionCatalog.TryGetScope(code, out PermissionScope scope)
                 && scope == PermissionScope.Platform)
-            .Select(code => code.Trim().ToUpperInvariant())
+            .Select(code => PermissionCatalog.NormalizeCode(code))
             .ToList();
 
         string normalizedRoleName = _options.RoleName.Trim().ToUpperInvariant();
@@ -67,7 +67,7 @@ public sealed class SuperAdminSeeder
                 continue;
             }
 
-            string normalizedName = permission.Name.Trim().ToUpperInvariant();
+            string normalizedName = PermissionCatalog.NormalizeCode(permission.Name);
             existingCodes.Add(normalizedName);
         }
 

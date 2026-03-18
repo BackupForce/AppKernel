@@ -287,7 +287,7 @@ internal sealed class PermissionProvider : IPermissionProvider
 
     private static string NormalizePermissionCode(string permissionCode)
     {
-        return permissionCode.Trim().ToUpperInvariant();
+        return PermissionCatalog.NormalizeCode(permissionCode);
     }
 
     private static Guid MapRoleIdToSubjectId(int roleId)
