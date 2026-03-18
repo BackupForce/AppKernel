@@ -30,14 +30,14 @@
 
 ### 主要權限代碼
 
-- `GAMING:CATALOG:VIEW`：檢視遊戲目錄
-- `GAMING:ENTITLEMENT:MANAGE`：管理租戶啟用
-- `GAMING:DRAW:CREATE`：建立期數
-- `GAMING:DRAW:EXECUTE`：執行開獎
-- `GAMING:DRAW:SETTLE`：結算開獎
-- `GAMING:DRAW:MANUAL-CLOSE`：手動封盤
-- `GAMING:DRAW:REOPEN`：重新開盤
-- `GAMING:DRAW:UPDATE-ALLOWED-TEMPLATES`：更新期數允許票種
+- `GAMING:CATALOG_VIEW`：檢視遊戲目錄
+- `GAMING:ENTITLEMENT_MANAGE`：管理租戶啟用
+- `GAMING_DRAW:CREATE`：建立期數
+- `GAMING_DRAW:EXECUTE`：執行開獎
+- `GAMING_DRAW:SETTLE`：結算開獎
+- `GAMING_DRAW:MANUAL_CLOSE`：手動封盤
+- `GAMING_DRAW:REOPEN`：重新開盤
+- `GAMING_DRAW:UPDATE_ALLOWED_TEMPLATES`：更新期數允許票種
 
 ### Entitlement 拒絕行為
 
@@ -61,7 +61,7 @@
 ### 取得平台遊戲/玩法清單
 `GET /catalog/games`
 
-**Permission**：`GAMING:CATALOG:VIEW`
+**Permission**：`GAMING:CATALOG_VIEW`
 
 **Response**
 ```json
@@ -78,7 +78,7 @@
 ### 查詢租戶已啟用遊戲/玩法
 `GET /entitlements`
 
-**Permission**：`GAMING:ENTITLEMENT:MANAGE`
+**Permission**：`GAMING:ENTITLEMENT_MANAGE`
 
 **Response**
 ```json
@@ -95,7 +95,7 @@
 ### 啟用租戶遊戲
 `PATCH /entitlements/games/{gameCode}/enable`
 
-**Permission**：`GAMING:ENTITLEMENT:MANAGE`
+**Permission**：`GAMING:ENTITLEMENT_MANAGE`
 
 **Response**
 - `200 OK`
@@ -105,7 +105,7 @@
 ### 停用租戶遊戲
 `PATCH /entitlements/games/{gameCode}/disable`
 
-**Permission**：`GAMING:ENTITLEMENT:MANAGE`
+**Permission**：`GAMING:ENTITLEMENT_MANAGE`
 
 **Response**
 - `200 OK`
@@ -115,7 +115,7 @@
 ### 啟用租戶玩法
 `PATCH /entitlements/games/{gameCode}/plays/{playTypeCode}/enable`
 
-**Permission**：`GAMING:ENTITLEMENT:MANAGE`
+**Permission**：`GAMING:ENTITLEMENT_MANAGE`
 
 **Response**
 - `200 OK`
@@ -125,7 +125,7 @@
 ### 停用租戶玩法
 `PATCH /entitlements/games/{gameCode}/plays/{playTypeCode}/disable`
 
-**Permission**：`GAMING:ENTITLEMENT:MANAGE`
+**Permission**：`GAMING:ENTITLEMENT_MANAGE`
 
 **Response**
 - `200 OK`
@@ -138,7 +138,7 @@
 - `gameCode` 代表遊戲代碼（例如 `LOTTERY539`）。
 - 若 Request Body 內有 `gameCode`，需與路徑一致。
 
-**Permission**：`GAMING:DRAW:CREATE`
+**Permission**：`GAMING_DRAW:CREATE`
 
 **Entitlement**：
 - 租戶必須啟用該遊戲。
@@ -248,7 +248,7 @@
 ### 開獎 (execute)
 `POST /games/{gameCode}/draws/{drawId}/execute`
 
-**Permission**：`GAMING:DRAW:EXECUTE`
+**Permission**：`GAMING_DRAW:EXECUTE`
 
 **Entitlement**：租戶必須啟用該遊戲。
 
@@ -260,7 +260,7 @@
 ### 結算 (settle)
 `POST /games/{gameCode}/draws/{drawId}/settle`
 
-**Permission**：`GAMING:DRAW:SETTLE`
+**Permission**：`GAMING_DRAW:SETTLE`
 
 **Entitlement**：租戶必須啟用該遊戲。
 
@@ -272,7 +272,7 @@
 ### 手動封盤
 `POST /games/{gameCode}/draws/{drawId}/manual-close`
 
-**Permission**：`GAMING:DRAW:MANUAL-CLOSE`
+**Permission**：`GAMING_DRAW:MANUAL_CLOSE`
 
 **Entitlement**：租戶必須啟用該遊戲。
 
@@ -291,7 +291,7 @@
 ### 重新開盤
 `POST /games/{gameCode}/draws/{drawId}/reopen`
 
-**Permission**：`GAMING:DRAW:REOPEN`
+**Permission**：`GAMING_DRAW:REOPEN`
 
 **Entitlement**：租戶必須啟用該遊戲。
 
@@ -324,7 +324,7 @@
 ### 更新期數允許票種清單
 `PUT /games/{gameCode}/draws/{drawId}/allowed-ticket-templates`
 
-**Permission**：`GAMING:DRAW:UPDATE-ALLOWED-TEMPLATES`
+**Permission**：`GAMING_DRAW:UPDATE_ALLOWED_TEMPLATES`
 
 **Entitlement**：租戶必須啟用該遊戲。
 

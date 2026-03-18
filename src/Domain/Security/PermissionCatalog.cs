@@ -76,6 +76,11 @@ public static class PermissionCatalog
         Add(nameof(Permission.Tenants), Permission.Tenants.AllPermissions);
         //Add(nameof(Permission.Points), Permission.Points.AllPermissions);
         Add(nameof(Permission.Gaming), Permission.Gaming.AllPermissions);
+        Add(nameof(Permission.GamingDraw), Permission.GamingDraw.AllPermissions);
+        Add(nameof(Permission.GamingDrawGroup), Permission.GamingDrawGroup.AllPermissions);
+        Add(nameof(Permission.GamingTicket), Permission.GamingTicket.AllPermissions);
+        Add(nameof(Permission.GamingTicketClaimEvent), Permission.GamingTicketClaimEvent.AllPermissions);
+        Add(nameof(Permission.GamingWinnings), Permission.GamingWinnings.AllPermissions);
         Add(nameof(Permission.Tickets), Permission.Tickets.AllPermissions);
 
         return permissions;

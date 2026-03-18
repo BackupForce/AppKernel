@@ -20,7 +20,7 @@ public static class AddDrawGroupDrawEndpoint
                     var command = new AddDrawGroupDrawCommand(tenantId, drawGroupId, request.DrawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawGroupDrawManage.Name)
+            .RequireAuthorization(Permission.GamingDrawGroup.ManageDraw.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AddDrawGroupDraw");

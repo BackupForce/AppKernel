@@ -27,7 +27,7 @@ public static class ValidateDrawPrizePoolEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
+            .RequireAuthorization(Permission.GamingDraw.Settle.Name)
             .Produces<DrawPrizePoolValidationDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ValidateGameDrawPrizePool");

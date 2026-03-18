@@ -26,7 +26,7 @@ public static class GetDrawBetNumberStatsEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.WinningNumbersRead.Name)
+            .RequireAuthorization(Permission.GamingWinnings.WinningNumbersRead.Name)
             .Produces<IReadOnlyCollection<DrawBetNumberStatDto>>(StatusCodes.Status200OK)
             .WithName("AdminGetDrawBetNumberStats");
     }

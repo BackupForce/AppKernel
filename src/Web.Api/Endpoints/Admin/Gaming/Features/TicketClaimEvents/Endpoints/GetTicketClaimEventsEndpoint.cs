@@ -62,7 +62,7 @@ public static class GetTicketClaimEventsEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.TicketClaimEventRead.Name)
+            .RequireAuthorization(Permission.GamingTicketClaimEvent.Read.Name)
             .Produces<PagedResult<TicketClaimEventSummaryDto>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AdminListTicketClaimEvents");

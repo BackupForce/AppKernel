@@ -23,7 +23,7 @@ public static class UpdateDrawGroupEndpoint
                         request.Name);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawGroupUpdate.Name)
+            .RequireAuthorization(Permission.GamingDrawGroup.Update.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("UpdateDrawGroup");

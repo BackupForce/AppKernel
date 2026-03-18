@@ -20,7 +20,7 @@ public static class DeleteDrawGroupEndpoint
                     var command = new DeleteDrawGroupCommand(tenantId, drawGroupId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawGroupDelete.Name)
+            .RequireAuthorization(Permission.GamingDrawGroup.Delete.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("DeleteDrawGroup");

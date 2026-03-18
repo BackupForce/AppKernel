@@ -30,7 +30,7 @@ public static class RemoteSearchDrawGroupsEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawGroupRead.Name)
+            .RequireAuthorization(Permission.GamingDrawGroup.Read.Name)
             .Produces<PagedResult<DrawGroupRemoteSearchDto>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("RemoteSearchDrawGroups");
