@@ -4,7 +4,7 @@ namespace Domain.Security;
 
 public static class PermissionCatalog
 {
-    private static List<Permission> AllPermissions { get; } = BuildAllPermissions();
+    public static List<Permission> AllPermissions { get; } = BuildAllPermissions();
     public static IReadOnlyCollection<string> AllPermissionCodes { get; } = BuildAllPermissionCodes();
     public static IReadOnlyDictionary<string, PermissionScope> PermissionScopes { get; } = BuildPermissionScopes();
 

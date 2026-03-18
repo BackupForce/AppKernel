@@ -6,19 +6,39 @@ namespace Application.Authorization;
 public sealed class PermissionUiCatalogProvider
 {
     private static readonly PermissionCatalogDto Catalog = BuildCatalog();
+    private static readonly PermissionCatalogDto TenantCatalog = BuildTenantCatalog();
 
     public static PermissionCatalogDto GetCatalog()
     {
         return Catalog;
     }
 
+    public static PermissionCatalogDto GetTenantCatalog()
+    {
+        return TenantCatalog;
+    }
+
     private static PermissionCatalogDto BuildCatalog()
     {
         PermissionCatalogDto catalog = new PermissionCatalogDto(
-            "2.0",
+            "1.0",
             new List<ScopeGroupDto>
             {
                 BuildPlatformScope(),
+                BuildTenantScope()
+            });
+
+        ValidateCatalog(catalog);
+
+        return catalog;
+    }
+
+    private static PermissionCatalogDto BuildTenantCatalog()
+    {
+        PermissionCatalogDto catalog = new PermissionCatalogDto(
+            "1.0",
+            new List<ScopeGroupDto>
+            {
                 BuildTenantScope()
             });
 
@@ -84,35 +104,35 @@ public sealed class PermissionUiCatalogProvider
             });
 
 
-        ModuleGroupDto memberPointsModule = new ModuleGroupDto(
-            "MEMBER_POINTS",
-            "會員點數",
-            "MEMBER_POINTS:*",
-            new List<PermissionItemDto>
-            {
-                Item("MEMBER_POINTS:READ", "檢視會員點數", "檢視會員點數"),
-                Item("MEMBER_POINTS:ADJUST", "調整會員點數", "人工調整會員點數", true),
-                Item("MEMBER_POINTS:TRANSFER", "點數轉帳", "會員點數轉帳", true)
-            });
+        //ModuleGroupDto memberPointsModule = new ModuleGroupDto(
+        //    "MEMBER_POINTS",
+        //    "會員點數",
+        //    "MEMBER_POINTS:*",
+        //    new List<PermissionItemDto>
+        //    {
+        //        Item("MEMBER_POINTS:READ", "檢視會員點數", "檢視會員點數"),
+        //        Item("MEMBER_POINTS:ADJUST", "調整會員點數", "人工調整會員點數", true),
+        //        Item("MEMBER_POINTS:TRANSFER", "點數轉帳", "會員點數轉帳", true)
+        //    });
 
-        ModuleGroupDto memberAssetsModule = new ModuleGroupDto(
-            "MEMBER_ASSETS",
-            "會員資產",
-            "MEMBER_ASSETS:*",
-            new List<PermissionItemDto>
-            {
-                Item("MEMBER_ASSETS:READ", "檢視會員資產", "檢視會員資產"),
-                Item("MEMBER_ASSETS:ADJUST", "調整會員資產", "調整會員資產", true)
-            });
+        //ModuleGroupDto memberAssetsModule = new ModuleGroupDto(
+        //    "MEMBER_ASSETS",
+        //    "會員資產",
+        //    "MEMBER_ASSETS:*",
+        //    new List<PermissionItemDto>
+        //    {
+        //        Item("MEMBER_ASSETS:READ", "檢視會員資產", "檢視會員資產"),
+        //        Item("MEMBER_ASSETS:ADJUST", "調整會員資產", "調整會員資產", true)
+        //    });
 
-        ModuleGroupDto pointsModule = new ModuleGroupDto(
-            "POINTS",
-            "自身點數",
-            "POINTS:ME:*",
-            new List<PermissionItemDto>
-            {
-                Item("POINTS:ME:VIEW", "檢視點數", "檢視自身點數")
-            });
+        //ModuleGroupDto pointsModule = new ModuleGroupDto(
+        //    "POINTS",
+        //    "自身點數",
+        //    "POINTS:ME:*",
+        //    new List<PermissionItemDto>
+        //    {
+        //        Item("POINTS:ME:VIEW", "檢視點數", "檢視自身點數")
+        //    });
 
         ModuleGroupDto memberAuditModule = new ModuleGroupDto(
             "MEMBER_AUDIT",
@@ -225,9 +245,9 @@ public sealed class PermissionUiCatalogProvider
                 rolesModule,
                 membersModule,
                 memberAuditModule,
-                memberPointsModule,
-                memberAssetsModule,
-                pointsModule,
+                //memberPointsModule,
+                //memberAssetsModule,
+                //pointsModule,
                 gamingSystemModule,
                 gamingDrawModule,
                 gamingDrawGroupModule,
@@ -273,43 +293,52 @@ public sealed class PermissionUiCatalogProvider
 
     private static void ValidateCatalog(PermissionCatalogDto catalog)
     {
-        HashSet<string> knownCodes = PermissionCatalog.AllPermissionCodes
-            .Select(PermissionCatalog.NormalizeCode)
-            .ToHashSet();
-
-        HashSet<string> uiCodes = new HashSet<string>();
-
         foreach (ScopeGroupDto scopeGroup in catalog.Scopes)
         {
+            // ✅ 只取該 Scope 的 Permission
+            HashSet<string> knownCodes = PermissionCatalog.AllPermissions
+                .Where(p => p.Scope == scopeGroup.Scope)
+                .Select(p => PermissionCatalog.NormalizeCode(p.Name))
+                .ToHashSet();
+
+            HashSet<string> uiCodes = new HashSet<string>();
+
             foreach (ModuleGroupDto module in scopeGroup.Modules)
             {
                 if (!string.IsNullOrWhiteSpace(module.MasterPermissionCode))
                 {
                     string normalizedMasterCode = NormalizeCode(module.MasterPermissionCode);
+
                     ValidateCodeExists(knownCodes, normalizedMasterCode);
                     ValidateScope(scopeGroup.Scope, normalizedMasterCode);
+
                     uiCodes.Add(normalizedMasterCode);
                 }
 
                 foreach (PermissionItemDto item in module.Items)
                 {
                     string normalizedCode = NormalizeCode(item.Code);
+
                     ValidateCodeExists(knownCodes, normalizedCode);
                     ValidateScope(scopeGroup.Scope, normalizedCode);
+
                     uiCodes.Add(normalizedCode);
                 }
             }
-        }
 
-        if (!knownCodes.SetEquals(uiCodes))
-        {
-            IEnumerable<string> missingInUi = knownCodes.Except(uiCodes).OrderBy(code => code);
-            IEnumerable<string> unknownInUi = uiCodes.Except(knownCodes).OrderBy(code => code);
-            throw new InvalidOperationException(
-                $"Permission catalog mismatch. MissingInUi=[{string.Join(',', missingInUi)}], UnknownInUi=[{string.Join(',', unknownInUi)}]");
+            // ✅ 只驗該 Scope
+            if (!knownCodes.SetEquals(uiCodes))
+            {
+                IEnumerable<string> missingInUi = knownCodes.Except(uiCodes).OrderBy(code => code);
+                IEnumerable<string> unknownInUi = uiCodes.Except(knownCodes).OrderBy(code => code);
+
+                throw new InvalidOperationException(
+                    $"Permission catalog mismatch (Scope={scopeGroup.Scope}). " +
+                    $"MissingInUi=[{string.Join(',', missingInUi)}], " +
+                    $"UnknownInUi=[{string.Join(',', unknownInUi)}]");
+            }
         }
     }
-
     private static void ValidateCodeExists(HashSet<string> knownCodes, string normalizedCode)
     {
         if (!knownCodes.Contains(normalizedCode))

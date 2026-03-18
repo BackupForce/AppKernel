@@ -19,7 +19,7 @@ public sealed class PermissionsEndpoints : IEndpoint
                 "/catalog",
                 (PermissionUiCatalogProvider provider) =>
                 {
-                    PermissionCatalogDto catalog = PermissionUiCatalogProvider.GetCatalog();
+                    PermissionCatalogDto catalog = PermissionUiCatalogProvider.GetTenantCatalog();
                     return Results.Ok(catalog);
                 })
             .Produces<PermissionCatalogDto>(StatusCodes.Status200OK)
