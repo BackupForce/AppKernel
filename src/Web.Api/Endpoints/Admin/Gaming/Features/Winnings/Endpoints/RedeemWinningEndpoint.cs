@@ -27,7 +27,7 @@ public static class RedeemWinningEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.WinningsRedeem.Name)
+            .RequireAuthorization(Permission.GamingWinnings.Redeem.Name)
             .Produces<AdminWinningDetailDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict)

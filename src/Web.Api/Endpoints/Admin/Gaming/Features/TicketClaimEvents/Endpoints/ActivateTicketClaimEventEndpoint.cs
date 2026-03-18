@@ -23,7 +23,7 @@ public static class ActivateTicketClaimEventEndpoint
                     ActivateTicketClaimEventCommand command = new(tenantId, id);
                     return await UseCaseInvoker.Send<ActivateTicketClaimEventCommand>(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.TicketClaimEventActivate.Name)
+            .RequireAuthorization(Permission.GamingTicketClaimEvent.Activate.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)

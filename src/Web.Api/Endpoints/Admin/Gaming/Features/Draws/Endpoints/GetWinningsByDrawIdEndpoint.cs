@@ -51,7 +51,7 @@ public static class GetWinningsByDrawIdEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.WinningsRead.Name)
+            .RequireAuthorization(Permission.GamingWinnings.Read.Name)
             .Produces<PagedResult<AdminWinningListItemDto>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AdminGetWinningsByDrawId");

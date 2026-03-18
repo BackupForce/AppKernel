@@ -40,7 +40,7 @@ public static class UpdateDrawPrizePoolEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawSettle.Name)
+            .RequireAuthorization(Permission.GamingDraw.Settle.Name)
             .Produces<DrawPrizePoolDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("UpdateGameDrawPrizePool");

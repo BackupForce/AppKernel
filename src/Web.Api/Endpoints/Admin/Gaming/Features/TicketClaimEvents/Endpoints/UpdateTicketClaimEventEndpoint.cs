@@ -39,7 +39,7 @@ public static class UpdateTicketClaimEventEndpoint
 
                     return await UseCaseInvoker.Send<UpdateTicketClaimEventCommand>(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.TicketClaimEventUpdate.Name)
+            .RequireAuthorization(Permission.GamingTicketClaimEvent.Update.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)

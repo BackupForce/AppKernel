@@ -21,7 +21,7 @@ public static class ExecuteDrawEndpoint
                     var command = new ExecuteDrawCommand(drawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawExecute.Name)
+            .RequireAuthorization(Permission.GamingDraw.Execute.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ExecuteGameDraw");

@@ -24,7 +24,7 @@ public static class UpdateDrawAllowedTicketTemplatesEndpoint
                         request.TemplateIds);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawUpdateAllowedTemplates.Name)
+            .RequireAuthorization(Permission.GamingDraw.UpdateAllowedTemplates.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("UpdateGameDrawAllowedTicketTemplates");

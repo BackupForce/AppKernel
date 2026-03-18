@@ -27,7 +27,7 @@ public static class CreateDrawGroupEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawGroupCreate.Name)
+            .RequireAuthorization(Permission.GamingDrawGroup.Create.Name)
             .Produces<Guid>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("CreateDrawGroup");

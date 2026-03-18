@@ -41,7 +41,7 @@ public static class CreateTicketClaimEventEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Gaming.TicketClaimEventCreate.Name)
+            .RequireAuthorization(Permission.GamingTicketClaimEvent.Create.Name)
             .Produces<Guid>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AdminCreateTicketClaimEvent");

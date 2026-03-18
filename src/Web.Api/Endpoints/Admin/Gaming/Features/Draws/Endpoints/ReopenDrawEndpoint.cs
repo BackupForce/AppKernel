@@ -21,7 +21,7 @@ public static class ReopenDrawEndpoint
                     var command = new ReopenDrawCommand(drawId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Gaming.DrawReopen.Name)
+            .RequireAuthorization(Permission.GamingDraw.Reopen.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("ReopenGameDraw");
