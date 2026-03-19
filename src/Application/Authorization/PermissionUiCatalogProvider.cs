@@ -115,7 +115,8 @@ public sealed class PermissionUiCatalogProvider
                 Item("MEMBER_TAG:UPDATE", "更新會員標籤", "更新會員標籤", true),
                 Item("MEMBER_TAG:DELETE", "刪除會員標籤", "刪除會員標籤", true),
                 Item("MEMBER_TAG:ASSIGN", "指派會員標籤", "指派標籤給會員", true),
-                Item("MEMBER_TAG:UNASSIGN", "移除會員標籤", "移除會員標籤", true)
+                Item("MEMBER_TAG:UNASSIGN", "移除會員標籤", "移除會員標籤", true),
+                Item("MEMBER_TAG:ACTIVATE", "啟用會員標籤", "啟用會員標籤", true)
             });
 
         //ModuleGroupDto memberPointsModule = new ModuleGroupDto(
