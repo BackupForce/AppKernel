@@ -701,7 +701,7 @@
 - **路徑參數**：`id` (int)
 - **成功回應**：角色的權限代碼清單。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L104-L118】
 
-### POST `/api/v1/roles/{id}/permissions`
+### PUT `/api/v1/roles/{id}/permissions`
 - **權限**：`roles:update`
 - **路徑參數**：`id` (int)
 - **請求體**
@@ -710,13 +710,19 @@
     "permissionCodes": ["roles:view", "roles:create"]
   }
   ```
-- **描述**：新增角色權限。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L120-L135】【F:src/Web.Api/Endpoints/Roles/Requests/UpdateRolePermissionsRequest.cs†L1-L3】
+- **描述**：全量覆蓋角色權限；傳入集合即為更新後的最終權限集合，空陣列代表清空全部權限。
+
+### POST `/api/v1/roles/{id}/permissions`
+- **權限**：`roles:update`
+- **路徑參數**：`id` (int)
+- **請求體** 同上。
+- **描述**：舊版增量新增角色權限 API，保留供相容性使用。
 
 ### POST `/api/v1/roles/{id}/permissions/remove`
 - **權限**：`roles:update`
 - **路徑參數**：`id` (int)
 - **請求體** 同上。
-- **描述**：移除角色權限。 【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L137-L152】【F:src/Web.Api/Endpoints/Roles/Requests/UpdateRolePermissionsRequest.cs†L1-L3】
+- **描述**：舊版增量移除角色權限 API，保留供相容性使用。
 
 ## 會員 (Members) – 管理後台
 
