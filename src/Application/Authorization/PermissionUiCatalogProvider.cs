@@ -104,6 +104,20 @@ public sealed class PermissionUiCatalogProvider
             });
 
 
+        ModuleGroupDto memberTagModule = new ModuleGroupDto(
+            "MEMBER_TAG",
+            "會員標籤",
+            "MEMBER_TAG:*",
+            new List<PermissionItemDto>
+            {
+                Item("MEMBER_TAG:READ", "檢視會員標籤", "檢視會員標籤"),
+                Item("MEMBER_TAG:CREATE", "建立會員標籤", "建立會員標籤"),
+                Item("MEMBER_TAG:UPDATE", "更新會員標籤", "更新會員標籤", true),
+                Item("MEMBER_TAG:DELETE", "刪除會員標籤", "刪除會員標籤", true),
+                Item("MEMBER_TAG:ASSIGN", "指派會員標籤", "指派標籤給會員", true),
+                Item("MEMBER_TAG:UNASSIGN", "移除會員標籤", "移除會員標籤", true)
+            });
+
         //ModuleGroupDto memberPointsModule = new ModuleGroupDto(
         //    "MEMBER_POINTS",
         //    "會員點數",
@@ -244,6 +258,7 @@ public sealed class PermissionUiCatalogProvider
                 usersModule,
                 rolesModule,
                 membersModule,
+                memberTagModule,
                 memberAuditModule,
                 //memberPointsModule,
                 //memberAssetsModule,
