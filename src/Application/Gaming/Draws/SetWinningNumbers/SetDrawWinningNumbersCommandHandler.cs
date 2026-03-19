@@ -23,8 +23,8 @@ internal sealed class SetDrawWinningNumbersCommandHandler(
     IDateTimeProvider dateTimeProvider,
     ITenantContext tenantContext,
     IEntitlementChecker entitlementChecker,
-    IUserContext userContext,
-    ISender sender) : ICommandHandler<SetDrawWinningNumbersCommand>
+    IUserContext userContext
+    ) : ICommandHandler<SetDrawWinningNumbersCommand>
 {
     public async Task<Result> Handle(SetDrawWinningNumbersCommand request, CancellationToken cancellationToken)
     {
