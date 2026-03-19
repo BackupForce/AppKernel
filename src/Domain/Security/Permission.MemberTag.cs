@@ -14,10 +14,11 @@ public sealed partial class Permission
         public static readonly Permission Delete = new(19, "MEMBER_TAG:DELETE", "刪除會員標籤", PermissionScope.Tenant);
         public static readonly Permission Assign = new(24, "MEMBER_TAG:ASSIGN", "指派標籤給會員", PermissionScope.Tenant);
         public static readonly Permission Unassign = new(25, "MEMBER_TAG:UNASSIGN", "移除會員標籤", PermissionScope.Tenant);
+        public static readonly Permission Activate = new(26, "MEMBER_TAG:ACTIVATE", "啟用會員標籤", PermissionScope.Tenant);
 
         public static IEnumerable<Permission> AllPermissions => new[]
         {
-            All, Read, Create, Update, Delete, Assign, Unassign
+            All, Read, Create, Update, Delete, Assign, Unassign, Activate
         };
     }
 }

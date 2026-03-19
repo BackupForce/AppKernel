@@ -17,6 +17,7 @@ public sealed class MemberTagEndpoints : IEndpoint
         group.MapCreateMemberTagEndpoint();
         group.MapUpdateMemberTagEndpoint();
         group.MapDeactivateMemberTagEndpoint();
+        group.MapActivateMemberTagEndpoint();
         group.MapGetMemberTagsEndpoint();
         group.MapAssignMemberTagEndpoint();
         group.MapUnassignMemberTagEndpoint();
