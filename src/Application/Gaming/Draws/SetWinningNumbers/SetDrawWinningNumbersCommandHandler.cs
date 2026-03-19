@@ -133,12 +133,6 @@ internal sealed class SetDrawWinningNumbersCommandHandler(
         await adminOperationLogRepository.AddAsync(log, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        Result settleResult = await sender.Send(new SettleDrawCommand(draw.Id), cancellationToken);
-        if (settleResult.IsFailure)
-        {
-            return Result.Failure(settleResult.Error);
-        }
-
         return Result.Success();
     }
 
