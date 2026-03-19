@@ -133,8 +133,9 @@
 | Roles | GET | `/api/v1/roles/{id}` | JWT + Policy(TenantUser) + Permission `ROLES:VIEW` | N/A | `RoleDetailDto` | 角色詳情。 |
 | Roles | GET | `/api/v1/roles` | JWT + Policy(TenantUser) + Permission `ROLES:VIEW` | N/A | `RoleListItemDto[]` | 角色列表。 |
 | Roles | GET | `/api/v1/roles/{id}/permissions` | JWT + Policy(TenantUser) + Permission `ROLES:VIEW` | N/A | `string[]` | 角色權限。 |
-| Roles | POST | `/api/v1/roles/{id}/permissions` | JWT + Policy(TenantUser) + Permission `ROLES:UPDATE` | `UpdateRolePermissionsRequest` | N/A | 新增權限。 |
-| Roles | POST | `/api/v1/roles/{id}/permissions/remove` | JWT + Policy(TenantUser) + Permission `ROLES:UPDATE` | `UpdateRolePermissionsRequest` | N/A | 移除權限。 |
+| Roles | PUT | `/api/v1/roles/{id}/permissions` | JWT + Policy(TenantUser) + Permission `ROLES:UPDATE` | `UpdateRolePermissionsRequest` | N/A | 全量覆蓋權限。 |
+| Roles | POST | `/api/v1/roles/{id}/permissions` | JWT + Policy(TenantUser) + Permission `ROLES:UPDATE` | `UpdateRolePermissionsRequest` | N/A | 新增權限（舊版相容）。 |
+| Roles | POST | `/api/v1/roles/{id}/permissions/remove` | JWT + Policy(TenantUser) + Permission `ROLES:UPDATE` | `UpdateRolePermissionsRequest` | N/A | 移除權限（舊版相容）。 |
 | Permissions | GET | `/api/v1/permissions/catalog` | JWT + Policy(TenantUser) | N/A | `PermissionCatalogDto` | 供 UI 使用的權限目錄。 |
 | Members | POST | `/api/v1/members` | JWT + Policy(TenantUser) + Permission `MEMBERS:CREATE` | `CreateMemberRequest` | `Guid` | 建立會員。 |
 | Members | GET | `/api/v1/members/{id}` | JWT + Policy(TenantUser) + Permission `MEMBERS:READ` | N/A | `MemberDetailDto` | 會員詳情。 |
@@ -641,52 +642,46 @@ curl "$BASE_URL/api/v1/roles/1/permissions" -H "Authorization: Bearer <jwt>"
 
 ---
 
-#### [POST] /api/v1/roles/{id}/permissions - 新增角色權限
-**Auth:** JWT + Policy `TenantUser` + Permission `ROLES:UPDATE`【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L128-L141】
+#### [PUT] /api/v1/roles/{id}/permissions - 全量覆蓋角色權限
+**Auth:** JWT + Policy `TenantUser` + Permission `ROLES:UPDATE`
 
 **Request**
 - Body schema `UpdateRolePermissionsRequest`
   | name | type | required | constraints |
   |---|---|---|---|
-  | permissionCodes | string[] | ✅ | 至少一個非空白代碼。【F:src/Application/Roles/Permissions/AddRolePermissionsCommandValidator.cs†L5-L25】 |
+  | permissionCodes | string[] | ✅ | 可為空陣列；會先去重，且每個代碼都必須存在於 permission catalog。 |
 
 - Example request
 ```bash
-curl -X POST "$BASE_URL/api/v1/roles/1/permissions" \
+curl -X PUT "$BASE_URL/api/v1/roles/1/permissions" \
   -H "Authorization: Bearer <jwt>" \
   -H "Content-Type: application/json" \
-  -d '{"permissionCodes":["USERS:VIEW","MEMBERS:READ"]}'
+  -d '{"permissionCodes":["USERS:READ","MEMBER_TAG:CREATE","MEMBER_AUDIT:READ"]}'
 ```
 
 **Response**
 - 200 OK
-- Example response
-```
-HTTP/1.1 200 OK
-```
+- 400 Bad Request：權限代碼不存在、scope 不符、或 request 為 null
+- 404 Not Found：角色不存在
 
 ---
 
-#### [POST] /api/v1/roles/{id}/permissions/remove - 移除角色權限
-**Auth:** JWT + Policy `TenantUser` + Permission `ROLES:UPDATE`【F:src/Web.Api/Endpoints/Roles/RolesEndpoints.cs†L143-L153】
+#### [POST] /api/v1/roles/{id}/permissions - 新增角色權限（舊版相容）
+**Auth:** JWT + Policy `TenantUser` + Permission `ROLES:UPDATE`
 
 **Request**
-- Body schema `UpdateRolePermissionsRequest`（同上）。【F:src/Application/Roles/Permissions/RemoveRolePermissionsCommandValidator.cs†L5-L25】
+- Body schema `UpdateRolePermissionsRequest`
+  | name | type | required | constraints |
+  |---|---|---|---|
+  | permissionCodes | string[] | ✅ | 至少一個非空白代碼。 |
 
-- Example request
-```bash
-curl -X POST "$BASE_URL/api/v1/roles/1/permissions/remove" \
-  -H "Authorization: Bearer <jwt>" \
-  -H "Content-Type: application/json" \
-  -d '{"permissionCodes":["USERS:VIEW"]}'
-```
+---
 
-**Response**
-- 200 OK
-- Example response
-```
-HTTP/1.1 200 OK
-```
+#### [POST] /api/v1/roles/{id}/permissions/remove - 移除角色權限（舊版相容）
+**Auth:** JWT + Policy `TenantUser` + Permission `ROLES:UPDATE`
+
+**Request**
+- Body schema `UpdateRolePermissionsRequest`（同上）。
 
 ---
 

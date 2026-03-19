@@ -32,6 +32,7 @@ internal static class RolesEndpoints
         group.MapGetRolesEndpoint();
 
         group.MapGetRolePermissionsEndpoint();
+        group.MapReplaceRolePermissionsEndpoint();
         group.MapUpdateRolePermissionsEndpoint();
         group.MapRemoveRolePermissionsEndpoint();
     }

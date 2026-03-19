@@ -27,4 +27,8 @@ public static class RoleErrors
     public static readonly Error PermissionScopeMismatch = Error.Validation(
         "Role.PermissionScopeMismatch",
         "權限 Scope 與角色類型不一致。");
+
+    public static Error InvalidPermissionCode(string code) => Error.Validation(
+        "Role.InvalidPermissionCode",
+        $"權限代碼不存在: {code}。");
 }

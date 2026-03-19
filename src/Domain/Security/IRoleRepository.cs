@@ -24,5 +24,7 @@ public interface IRoleRepository
 
     Task RemovePermissionsAsync(int roleId, IEnumerable<string> permissionCodes, CancellationToken cancellationToken);
 
+    Task ReplacePermissionsAsync(int roleId, IEnumerable<string> permissionCodes, CancellationToken cancellationToken);
+
     Task RemovePermissionsByRoleIdAsync(int roleId, CancellationToken cancellationToken);
 }
