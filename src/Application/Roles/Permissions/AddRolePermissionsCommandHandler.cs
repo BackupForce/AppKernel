@@ -24,41 +24,19 @@ internal sealed class AddRolePermissionsCommandHandler(
             return Result.Failure(RoleErrors.NotFound);
         }
 
-        if (!IsRoleAccessible(userContext, role))
+        if (!RolePermissionUpdatePolicy.IsRoleAccessible(userContext, role))
         {
             // 中文註解：避免跨租戶或 Member 操作角色權限。
             return Result.Failure(RoleErrors.OperationNotAllowed);
         }
 
-        HashSet<string> existingCodes = new HashSet<string>(StringComparer.Ordinal);
-        foreach (Permission permission in role.Permissions)
-        {
-            if (string.IsNullOrWhiteSpace(permission.Name))
-            {
-                continue;
-            }
+        HashSet<string> existingCodes = RolePermissionUpdatePolicy.NormalizeCodes(role.Permissions.Select(permission => permission.Name));
+        HashSet<string> requestedCodes = RolePermissionUpdatePolicy.NormalizeCodes(request.PermissionCodes);
 
-            existingCodes.Add(PermissionCatalog.NormalizeCode(permission.Name));
-        }
-
-        HashSet<string> requestedCodes = new HashSet<string>(StringComparer.Ordinal);
-        foreach (string code in request.PermissionCodes)
+        Result validationResult = RolePermissionUpdatePolicy.ValidateRequestedCodes(role, requestedCodes, requireNonEmpty: true);
+        if (validationResult.IsFailure)
         {
-            if (!string.IsNullOrWhiteSpace(code))
-            {
-                requestedCodes.Add(PermissionCatalog.NormalizeCode(code));
-            }
-        }
-
-        if (requestedCodes.Count == 0)
-        {
-            return Result.Failure(RoleErrors.PermissionCodesRequired);
-        }
-
-        if (!ArePermissionScopesAllowedForRole(role, requestedCodes))
-        {
-            // 中文註解：平台/租戶角色不可混用權限，Fail Closed。
-            return Result.Failure(RoleErrors.PermissionScopeMismatch);
+            return validationResult;
         }
 
         List<Permission> permissionsToAdd = new List<Permission>();
@@ -83,47 +61,4 @@ internal sealed class AddRolePermissionsCommandHandler(
         return Result.Success();
     }
 
-    private static bool IsRoleAccessible(IUserContext userContext, Role role)
-    {
-        if (userContext.UserType == UserType.Member)
-        {
-            return false;
-        }
-
-        if (userContext.UserType == UserType.Platform)
-        {
-            return role.IsPlatformRole();
-        }
-
-        if (userContext.UserType == UserType.Tenant)
-        {
-            return userContext.TenantId.HasValue
-                && role.TenantId == userContext.TenantId.Value;
-        }
-
-        return false;
-    }
-
-    private static bool ArePermissionScopesAllowedForRole(Role role, IEnumerable<string> requestedCodes)
-    {
-        PermissionScope expectedScope = role.IsPlatformRole()
-            ? PermissionScope.Platform
-            : PermissionScope.Tenant;
-
-        foreach (string code in requestedCodes)
-        {
-            if (!PermissionCatalog.TryGetScope(code, out PermissionScope scope))
-            {
-                // 中文註解：無法解析的權限碼一律拒絕。
-                return false;
-            }
-
-            if (scope != expectedScope)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
 }

@@ -24,24 +24,18 @@ internal sealed class RemoveRolePermissionsCommandHandler(
             return Result.Failure(RoleErrors.NotFound);
         }
 
-        if (!IsRoleAccessible(userContext, role))
+        if (!RolePermissionUpdatePolicy.IsRoleAccessible(userContext, role))
         {
             // 中文註解：避免跨租戶或 Member 操作角色權限。
             return Result.Failure(RoleErrors.OperationNotAllowed);
         }
 
-        HashSet<string> codes = new HashSet<string>(StringComparer.Ordinal);
-        foreach (string code in request.PermissionCodes)
-        {
-            if (!string.IsNullOrWhiteSpace(code))
-            {
-                codes.Add(PermissionCatalog.NormalizeCode(code));
-            }
-        }
+        HashSet<string> codes = RolePermissionUpdatePolicy.NormalizeCodes(request.PermissionCodes);
 
-        if (codes.Count == 0)
+        Result validationResult = RolePermissionUpdatePolicy.ValidateRequestedCodes(role, codes, requireNonEmpty: true);
+        if (validationResult.IsFailure)
         {
-            return Result.Failure(RoleErrors.PermissionCodesRequired);
+            return validationResult;
         }
 
         await roleRepository.RemovePermissionsAsync(request.RoleId, codes, cancellationToken);
@@ -51,24 +45,4 @@ internal sealed class RemoveRolePermissionsCommandHandler(
         return Result.Success();
     }
 
-    private static bool IsRoleAccessible(IUserContext userContext, Role role)
-    {
-        if (userContext.UserType == UserType.Member)
-        {
-            return false;
-        }
-
-        if (userContext.UserType == UserType.Platform)
-        {
-            return role.IsPlatformRole();
-        }
-
-        if (userContext.UserType == UserType.Tenant)
-        {
-            return userContext.TenantId.HasValue
-                && role.TenantId == userContext.TenantId.Value;
-        }
-
-        return false;
-    }
 }
