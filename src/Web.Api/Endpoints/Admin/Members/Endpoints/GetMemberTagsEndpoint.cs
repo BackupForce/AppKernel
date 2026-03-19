@@ -30,7 +30,7 @@ public static class GetMemberTagsEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Members.View.Name)
+            .RequireAuthorization(Permission.MemberTag.Read.Name)
             .Produces<IReadOnlyCollection<MemberTagDto>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithName("AdminGetMemberTags");

@@ -26,7 +26,7 @@ public static class ReplaceMemberTagsEndpoint
                     ReplaceMemberTagsCommand command = new(tenantId, memberId, request.TagIds ?? Array.Empty<Guid>());
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Members.Update.Name)
+            .RequireAuthorization(Permission.MemberTag.Assign.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)

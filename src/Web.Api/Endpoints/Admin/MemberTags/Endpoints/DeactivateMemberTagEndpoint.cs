@@ -1,5 +1,4 @@
 ﻿using Application.Abstractions.Authorization;
-using Application.Members.Tags.Create;
 using Application.Members.Tags.Deactivate;
 using Domain.Security;
 using MediatR;
@@ -22,7 +21,7 @@ public static class DeactivateMemberTagEndpoint
                     DeactivateMemberTagCommand command = new(tenantId, tagId);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
-            .RequireAuthorization(Permission.Members.Update.Name)
+            .RequireAuthorization(Permission.MemberTag.Delete.Name)
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)

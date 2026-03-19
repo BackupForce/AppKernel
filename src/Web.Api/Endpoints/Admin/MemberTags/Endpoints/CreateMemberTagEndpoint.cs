@@ -25,7 +25,7 @@ public static class CreateMemberTagEndpoint
                         value => Results.Ok(value),
                         ct);
                 })
-            .RequireAuthorization(Permission.Members.Update.Name)
+            .RequireAuthorization(Permission.MemberTag.Create.Name)
             .Produces<Guid>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AdminCreateMemberTag");
