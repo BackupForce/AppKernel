@@ -79,8 +79,8 @@
   ```
   - `404 Not Found`: 角色不存在
 
-### 新增角色權限（批次）
-- **POST** `/{id}/permissions`
+### 全量覆蓋角色權限（批次）
+- **PUT** `/{id}/permissions`
 - **Body**
   ```json
   {
@@ -91,12 +91,12 @@
   }
   ```
 - **Response**
-  - `200 OK`（idempotent，已存在的 code 會被略過）
-  - `400 Bad Request`: 權限代碼為空
+  - `200 OK`（idempotent，傳入集合即最終狀態；空陣列會清空權限）
+  - `400 Bad Request`: 權限代碼不存在 / scope 不符 / request 不合法
   - `404 Not Found`: 角色不存在
 
-### 移除角色權限（批次）
-- **POST** `/{id}/permissions/remove`
+### 增量新增角色權限（舊版相容）
+- **POST** `/{id}/permissions`
 - **Body**
   ```json
   {

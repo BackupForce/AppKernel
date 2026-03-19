@@ -21,6 +21,7 @@ public static class RemoveRolePermissionsEndpoint
         .RequireAuthorization(Permission.Roles.Update.Name)
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound)
         .WithName("RemoveRolePermissions");
     }
 }

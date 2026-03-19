@@ -175,6 +175,46 @@ internal sealed class RoleRepository(ApplicationDbContext context) : IRoleReposi
     }
 
 
+    public async Task ReplacePermissionsAsync(
+        int roleId,
+        IEnumerable<string> permissionCodes,
+        CancellationToken cancellationToken)
+    {
+        HashSet<string> requestedCodes = permissionCodes
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Select(code => PermissionCatalog.NormalizeCode(code))
+            .ToHashSet(StringComparer.Ordinal);
+
+        List<Permission> existingPermissions = await context.Set<Permission>()
+            .Where(permission => permission.RoleId == roleId)
+            .ToListAsync(cancellationToken);
+
+        HashSet<string> existingCodes = existingPermissions
+            .Where(permission => !string.IsNullOrWhiteSpace(permission.Name))
+            .Select(permission => PermissionCatalog.NormalizeCode(permission.Name))
+            .ToHashSet(StringComparer.Ordinal);
+
+        List<Permission> toRemove = existingPermissions
+            .Where(permission => permission.Name != null && !requestedCodes.Contains(PermissionCatalog.NormalizeCode(permission.Name)))
+            .ToList();
+
+        if (toRemove.Count > 0)
+        {
+            context.Set<Permission>().RemoveRange(toRemove);
+        }
+
+        List<Permission> toAdd = requestedCodes
+            .Where(code => !existingCodes.Contains(code))
+            .Select(code => Permission.CreateForRole(code, string.Empty, roleId))
+            .ToList();
+
+        if (toAdd.Count > 0)
+        {
+            await context.Set<Permission>().AddRangeAsync(toAdd, cancellationToken);
+        }
+    }
+
+
 
     public async Task RemovePermissionsByRoleIdAsync(int roleId, CancellationToken cancellationToken)
     {
