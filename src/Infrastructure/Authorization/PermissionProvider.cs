@@ -8,7 +8,7 @@ namespace Infrastructure.Authorization;
 
 internal sealed class PermissionProvider : IPermissionProvider
 {
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(20);
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
     private readonly ApplicationDbContext _dbContext;
     private readonly ICacheService _cacheService;
 

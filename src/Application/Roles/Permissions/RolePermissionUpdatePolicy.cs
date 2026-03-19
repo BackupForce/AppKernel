@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Domain.Security;
 using Domain.Users;
+using SharedKernel;
 
 namespace Application.Roles.Permissions;
 

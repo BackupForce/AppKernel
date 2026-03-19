@@ -216,42 +216,55 @@ public sealed class DefaultTenantSeeder : IDataSeeder
             .Where(permission => permission.RoleId == role.Id)
             .ToListAsync();
 
-        HashSet<string> existingCodes = new HashSet<string>(StringComparer.Ordinal);
-        foreach (Permission permission in existingPermissions)
-        {
-            if (string.IsNullOrWhiteSpace(permission.Name))
-            {
-                continue;
-            }
+        Dictionary<string, Permission> existingMap = existingPermissions
+            .Where(p => !string.IsNullOrWhiteSpace(p.Name))
+            .ToDictionary(
+                p => PermissionCatalog.NormalizeCode(p.Name),
+                p => p,
+                StringComparer.Ordinal);
 
-            existingCodes.Add(PermissionCatalog.NormalizeCode(permission.Name));
-        }
-
-        List<string> expectedCodes = PermissionCatalog.AllPermissionCodes
+        HashSet<string> expectedCodes = PermissionCatalog.AllPermissionCodes
             .Where(code =>
                 PermissionCatalog.TryGetScope(code, out PermissionScope resolvedScope)
                 && resolvedScope == scope)
-            .Select(code => PermissionCatalog.NormalizeCode(code))
-            .ToList();
+            .Select(PermissionCatalog.NormalizeCode)
+            .ToHashSet(StringComparer.Ordinal);
 
-        List<Permission> toAdd = new List<Permission>();
+        // === 1. 新增缺少的 ===
+        List<Permission> toAdd = new();
         foreach (string code in expectedCodes)
         {
-            if (existingCodes.Contains(code))
+            if (!existingMap.ContainsKey(code))
             {
-                continue;
+                toAdd.Add(Permission.CreateForRole(code, code, role.Id));
             }
-
-            Permission permission = Permission.CreateForRole(code, code, role.Id);
-            toAdd.Add(permission);
         }
 
-        if (toAdd.Count == 0)
+        // === 2. 刪除多餘的（關鍵修正） ===
+        List<Permission> toRemove = new();
+        foreach ((string code, Permission permission) in existingMap)
+        {
+            if (!expectedCodes.Contains(code))
+            {
+                toRemove.Add(permission);
+            }
+        }
+
+        if (toAdd.Count == 0 && toRemove.Count == 0)
         {
             return;
         }
 
-        await _db.Set<Permission>().AddRangeAsync(toAdd);
+        if (toAdd.Count > 0)
+        {
+            await _db.Set<Permission>().AddRangeAsync(toAdd);
+        }
+
+        if (toRemove.Count > 0)
+        {
+            _db.Set<Permission>().RemoveRange(toRemove);
+        }
+
         await _db.SaveChangesAsync();
     }
 
