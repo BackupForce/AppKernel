@@ -147,7 +147,7 @@ public class PermissionProviderTests : BaseIntegrationTest
             SubjectType.User,
             Decision.Allow,
             user.Id,
-            "GAMING_DRAW:CREATE",
+            "GAMING:DRAW:CREATE",
             tenantId,
             gameNode.Id);
         DbContext.PermissionAssignments.Add(assignment);
@@ -156,7 +156,7 @@ public class PermissionProviderTests : BaseIntegrationTest
 
         PermissionProvider provider = CreateProvider();
 
-        bool result = await provider.HasPermissionAsync(user.Id, "GAMING_DRAW:CREATE", playNode.Id, tenantId);
+        bool result = await provider.HasPermissionAsync(user.Id, "GAMING:DRAW:CREATE", playNode.Id, tenantId);
 
         result.Should().BeTrue();
     }

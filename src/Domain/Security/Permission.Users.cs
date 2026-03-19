@@ -8,7 +8,7 @@ public sealed partial class Permission
     public static class Users
     {
         public static readonly Permission All = new(0, "USERS:*", "使用者模組所有權限", PermissionScope.Tenant);
-        public static readonly Permission View = new(1, "USERS:VIEW", "檢視使用者資料", PermissionScope.Tenant);
+        public static readonly Permission View = new(1, "USERS:READ", "檢視使用者資料", PermissionScope.Tenant);
         public static readonly Permission Create = new(2, "USERS:CREATE", "建立使用者", PermissionScope.Tenant);
         public static readonly Permission Update = new(3, "USERS:UPDATE", "修改使用者", PermissionScope.Tenant);
         public static readonly Permission Delete = new(4, "USERS:DELETE", "刪除使用者", PermissionScope.Tenant);

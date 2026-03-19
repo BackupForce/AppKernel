@@ -45,7 +45,7 @@ services:
       ACCEPT_EULA: "Y"
       SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_FIRSTRUN_ADMINPASSWORD}
     ports:
-      - "5341:5341"
+      - "6001:5341"
       - "18080:80"
 
   redis:
