@@ -14,19 +14,6 @@ internal sealed class GetDrawTicketsQueryHandler(
     ITenantContext tenantContext)
     : IQueryHandler<GetDrawTicketsQuery, PagedResult<DrawTicketBetDto>>
 {
-    private sealed record TicketRow(
-        Guid TicketId,
-        Guid MemberId,
-        string MemberNo,
-        string DisplayName,
-        string GameCode,
-        TicketSubmissionStatus SubmissionStatus,
-        DateTime IssuedAtUtc,
-        DateTime? SubmittedAtUtc,
-        TicketDrawParticipationStatus ParticipationStatus,
-        int? LineIndex,
-        string? PlayTypeCode,
-        string? Numbers);
 
     public async Task<Result<PagedResult<DrawTicketBetDto>>> Handle(
         GetDrawTicketsQuery request,
@@ -115,7 +102,7 @@ internal sealed class GetDrawTicketsQueryHandler(
                 request.PageSize);
         }
 
-        IEnumerable<TicketRow> rows = await connection.QueryAsync<TicketRow>(
+        IEnumerable<TicketBetRow> rows = await connection.QueryAsync<TicketBetRow>(
             sql,
             new
             {
@@ -126,49 +113,7 @@ internal sealed class GetDrawTicketsQueryHandler(
                 Offset = (request.Page - 1) * request.PageSize
             });
 
-        Dictionary<Guid, DrawTicketBetDto> ticketMap = new();
-        Dictionary<Guid, List<TicketLineDetailDto>> lineMap = new();
-        List<Guid> ticketOrder = new();
-
-        foreach (TicketRow row in rows)
-        {
-            if (!ticketMap.ContainsKey(row.TicketId))
-            {
-                ticketMap[row.TicketId] = new DrawTicketBetDto(
-                    row.TicketId,
-                    row.MemberId,
-                    row.MemberNo,
-                    row.DisplayName,
-                    row.GameCode,
-                    row.SubmissionStatus,
-                    row.IssuedAtUtc,
-                    row.SubmittedAtUtc,
-                    row.ParticipationStatus,
-                    Array.Empty<TicketLineDetailDto>());
-                lineMap[row.TicketId] = new List<TicketLineDetailDto>();
-                ticketOrder.Add(row.TicketId);
-            }
-
-            if (row.LineIndex.HasValue
-                && !string.IsNullOrWhiteSpace(row.PlayTypeCode)
-                && !string.IsNullOrWhiteSpace(row.Numbers)
-                && lineMap[row.TicketId].TrueForAll(item => item.LineIndex != row.LineIndex.Value))
-            {
-                lineMap[row.TicketId].Add(new TicketLineDetailDto(
-                    row.LineIndex.Value,
-                    row.PlayTypeCode,
-                    row.Numbers));
-            }
-        }
-
-        List<DrawTicketBetDto> items = new();
-        foreach (Guid ticketId in ticketOrder)
-        {
-            DrawTicketBetDto ticket = ticketMap[ticketId];
-            IReadOnlyCollection<TicketLineDetailDto> lines = lineMap[ticketId];
-            items.Add(ticket with { Lines = lines });
-        }
-
+        IReadOnlyList<DrawTicketBetDto> items = DrawTicketBetDtoAssembler.Assemble(rows);
         return PagedResult<DrawTicketBetDto>.Create(items, totalCount, request.Page, request.PageSize);
     }
 }

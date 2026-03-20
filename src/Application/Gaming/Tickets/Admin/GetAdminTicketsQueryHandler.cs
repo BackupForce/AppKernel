@@ -23,6 +23,7 @@ internal sealed class GetAdminTicketsQueryHandler(
                 t.id AS TicketId,
                 t.member_id AS MemberId,
                 m.member_no AS MemberNo,
+                m.display_name AS DisplayName,
                 t.game_code AS GameCode,
                 t.draw_id AS DrawId,
                 d.draw_code AS DrawCode,

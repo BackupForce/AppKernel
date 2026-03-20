@@ -57,6 +57,7 @@ public sealed class MembersEndpoints : IEndpoint
 
         //Tickets
         group.MapIssueMemberTicketsEndpoint();
+        group.MapGetMemberTicketsEndpoint();
         group.MapGetAvailableTicketsForBetEndpoint();
 
         MemberAddressEndpoints.Map(group);
