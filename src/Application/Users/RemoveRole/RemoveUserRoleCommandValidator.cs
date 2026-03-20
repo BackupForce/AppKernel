@@ -10,8 +10,8 @@ internal sealed class RemoveUserRoleCommandValidator : AbstractValidator<RemoveU
             .NotEmpty()
             .WithMessage("使用者識別碼不可為空。");
 
-        RuleFor(command => command.RoleName)
+        RuleFor(command => command.RoleId)
             .NotEmpty()
-            .WithMessage("角色名稱不可為空。");
+            .WithMessage("角色識別碼不可為空。");
     }
 }

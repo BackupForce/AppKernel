@@ -636,8 +636,9 @@
 - **權限**：`users:update`
 - **成功回應**：更新後角色 ID 清單。 【F:src/Web.Api/Endpoints/Admin/Users/Endpoints/AssignRoleToUserEndpoint.cs†L15-L34】
 
-### DELETE `/api/v1/tenants/{tenantId}/admin/users/{userId}/roles/{roleName}`
+### DELETE `/api/v1/tenants/{tenantId}/admin/users/{userId}/roles/{roleId}`
 - **權限**：`users:update`
+- **路徑參數**：`roleId` (int)
 - **成功回應**：`204 No Content`。
 - **描述**：移除使用者角色。 【F:src/Web.Api/Endpoints/Admin/Users/Endpoints/RemoveUserRoleEndpoint.cs†L19-L37】
 

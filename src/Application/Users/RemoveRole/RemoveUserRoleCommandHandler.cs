@@ -37,7 +37,7 @@ internal sealed class RemoveUserRoleCommandHandler(
             return Result.Failure<RemoveUserRoleResultDto>(UserErrors.NotFound(request.UserId));
         }
 
-        Role? role = await roleRepository.GetByCodeAsync(user.TenantId, request.RoleName, cancellationToken);
+        Role? role = await roleRepository.GetByIdAsync(request.RoleId, false, cancellationToken);
         if (role is null)
         {
             return Result.Failure<RemoveUserRoleResultDto>(RoleErrors.NotFound);

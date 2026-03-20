@@ -13,10 +13,10 @@ public static class RemoveUserRoleEndpoint
         this RouteGroupBuilder group)
     {
         return group.MapDelete(
-                "/{userId:guid}/roles/{roleName}",
-                async (Guid userId, string roleName, ISender sender, CancellationToken ct) =>
+                "/{userId:guid}/roles/{roleId:int}",
+                async (Guid userId, int roleId, ISender sender, CancellationToken ct) =>
                 {
-                    RemoveUserRoleCommand command = new RemoveUserRoleCommand(userId, roleName);
+                    RemoveUserRoleCommand command = new RemoveUserRoleCommand(userId, roleId);
                     Result<RemoveUserRoleResultDto> result = await sender.Send(command, ct);
                     return result.Match(
                         _ => Results.NoContent(),
