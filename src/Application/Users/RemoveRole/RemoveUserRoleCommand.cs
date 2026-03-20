@@ -2,5 +2,5 @@
 
 namespace Application.Users.RemoveRole;
 
-public sealed record RemoveUserRoleCommand(Guid UserId, string RoleName)
+public sealed record RemoveUserRoleCommand(Guid UserId, int RoleId)
     : ICommand<RemoveUserRoleResultDto>;
