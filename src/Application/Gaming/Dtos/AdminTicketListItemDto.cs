@@ -9,6 +9,7 @@ public sealed record AdminTicketListItemDto(
     Guid TicketId,
     Guid MemberId,
     string? MemberNo,
+    string DisplayName,
     string GameCode,
     Guid? DrawId,
     string DrawCode,
