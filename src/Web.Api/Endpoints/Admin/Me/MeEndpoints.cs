@@ -24,6 +24,7 @@ internal static class MeEndpoints
         RouteGroupBuilder group = parent.MapGroup("/me")
             .WithTags("Admin.Me");
 
+        group.MapGetMyProfileEndpoint();
         group.MapGetMyPermissionsEndpoint();
     }
 }
