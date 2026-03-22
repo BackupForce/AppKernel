@@ -33,6 +33,8 @@ public sealed record TicketClaimEventDetailDto(
 public sealed record TicketClaimRecordDto(
     Guid Id,
     Guid MemberId,
+    string MemberNo,
+    string DisplayName,
     int Quantity,
     DateTime ClaimedAtUtc,
     IReadOnlyCollection<Guid> IssuedTicketIds);

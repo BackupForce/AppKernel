@@ -2160,3 +2160,6 @@ curl "$BASE_URL/health"
 - 逐步導入 OpenAPI/NSwag 或在 endpoint 上加上完整的 `WithOpenApi` / `Produces` metadata，以自動輸出前端文件。
 - 若要保持輕量，可建立 Roslyn 掃描工具（/tools/api-doc-gen）定期解析 `MapGet/MapPost` + DTO，輸出 Markdown。
 - 本次未新增 tool，避免改動執行環境；若後續要自動化，可從上述文件路徑作為掃描入口。
+
+## 附加更新文件
+- `20260322002.md`：Ticket Claim Event Claims API 欄位擴充，回傳新增 `memberNo`、`displayName`。
