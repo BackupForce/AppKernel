@@ -45,8 +45,10 @@ internal sealed class GetDrawGroupByIdQueryHandler(
         const string drawsSql = """
             SELECT
                 cd.draw_id AS DrawId,
+                dw.draw_code AS DrawCode,
                 cd.created_at_utc AS CreatedAtUtc
             FROM gaming.draw_group_draws cd
+            INNER JOIN gaming.draws dw ON cd.draw_id = dw.id
             WHERE cd.tenant_id = @TenantId AND cd.draw_group_id = @DrawGroupId
             ORDER BY cd.created_at_utc ASC
             """;

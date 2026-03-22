@@ -5,4 +5,5 @@ namespace Application.Gaming.Dtos;
 /// </summary>
 public sealed record DrawGroupDrawDto(
     Guid DrawId,
+    string DrawCode,
     DateTime CreatedAtUtc);
