@@ -60,6 +60,8 @@ public static class GetTicketClaimEventClaimsEndpoint
                 })
             .RequireAuthorization(Permission.GamingTicketClaimEvent.ClaimRead.Name)
             .Produces<PagedResult<TicketClaimRecordDto>>(StatusCodes.Status200OK)
+            .WithSummary("Get ticket claim event claims")
+            .WithDescription("Returns paged claim records for a ticket claim event, including memberId, memberNo, displayName, quantity, claimedAtUtc, and issuedTicketIds.")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithName("AdminGetTicketClaimEventClaims");
     }

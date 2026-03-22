@@ -32,10 +32,15 @@ internal sealed class GetTicketClaimEventClaimsQueryHandler(
             SELECT
                 r.id AS Id,
                 r.member_id AS MemberId,
+                m.member_no AS MemberNo,
+                m.display_name AS DisplayName,
                 r.quantity AS Quantity,
                 r.claimed_at_utc AS ClaimedAtUtc,
                 r.issued_ticket_ids AS IssuedTicketIds
             FROM gaming.ticket_claim_records r
+            INNER JOIN public.members m
+                ON m.id = r.member_id
+               AND m.tenant_id = r.tenant_id
             WHERE r.tenant_id = @TenantId AND r.event_id = @EventId
             """);
 
@@ -79,6 +84,8 @@ internal sealed class GetTicketClaimEventClaimsQueryHandler(
             .Select(row => new TicketClaimRecordDto(
                 row.Id,
                 row.MemberId,
+                row.MemberNo,
+                row.DisplayName,
                 row.Quantity,
                 row.ClaimedAtUtc,
                 DeserializeTicketIds(row.IssuedTicketIds)))
@@ -108,6 +115,8 @@ internal sealed class GetTicketClaimEventClaimsQueryHandler(
     private sealed record RawRecord(
         Guid Id,
         Guid MemberId,
+        string MemberNo,
+        string DisplayName,
         int Quantity,
         DateTime ClaimedAtUtc,
         string? IssuedTicketIds);
