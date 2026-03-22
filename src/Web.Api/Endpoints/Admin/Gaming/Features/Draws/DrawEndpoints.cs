@@ -37,6 +37,7 @@ internal static class DrawEndpoints
         group.MapCreateDrawEndpoint();
         group.MapRemoteSearchDrawsEndpoint();
         group.MapGetDrawsEndpoint();
+        group.MapGetScheduledOrSalesOpenDrawsEndpoint();
         group.MapGetDrawEndpoint();
 
         group.MapGetSellingDrawOptionsEndpoint();
