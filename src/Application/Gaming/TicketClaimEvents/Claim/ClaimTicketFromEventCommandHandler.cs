@@ -238,10 +238,11 @@ internal sealed class ClaimTicketFromEventCommandHandler(
                     continue;
                 }
 
-                if (!draw.EnabledPlayTypes.Contains(drawGroup.PlayTypeCode))
-                {
-                    return Result.Failure<TicketIssuanceRequest>(GamingErrors.DrawGroupDrawPlayTypeNotEnabled);
-                }
+                //先拿掉 因為只有一種遊戲
+                //if (!draw.EnabledPlayTypes.Contains(drawGroup.PlayTypeCode))
+                //{
+                //    return Result.Failure<TicketIssuanceRequest>(GamingErrors.DrawGroupDrawPlayTypeNotEnabled);
+                //}
 
                 if (!DrawEligibility.IsEligiblePrimary(draw, now))
                 {

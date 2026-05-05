@@ -80,9 +80,8 @@ public sealed class DrawGroup : Entity
             return Result.Failure<DrawGroup>(GamingErrors.DrawGroupNameRequired);
         }
 
-        if ((grantOpenAtUtc.HasValue && !grantCloseAtUtc.HasValue)
-            || (!grantOpenAtUtc.HasValue && grantCloseAtUtc.HasValue)
-            || (grantOpenAtUtc.HasValue && grantCloseAtUtc.HasValue && grantOpenAtUtc.Value >= grantCloseAtUtc.Value))
+        if (grantOpenAtUtc.HasValue && !grantCloseAtUtc.HasValue
+            ||!grantOpenAtUtc.HasValue && grantCloseAtUtc.HasValue)
         {
             return Result.Failure<DrawGroup>(GamingErrors.DrawGroupGrantWindowInvalid);
         }
@@ -120,9 +119,8 @@ public sealed class DrawGroup : Entity
             return Result.Failure(GamingErrors.DrawGroupNameRequired);
         }
 
-        if ((grantOpenAtUtc.HasValue && !grantCloseAtUtc.HasValue)
-            || (!grantOpenAtUtc.HasValue && grantCloseAtUtc.HasValue)
-            || (grantOpenAtUtc.HasValue && grantCloseAtUtc.HasValue && grantOpenAtUtc.Value >= grantCloseAtUtc.Value))
+        if (grantOpenAtUtc.HasValue && !grantCloseAtUtc.HasValue
+            || !grantOpenAtUtc.HasValue && grantCloseAtUtc.HasValue)
         {
             return Result.Failure(GamingErrors.DrawGroupGrantWindowInvalid);
         }
