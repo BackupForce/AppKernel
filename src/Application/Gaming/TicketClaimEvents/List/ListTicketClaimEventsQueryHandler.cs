@@ -54,7 +54,7 @@ internal sealed class ListTicketClaimEventsQueryHandler(
                 COALESCE((
                     SELECT array_agg(r.tag_id ORDER BY r.tag_id)
                     FROM gaming.ticket_claim_event_tag_rules r
-                    WHERE r.ticket_claim_event_id = e.id
+                    WHERE r.event_id = e.id
                 ), ARRAY[]::uuid[]) AS AllowedTagIds
             FROM gaming.ticket_claim_events e
             WHERE e.tenant_id = @TenantId
