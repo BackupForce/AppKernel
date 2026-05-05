@@ -8,4 +8,6 @@ namespace Application.Gaming.DrawGroups.Update;
 public sealed record UpdateDrawGroupCommand(
     Guid TenantId,
     Guid DrawGroupId,
-    string Name) : ICommand;
+    string Name,
+    DateTime? GrantOpenAtUtc,
+    DateTime? GrantCloseAtUtc) : ICommand;
