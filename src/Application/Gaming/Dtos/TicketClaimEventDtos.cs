@@ -13,7 +13,8 @@ public sealed record TicketClaimEventSummaryDto(
     Guid ScopeId,
     Guid? TicketTemplateId,
     DateTime CreatedAtUtc,
-    DateTime UpdatedAtUtc);
+    DateTime UpdatedAtUtc,
+    Guid[] AllowedTagIds);
 
 public sealed record TicketClaimEventDetailDto(
     Guid Id,
