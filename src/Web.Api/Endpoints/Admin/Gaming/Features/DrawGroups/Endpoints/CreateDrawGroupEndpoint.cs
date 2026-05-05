@@ -20,7 +20,9 @@ public static class CreateDrawGroupEndpoint
                         tenantId,
                         request.GameCode,
                         request.PlayTypeCode,
-                        request.Name);
+                        request.Name,
+                        request.GrantOpenAtUtc,
+                        request.GrantCloseAtUtc);
                     return await UseCaseInvoker.Send<CreateDrawGroupCommand, Guid>(
                         command,
                         sender,

@@ -9,4 +9,6 @@ public sealed record CreateDrawGroupCommand(
     Guid TenantId,
     string GameCode,
     string PlayTypeCode,
-    string Name) : ICommand<Guid>;
+    string Name,
+    DateTime? GrantOpenAtUtc,
+    DateTime? GrantCloseAtUtc) : ICommand<Guid>;
