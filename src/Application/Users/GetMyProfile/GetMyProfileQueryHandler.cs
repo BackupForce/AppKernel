@@ -54,8 +54,8 @@ internal sealed class GetMyProfileQueryHandler(
             sql,
             new
             {
-                UserId = userContext.UserId,
-                TenantId = tenantContext.TenantId,
+                userContext.UserId,
+                tenantContext.TenantId,
                 UserType = UserType.Tenant
             });
 

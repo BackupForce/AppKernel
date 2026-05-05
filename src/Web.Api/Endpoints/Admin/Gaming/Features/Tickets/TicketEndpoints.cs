@@ -26,5 +26,7 @@ internal static class TicketEndpoints
         group.MapCancelTicketEndpoint();
         group.MapClaimDrawGroupTicketEndpoint();
         group.MapRedeemTicketDrawEndpoint();
+
+        group.MapPlaceTicketBetEndpoint();
     }
 }
