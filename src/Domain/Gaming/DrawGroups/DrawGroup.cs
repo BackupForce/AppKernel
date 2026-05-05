@@ -65,6 +65,8 @@ public sealed class DrawGroup : Entity
         GameCode gameCode,
         PlayTypeCode playTypeCode,
         string name,
+        DateTime? grantOpenAtUtc,
+        DateTime? grantCloseAtUtc,
         DrawGroupStatus status,
         DateTime utcNow)
     {
@@ -78,14 +80,21 @@ public sealed class DrawGroup : Entity
             return Result.Failure<DrawGroup>(GamingErrors.DrawGroupNameRequired);
         }
 
+        if ((grantOpenAtUtc.HasValue && !grantCloseAtUtc.HasValue)
+            || (!grantOpenAtUtc.HasValue && grantCloseAtUtc.HasValue)
+            || (grantOpenAtUtc.HasValue && grantCloseAtUtc.HasValue && grantOpenAtUtc.Value >= grantCloseAtUtc.Value))
+        {
+            return Result.Failure<DrawGroup>(GamingErrors.DrawGroupGrantWindowInvalid);
+        }
+
         return new DrawGroup(
             Guid.NewGuid(),
             tenantId,
             gameCode,
             playTypeCode,
             name.Trim(),
-            null,
-            null,
+            grantOpenAtUtc,
+            grantCloseAtUtc,
             status,
             null,
             null,
@@ -104,14 +113,23 @@ public sealed class DrawGroup : Entity
         return Result.Success();
     }
 
-    public Result Update(string name)
+    public Result Update(string name, DateTime? grantOpenAtUtc, DateTime? grantCloseAtUtc)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Failure(GamingErrors.DrawGroupNameRequired);
         }
 
+        if ((grantOpenAtUtc.HasValue && !grantCloseAtUtc.HasValue)
+            || (!grantOpenAtUtc.HasValue && grantCloseAtUtc.HasValue)
+            || (grantOpenAtUtc.HasValue && grantCloseAtUtc.HasValue && grantOpenAtUtc.Value >= grantCloseAtUtc.Value))
+        {
+            return Result.Failure(GamingErrors.DrawGroupGrantWindowInvalid);
+        }
+
         Name = name.Trim();
+        GrantOpenAtUtc = grantOpenAtUtc;
+        GrantCloseAtUtc = grantCloseAtUtc;
         return Result.Success();
     }
 
