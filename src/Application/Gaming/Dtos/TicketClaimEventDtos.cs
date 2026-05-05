@@ -13,7 +13,8 @@ public sealed record TicketClaimEventSummaryDto(
     Guid ScopeId,
     Guid? TicketTemplateId,
     DateTime CreatedAtUtc,
-    DateTime UpdatedAtUtc);
+    DateTime UpdatedAtUtc,
+    IReadOnlyCollection<Guid> AllowedTagIds);
 
 public sealed record TicketClaimEventDetailDto(
     Guid Id,
@@ -28,7 +29,8 @@ public sealed record TicketClaimEventDetailDto(
     Guid ScopeId,
     Guid? TicketTemplateId,
     DateTime CreatedAtUtc,
-    DateTime UpdatedAtUtc);
+    DateTime UpdatedAtUtc,
+    IReadOnlyCollection<Guid> AllowedTagIds);
 
 public sealed record TicketClaimRecordDto(
     Guid Id,
