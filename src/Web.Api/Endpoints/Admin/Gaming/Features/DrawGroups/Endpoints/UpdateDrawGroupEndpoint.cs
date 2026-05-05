@@ -20,7 +20,9 @@ public static class UpdateDrawGroupEndpoint
                     var command = new UpdateDrawGroupCommand(
                         tenantId,
                         drawGroupId,
-                        request.Name);
+                        request.Name,
+                        request.GrantOpenAtUtc,
+                        request.GrantCloseAtUtc);
                     return await UseCaseInvoker.Send(command, sender, ct);
                 })
             .RequireAuthorization(Permission.GamingDrawGroup.Update.Name)
