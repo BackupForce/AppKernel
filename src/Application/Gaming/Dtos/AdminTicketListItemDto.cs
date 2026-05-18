@@ -1,0 +1,24 @@
+using Domain.Gaming.Tickets;
+
+namespace Application.Gaming.Dtos;
+
+/// <summary>
+/// 後台查詢票券列表項目。
+/// </summary>
+public sealed record AdminTicketListItemDto(
+    Guid TicketId,
+    Guid MemberId,
+    string? MemberNo,
+    string DisplayName,
+    string GameCode,
+    Guid? DrawId,
+    string DrawCode,
+    TicketSubmissionStatus SubmissionStatus,
+    DateTime IssuedAtUtc,
+    DateTime? SubmittedAtUtc,
+    DateTime? CancelledAtUtc,
+    IssuedByType IssuedByType,
+    Guid? IssuedByUserId,
+    Guid? SubmittedByUserId,
+    long LineCount,
+    DateTime CreatedAt);

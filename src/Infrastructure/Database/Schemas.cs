@@ -3,4 +3,6 @@
 internal static class Schemas
 {
     public const string Default = "public";
+    public const string Gaming = "gaming";
+    public const string Admin = "admin";
 }

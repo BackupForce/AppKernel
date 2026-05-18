@@ -1,0 +1,15 @@
+using Application.Abstractions.Data;
+using Application.Abstractions.Messaging;
+using Application.Gaming.Dtos;
+
+namespace Application.Gaming.Tickets.GetMy;
+
+/// <summary>
+/// 取得會員票券列表查詢。
+/// </summary>
+public sealed record GetMyTicketsQuery(
+    string GameCode,
+    DateTime? From,
+    DateTime? To,
+    int PageNumber,
+    int PageSize) : IQuery<PagedResult<TicketSummaryDto>>;

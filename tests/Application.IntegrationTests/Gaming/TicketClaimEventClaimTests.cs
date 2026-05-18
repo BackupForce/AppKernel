@@ -1,0 +1,513 @@
+using Application.Abstractions.Authentication;
+using Application.Abstractions.Data;
+using Application.Abstractions.Gaming;
+using Application.Abstractions.Time;
+using Application.Gaming.TicketClaimEvents.Claim;
+using Application.Gaming.Tickets.Services;
+using Application.IntegrationTests.Infrastructure;
+using Domain.Gaming.Catalog;
+using Domain.Gaming.Draws;
+using Domain.Gaming.Repositories;
+using Domain.Gaming.Rules;
+using Domain.Gaming.Shared;
+using Domain.Gaming.TicketClaimEvents;
+using Domain.Members;
+using FluentAssertions;
+using Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using SharedKernel;
+
+namespace Application.IntegrationTests.Gaming;
+
+public sealed class TicketClaimEventClaimTests : BaseIntegrationTest
+{
+    public TicketClaimEventClaimTests(IntegrationTestWebAppFactory factory)
+        : base(factory)
+    {
+    }
+
+    [Fact]
+    public async Task Claim_In_Window_Should_Succeed()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        Guid tenantId = Guid.NewGuid();
+        Guid userId = Guid.NewGuid();
+
+        (Guid eventId, Guid memberId) = await SeedSingleDrawEventAsync(tenantId, userId, now, totalQuota: 10, perMemberQuota: 1);
+
+        Result<TicketClaimResult> result = await ExecuteClaimAsync(tenantId, userId, eventId, now);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.EventId.Should().Be(eventId);
+        result.Value.Quantity.Should().Be(1);
+        result.Value.TicketIds.Should().HaveCount(1);
+
+        TicketClaimEvent? persisted = await DbContext.TicketClaimEvents.FindAsync(eventId);
+        persisted.Should().NotBeNull();
+        persisted!.TotalClaimed.Should().Be(1);
+
+        int recordCount = await DbContext.TicketClaimRecords.CountAsync(r => r.EventId == eventId && r.MemberId == memberId);
+        recordCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Claim_Over_TotalQuota_Should_Return_SoldOut()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        Guid tenantId = Guid.NewGuid();
+        Guid firstUserId = Guid.NewGuid();
+        Guid secondUserId = Guid.NewGuid();
+
+        Guid eventId = (await SeedSingleDrawEventAsync(tenantId, firstUserId, now, totalQuota: 1, perMemberQuota: 1)).eventId;
+        await SeedMemberAsync(tenantId, secondUserId, now, "M0002");
+
+        Result<TicketClaimResult> firstClaim = await ExecuteClaimAsync(tenantId, firstUserId, eventId, now);
+        firstClaim.IsSuccess.Should().BeTrue();
+
+        Result<TicketClaimResult> secondClaim = await ExecuteClaimAsync(tenantId, secondUserId, eventId, now);
+        secondClaim.IsFailure.Should().BeTrue();
+        secondClaim.Error.Should().Be(GamingErrors.TicketClaimEventSoldOut);
+    }
+
+    [Fact]
+    public async Task Claim_Over_PerMemberQuota_Should_Return_Error()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        Guid tenantId = Guid.NewGuid();
+        Guid userId = Guid.NewGuid();
+
+        Guid eventId = (await SeedSingleDrawEventAsync(tenantId, userId, now, totalQuota: 2, perMemberQuota: 1)).eventId;
+
+        Result<TicketClaimResult> firstClaim = await ExecuteClaimAsync(tenantId, userId, eventId, now);
+        firstClaim.IsSuccess.Should().BeTrue();
+
+        Result<TicketClaimResult> secondClaim = await ExecuteClaimAsync(tenantId, userId, eventId, now);
+        secondClaim.IsFailure.Should().BeTrue();
+        secondClaim.Error.Should().Be(GamingErrors.TicketClaimEventMemberQuotaExceeded);
+    }
+
+    [Fact]
+    public async Task Concurrent_Claims_Should_Not_Exceed_TotalQuota()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        Guid tenantId = Guid.NewGuid();
+        Guid seedUserId = Guid.NewGuid();
+
+        Guid eventId = (await SeedSingleDrawEventAsync(tenantId, seedUserId, now, totalQuota: 5, perMemberQuota: 1)).eventId;
+
+        List<Guid> userIds = new();
+        for (int index = 0; index < 20; index++)
+        {
+            Guid userId = Guid.NewGuid();
+            userIds.Add(userId);
+            await SeedMemberAsync(tenantId, userId, now, $"M{index + 10:D4}");
+        }
+
+        Task<Result<TicketClaimResult>>[] tasks = userIds
+            .Select(userId => ExecuteClaimAsync(tenantId, userId, eventId, now))
+            .ToArray();
+
+        Result<TicketClaimResult>[] results = await Task.WhenAll(tasks);
+
+        int successCount = results.Count(result => result.IsSuccess);
+        successCount.Should().Be(5);
+
+        TicketClaimEvent? updated = await DbContext.TicketClaimEvents.FindAsync(eventId);
+        updated.Should().NotBeNull();
+        updated!.TotalClaimed.Should().Be(5);
+    }
+
+    [Fact]
+    public void Create_Null_TotalQuota_Should_Succeed()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        Result<TicketClaimEvent> result = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "不限量活動",
+            now,
+            now.AddHours(1),
+            null,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.TotalQuota.Should().BeNull();
+        result.Value.TotalClaimed.Should().Be(0);
+        result.Value.Status.Should().Be(TicketClaimEventStatus.Draft);
+    }
+
+    [Fact]
+    public void Create_Zero_TotalQuota_Should_Fail()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        Result<TicketClaimEvent> result = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "無效活動",
+            now,
+            now.AddHours(1),
+            0,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(GamingErrors.TicketClaimEventInvalidQuota);
+    }
+
+    [Fact]
+    public void EnsureCanClaim_With_Null_TotalQuota_Should_Succeed_When_Active()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "不限量活動",
+            now.AddMinutes(-5),
+            now.AddMinutes(5),
+            null,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now).Value;
+
+        ticketClaimEvent.Activate(now).IsSuccess.Should().BeTrue();
+
+        Result result = ticketClaimEvent.EnsureCanClaim(now);
+        result.IsSuccess.Should().BeTrue();
+        ticketClaimEvent.Status.Should().Be(TicketClaimEventStatus.Active);
+    }
+
+    [Fact]
+    public void IncreaseClaimed_With_Null_TotalQuota_Should_Not_SoldOut()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "不限量活動",
+            now.AddMinutes(-5),
+            now.AddMinutes(5),
+            null,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now).Value;
+
+        ticketClaimEvent.Activate(now).IsSuccess.Should().BeTrue();
+
+        ticketClaimEvent.IncreaseClaimed(2, now).IsSuccess.Should().BeTrue();
+        ticketClaimEvent.IncreaseClaimed(3, now.AddMinutes(1)).IsSuccess.Should().BeTrue();
+
+        ticketClaimEvent.TotalClaimed.Should().Be(5);
+        ticketClaimEvent.Status.Should().Be(TicketClaimEventStatus.Active);
+    }
+
+    [Fact]
+    public void Activate_With_Null_TotalQuota_Should_Succeed()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "不限量活動",
+            now.AddMinutes(-5),
+            now.AddMinutes(5),
+            null,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now).Value;
+
+        Result result = ticketClaimEvent.Activate(now);
+        result.IsSuccess.Should().BeTrue();
+        ticketClaimEvent.Status.Should().Be(TicketClaimEventStatus.Active);
+    }
+
+    [Fact]
+    public void UpdateInfo_With_Null_TotalQuota_Should_Not_Block_TotalClaimed()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "活動",
+            now.AddMinutes(-10),
+            now.AddMinutes(10),
+            20,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now).Value;
+
+        ticketClaimEvent.IncreaseClaimed(11, now).IsSuccess.Should().BeTrue();
+
+        Result result = ticketClaimEvent.UpdateInfo(
+            "活動更新",
+            now.AddMinutes(-10),
+            now.AddMinutes(20),
+            null,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now.AddMinutes(1));
+
+        result.IsSuccess.Should().BeTrue();
+        ticketClaimEvent.TotalQuota.Should().BeNull();
+    }
+
+    [Fact]
+    public void UpdateInfo_With_TotalQuota_Less_Than_TotalClaimed_Should_Fail()
+    {
+        DateTime now = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            Guid.NewGuid(),
+            "活動",
+            now.AddMinutes(-10),
+            now.AddMinutes(10),
+            20,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now).Value;
+
+        ticketClaimEvent.IncreaseClaimed(11, now).IsSuccess.Should().BeTrue();
+
+        Result result = ticketClaimEvent.UpdateInfo(
+            "活動更新",
+            now.AddMinutes(-10),
+            now.AddMinutes(20),
+            10,
+            1,
+            TicketClaimEventScopeType.SingleDraw,
+            Guid.NewGuid(),
+            null,
+            now.AddMinutes(1));
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(GamingErrors.TicketClaimEventInvalidQuota);
+    }
+
+    private async Task<(Guid eventId, Guid memberId)> SeedSingleDrawEventAsync(
+        Guid tenantId,
+        Guid userId,
+        DateTime now,
+        int totalQuota,
+        int perMemberQuota)
+    {
+        Draw draw = Draw.Create(
+            tenantId,
+            GameCodes.Lottery539,
+            "539-TEST",
+            now.AddMinutes(-30),
+            now.AddMinutes(30),
+            now.AddHours(2),
+            null,
+            now,
+            PlayRuleRegistry.CreateDefault()).Value;
+
+        Member member = (await SeedMemberAsync(tenantId, userId, now, "M0001")).member;
+
+        TicketClaimEvent ticketClaimEvent = TicketClaimEvent.Create(
+            tenantId,
+            "搶票活動",
+            now.AddMinutes(-10),
+            now.AddMinutes(10),
+            totalQuota,
+            perMemberQuota,
+            TicketClaimEventScopeType.SingleDraw,
+            draw.Id,
+            null,
+            now).Value;
+
+        Result activationResult = ticketClaimEvent.Activate(now);
+        activationResult.IsSuccess.Should().BeTrue();
+
+        await EnsureTicketClaimEventTablesAsync();
+
+        DbContext.Draws.Add(draw);
+        DbContext.TicketClaimEvents.Add(ticketClaimEvent);
+        await DbContext.SaveChangesAsync();
+
+        return (ticketClaimEvent.Id, member.Id);
+    }
+
+    private async Task<(Member member, Guid memberId)> SeedMemberAsync(
+        Guid tenantId,
+        Guid userId,
+        DateTime now,
+        string memberNo)
+    {
+        Member member = Member.Create(
+            tenantId,
+            userId,
+            memberNo,
+            $"Member {memberNo}",
+            now).Value;
+
+        DbContext.Members.Add(member);
+        await DbContext.SaveChangesAsync();
+
+        return (member, member.Id);
+    }
+
+    private async Task<Result<TicketClaimResult>> ExecuteClaimAsync(
+        Guid tenantId,
+        Guid userId,
+        Guid eventId,
+        DateTime now)
+    {
+        await using AsyncServiceScope scope = ServiceProvider.CreateAsyncScope();
+
+        ITicketClaimEventRepository ticketClaimEventRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimEventRepository>();
+        ITicketClaimMemberCounterRepository ticketClaimMemberCounterRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimMemberCounterRepository>();
+        ITicketClaimRecordRepository ticketClaimRecordRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimRecordRepository>();
+        IDrawGroupRepository drawGroupRepository = scope.ServiceProvider.GetRequiredService<IDrawGroupRepository>();
+        IDrawGroupDrawRepository drawGroupDrawRepository = scope.ServiceProvider.GetRequiredService<IDrawGroupDrawRepository>();
+        IDrawRepository drawRepository = scope.ServiceProvider.GetRequiredService<IDrawRepository>();
+        ITicketTemplateRepository ticketTemplateRepository = scope.ServiceProvider.GetRequiredService<ITicketTemplateRepository>();
+        IMemberRepository memberRepository = scope.ServiceProvider.GetRequiredService<IMemberRepository>();
+        ITicketRepository ticketRepository = scope.ServiceProvider.GetRequiredService<ITicketRepository>();
+        IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+        IMemberTagBindingRepository memberTagBindingRepository = scope.ServiceProvider.GetRequiredService<IMemberTagBindingRepository>();
+        IMemberTagCatalogRepository memberTagCatalogRepository = scope.ServiceProvider.GetRequiredService<IMemberTagCatalogRepository>();
+        ITicketClaimEventTagRuleRepository ticketClaimEventTagRuleRepository = scope.ServiceProvider.GetRequiredService<ITicketClaimEventTagRuleRepository>();
+
+            TicketIssuanceService ticketIssuanceService = new(ticketRepository);
+
+        ClaimTicketFromEventCommandHandler handler = new(
+            ticketClaimEventRepository,
+            ticketClaimMemberCounterRepository,
+            ticketClaimRecordRepository,
+            drawGroupRepository,
+            drawGroupDrawRepository,
+            drawRepository,
+            ticketTemplateRepository,
+            memberRepository,
+            ticketClaimEventTagRuleRepository,
+            memberTagBindingRepository,
+            memberTagCatalogRepository,
+            ticketIssuanceService,
+            unitOfWork,
+            new FixedDateTimeProvider(now),
+            new TestTenantContext(tenantId),
+            new TestUserContext(userId, tenantId),
+            new TestEntitlementChecker());
+
+        return await handler.Handle(new ClaimTicketFromEventCommand(eventId, null), CancellationToken.None);
+    }
+
+    private async Task EnsureTicketClaimEventTablesAsync()
+    {
+        await DbContext.Database.ExecuteSqlRawAsync("CREATE SCHEMA IF NOT EXISTS gaming;");
+
+        await DbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS gaming.ticket_claim_events (
+                id uuid PRIMARY KEY,
+                tenant_id uuid NOT NULL,
+                name varchar(128) NOT NULL,
+                starts_at_utc timestamptz NOT NULL,
+                ends_at_utc timestamptz NOT NULL,
+                status integer NOT NULL,
+                total_quota integer NULL,
+                total_claimed integer NOT NULL,
+                per_member_quota integer NOT NULL,
+                scope_type integer NOT NULL,
+                scope_id uuid NOT NULL,
+                ticket_template_id uuid NULL,
+                created_at_utc timestamptz NOT NULL,
+                updated_at_utc timestamptz NOT NULL
+            );
+            """);
+
+        await DbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS gaming.ticket_claim_member_counters (
+                event_id uuid NOT NULL,
+                member_id uuid NOT NULL,
+                claimed_count integer NOT NULL,
+                updated_at_utc timestamptz NOT NULL,
+                PRIMARY KEY (event_id, member_id)
+            );
+            """);
+
+        await DbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS gaming.ticket_claim_records (
+                id uuid PRIMARY KEY,
+                tenant_id uuid NOT NULL,
+                event_id uuid NOT NULL,
+                member_id uuid NOT NULL,
+                quantity integer NOT NULL,
+                idempotency_key varchar(64) NULL,
+                issued_ticket_ids jsonb NULL,
+                claimed_at_utc timestamptz NOT NULL
+            );
+            """);
+    }
+
+    private sealed class FixedDateTimeProvider(DateTime utcNow) : IDateTimeProvider
+    {
+        public DateTime UtcNow => utcNow;
+    }
+
+    private sealed class TestTenantContext(Guid tenantId) : ITenantContext
+    {
+        public Guid TenantId => tenantId;
+
+        public bool TryGetTenantId(out Guid tenantId)
+        {
+            tenantId = TenantId;
+            return true;
+        }
+    }
+
+    private sealed class TestUserContext(Guid userId, Guid tenantId) : IUserContext
+    {
+        public Guid UserId => userId;
+
+        public Domain.Users.UserType UserType => Domain.Users.UserType.Member;
+
+        public Guid? TenantId => tenantId;
+    }
+
+    private sealed class TestEntitlementChecker : IEntitlementChecker
+    {
+        public Task<Result> EnsureGameEnabledAsync(Guid tenantId, GameCode gameCode, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Result.Success());
+        }
+
+        public Task<Result> EnsurePlayEnabledAsync(
+            Guid tenantId,
+            GameCode gameCode,
+            PlayTypeCode playTypeCode,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Result.Success());
+        }
+
+        public Task<TenantEntitlementsDto> GetTenantEntitlementsAsync(Guid tenantId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new TenantEntitlementsDto(
+                Array.Empty<string>(),
+                new Dictionary<string, IReadOnlyCollection<string>>()));
+        }
+    }
+}

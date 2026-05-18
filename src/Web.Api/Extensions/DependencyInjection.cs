@@ -1,13 +1,17 @@
 ﻿using Asp.Versioning;
+using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
+using Web.Api.Common;
 using Web.Api.Infrastructure;
 using Web.Api.OpenApi;
+using Web.Api.Settings;
+using System.Linq;
 
 namespace Web.Api.Extensions;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddPresentation(this IServiceCollection services)
+    public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
@@ -29,6 +33,59 @@ public static class DependencyInjection
         });
 
         services.ConfigureOptions<ConfigureSwaggerGenOptions>();
+        services.Configure<TenantResolutionOptions>(
+            configuration.GetSection(TenantResolutionOptions.SectionName));
+
+        CorsSettings corsSettings =
+    configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>()
+    ?? throw new InvalidOperationException("Cors section is missing or malformed.");
+
+        if (corsSettings.AllowedOrigins.Count is 0)
+        {
+            throw new InvalidOperationException("Cors:AllowedOrigins must contain at least one origin.");
+        }
+
+        if (corsSettings.AllowCredentials &&
+            corsSettings.AllowedOrigins.Any(origin =>
+                string.Equals(origin, "*", StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException(
+                "Cors:AllowedOrigins cannot contain \"*\" when AllowCredentials is true.");
+        }
+
+        // ✔ Options 註冊：只做一次，而且一定在 AddCors 之前
+        services.Configure<CorsSettings>(
+            configuration.GetSection(CorsSettings.SectionName));
+
+        services.AddCors(options =>
+        {
+            // 🔹 Default Policy（原本的）
+            options.AddPolicy(CorsPolicyNames.Default, policyBuilder =>
+            {
+                policyBuilder
+                    .WithOrigins([.. corsSettings.AllowedOrigins])
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+
+                if (corsSettings.AllowCredentials)
+                {
+                    policyBuilder.AllowCredentials();
+                }
+                else
+                {
+                    policyBuilder.DisallowCredentials();
+                }
+            });
+
+            // 🔹 新增 Public Policy（完全開放）
+            options.AddPolicy(CorsPolicyNames.Public, policyBuilder =>
+            {
+                policyBuilder
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
 
         return services;
     }

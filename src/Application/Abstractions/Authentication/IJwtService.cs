@@ -1,13 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Users;
 
 namespace Application.Abstractions.Authentication;
 public interface IJwtService
 {
-    string GenerateToken(Guid userId, string userName, IEnumerable<string> roles, IEnumerable<Guid> nodeIds, IEnumerable<string> permissions);
+    string GenerateToken(
+        Guid userId,
+        string userName,
+        UserType userType,
+        Guid? tenantId,
+        Guid sessionId,
+        IEnumerable<string> roles,
+        IEnumerable<Guid> nodeIds,
+        IEnumerable<string> permissions);
+
+    (string Token, DateTime ExpiresAtUtc) IssueAccessToken(
+        Guid userId,
+        string userName,
+        UserType userType,
+        Guid? tenantId,
+        Guid sessionId,
+        IEnumerable<string> roles,
+        IEnumerable<Guid> nodeIds,
+        IEnumerable<string> permissions,
+        DateTime utcNow);
     JwtPayloadDto? ValidateToken(string token);
 }
-

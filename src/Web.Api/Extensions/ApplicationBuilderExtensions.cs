@@ -41,6 +41,8 @@ public static class ApplicationBuilderExtensions
                 {
                     var g when g.StartsWith("ADMIN", StringComparison.OrdinalIgnoreCase) => $"🔐 Admin API {description.ApiVersion}",
                     var g when g.StartsWith("FRONTEND", StringComparison.OrdinalIgnoreCase) => $"🌐 Frontend API {description.ApiVersion}",
+                    var g when g.StartsWith("TENANT", StringComparison.OrdinalIgnoreCase) => $"Tenant API {description.ApiVersion}",
+                    var g when g.StartsWith("GAMING", StringComparison.OrdinalIgnoreCase) => $"Gaming API {description.ApiVersion}",
                     _ => $"API {description.ApiVersion}"
                 };
 

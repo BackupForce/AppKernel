@@ -7,11 +7,15 @@ using Hangfire;
 using HealthChecks.UI.Client;
 using Infrastructure;
 using Infrastructure.OpenTelemetry;
+using Infrastructure.Database.Seeders;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
 using Serilog;
 using Web.Api.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddEnvironmentVariables();
 
 builder.Host.UseSerilog((context, loggerConfig) =>
     loggerConfig
@@ -27,10 +31,11 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 
 builder.Services
     .AddApplication()
-    .AddPresentation()
+    .AddPresentation(builder.Configuration)
     .AddInfrastructure(builder.Configuration);
 
 builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
+builder.Services.Configure<SuperAdminSeedOptions>(options => options.Enabled = builder.Environment.IsDevelopment());
 
 WebApplication app = builder.Build();
 
@@ -60,7 +65,14 @@ if (app.Environment.IsDevelopment())
     app.ApplyMigrations();
 }
 
-app.UseHttpsRedirection();
+//Todo: Remove duplicate Swagger setup
+app.UseSwaggerWithUi();
+app.ApplyMigrations();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.MapHealthChecks("health", new HealthCheckOptions
 {
@@ -72,6 +84,12 @@ app.UseRequestContextLogging();
 app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
+
+app.UseCors(Web.Api.Common.CorsPolicyNames.Default);
+
+
+
+app.UseTenantResolution();
 
 app.UseAuthentication();
 
@@ -86,6 +104,18 @@ using (IServiceScope scope = app.Services.CreateScope())
     foreach (IDataSeeder seeder in seeders)
     {
         await seeder.SeedAsync();
+    }
+}
+
+if (app.Environment.IsDevelopment())
+{
+    using IServiceScope scope = app.Services.CreateScope();
+    IOptions<SuperAdminSeedOptions> seedOptions =
+        scope.ServiceProvider.GetRequiredService<IOptions<SuperAdminSeedOptions>>();
+    if (seedOptions.Value.Enabled)
+    {
+        SuperAdminSeeder superAdminSeeder = scope.ServiceProvider.GetRequiredService<SuperAdminSeeder>();
+        await superAdminSeeder.SeedAsync(app.Lifetime.ApplicationStopping);
     }
 }
 

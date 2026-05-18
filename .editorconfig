@@ -89,6 +89,8 @@ csharp_style_prefer_not_pattern = true:suggestion
 csharp_style_prefer_extended_property_pattern = true:suggestion
 csharp_space_around_binary_operators = before_and_after
 dotnet_diagnostic.CA1515.severity = suggestion
+# 設定 IDE0007 規則為不顯示 (關閉)
+dotnet_diagnostic.IDE0007.severity = none
 
 [*.{cs,vb}]
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
@@ -368,6 +370,8 @@ dotnet_diagnostic.IDE0046.severity = none
 # IDE0290: Use primary constructor
 dotnet_diagnostic.IDE0290.severity = none
 
+dotnet_diagnostic.IDE0053.severity = none
+
 # SonarAnalyzer.CSharp rules
 
 # S112: General or reserved exceptions should never be thrown
@@ -420,3 +424,4 @@ end_of_line = crlf
 tab_width = 4
 indent_size = 4
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
+dotnet_diagnostic.CA1861.severity = none

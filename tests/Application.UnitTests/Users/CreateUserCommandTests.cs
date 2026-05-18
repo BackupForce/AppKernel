@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Data;
+﻿using Application.Abstractions.Authentication;
+using Application.Abstractions.Data;
 using Application.Users.Create;
 using Domain.Users;
 using FluentAssertions;
@@ -9,19 +10,34 @@ namespace Application.UnitTests.Users;
 
 public class CreateUserCommandTests
 {
-    private static readonly CreateUserCommand Command = new("test@test.com", "FullName", true);
+    private static readonly Guid TenantId = Guid.NewGuid();
+    private static readonly CreateUserCommand Command = new(
+        "test@test.com",
+        "FullName",
+        "Password123!",
+        true,
+        "Tenant",
+        TenantId);
 
     private readonly CreateUserCommandHandler _handler;
     private readonly IUserRepository _userRepositoryMock;
     private readonly IUnitOfWork _unitOfWorkMock;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly ITenantContext _tenantContext;
 
     public CreateUserCommandTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _unitOfWorkMock = Substitute.For<IUnitOfWork>();
+        _passwordHasher = Substitute.For<IPasswordHasher>();
+        _passwordHasher.Hash(Arg.Any<string>()).Returns("hashed");
+        _tenantContext = Substitute.For<ITenantContext>();
+        _tenantContext.TenantId.Returns(TenantId);
 
         _handler = new CreateUserCommandHandler(
             _userRepositoryMock,
+            _passwordHasher,
+            _tenantContext,
             _unitOfWorkMock);
     }
 

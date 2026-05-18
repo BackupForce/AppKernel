@@ -1,0 +1,30 @@
+﻿using Application.Abstractions.Authorization;
+using Application.Authorization;
+using Asp.Versioning;
+
+namespace Web.Api.Endpoints.Permissions;
+
+public sealed class PermissionsEndpoints : IEndpoint
+{
+    public void MapEndpoint(IEndpointRouteBuilder app)
+    {
+        RouteGroupBuilder group = app.MapGroup("/tenants/{tenantId:guid}/permissions")
+            .WithGroupName("admin-v1")
+            .WithMetadata(new ApiVersion(1, 0))
+            .RequireAuthorization(AuthorizationPolicyNames.TenantUser)
+            .WithTags("Permissions");
+
+        // 中文註解：提供前端取得 UI 友善的權限目錄。
+        group.MapGet(
+                "/catalog",
+                (PermissionUiCatalogProvider provider) =>
+                {
+                    PermissionCatalogDto catalog = PermissionUiCatalogProvider.GetTenantCatalog();
+                    return Results.Ok(catalog);
+                })
+            .Produces<PermissionCatalogDto>(StatusCodes.Status200OK)
+            .WithSummary("權限目錄")
+            .WithDescription("提供前端取得 UI 友善的權限目錄")
+            .WithName("GetPermissionCatalog");
+    }
+}

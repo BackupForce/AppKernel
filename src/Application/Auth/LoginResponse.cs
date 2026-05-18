@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 namespace Application.Auth;
 public sealed class LoginResponse
 {
-    public string Token { get; init; } = string.Empty;
-    public DateTime Expiration { get; init; }
+    public string AccessToken { get; init; } = string.Empty;
+    public DateTime AccessTokenExpiresAtUtc { get; init; }
+    public string? RefreshToken { get; init; }
+    public Guid SessionId { get; init; }
 }
-

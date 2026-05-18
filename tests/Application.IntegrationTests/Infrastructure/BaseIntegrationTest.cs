@@ -15,6 +15,7 @@ public abstract class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppF
         Sender = _scope.ServiceProvider.GetRequiredService<ISender>();
         DbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Faker = new Faker();
+        ServiceProvider = _scope.ServiceProvider;
     }
 
     protected ISender Sender { get; }
@@ -22,6 +23,8 @@ public abstract class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppF
     protected ApplicationDbContext DbContext { get; }
 
     protected Faker Faker { get; }
+
+    protected IServiceProvider ServiceProvider { get; }
 
     public void Dispose()
     {

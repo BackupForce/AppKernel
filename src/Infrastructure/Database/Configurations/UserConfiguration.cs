@@ -14,8 +14,37 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             u => u.Email,
             b => b.Property(e => e.Value).HasColumnName("email"));
 
+        builder.Property(u => u.NormalizedEmail)
+            .HasColumnName("normalized_email");
+
         builder.ComplexProperty(
             u => u.Name,
             b => b.Property(e => e.Value).HasColumnName("name"));
+
+        builder.Property(u => u.Type)
+            .HasColumnName("type")
+            .HasConversion<int>()
+            .IsRequired();
+
+        builder.Property(u => u.TenantId)
+            .HasColumnName("tenant_id");
+
+        builder.Property(u => u.IsEnabled)
+            .HasColumnName("is_enabled")
+            .HasDefaultValue(true);
+
+        builder.Property(u => u.DisabledAtUtc)
+            .HasColumnName("disabled_at_utc");
+
+        builder.HasIndex(u => u.TenantId);
+
+        builder.HasMany(u => u.LoginBindings)
+            .WithOne(binding => binding.User)
+            .HasForeignKey(binding => binding.UserId);
+
+        builder.ToTable(t => t.HasCheckConstraint(
+             "CK_user_type",
+             "\"type\" IN (0, 1, 2)"
+ ));
     }
 }

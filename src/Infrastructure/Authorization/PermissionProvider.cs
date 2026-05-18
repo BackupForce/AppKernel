@@ -1,24 +1,306 @@
-﻿using Application.Abstractions.Caching;
+﻿using Application.Abstractions.Authorization;
+using Application.Abstractions.Caching;
+using Domain.Security;
+using Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Authorization;
 
-internal sealed class PermissionProvider(ICacheService cacheService)
+internal sealed class PermissionProvider : IPermissionProvider
 {
-    public async Task<HashSet<string>> GetForUserIdAsync(Guid userId)
-    {
-        string cacheKey = $"auth:permissions-{userId}";
-        HashSet<string>? cachedPermissions = await cacheService.GetAsync<HashSet<string>>(cacheKey);
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
+    private readonly ApplicationDbContext _dbContext;
+    private readonly ICacheService _cacheService;
 
-        if (cachedPermissions is not null)
+    public PermissionProvider(ApplicationDbContext dbContext, ICacheService cacheService)
+    {
+        _dbContext = dbContext;
+        _cacheService = cacheService;
+    }
+
+    public async Task<bool> HasPermissionAsync(Guid userId, string permissionCode, Guid? nodeId, Guid? tenantId)
+    {
+        if (string.IsNullOrWhiteSpace(permissionCode))
         {
-            return cachedPermissions;
+            return false;
         }
 
-        // TODO: Here you'll implement your logic to fetch permissions.
-        HashSet<string> permissionsSet = [];
+        if (!tenantId.HasValue)
+        {
+            return false;
+        }
 
-        await cacheService.SetAsync(cacheKey, permissionsSet);
+        bool isInTenant = await _dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(user => user.Id == userId && user.TenantId == tenantId.Value);
+        if (!isInTenant)
+        {
+            return false;
+        }
 
-        return permissionsSet;
+        UserPermissionMatrix cachedMatrix = await GetOrBuildUserPermissionMatrixAsync(userId, tenantId.Value);
+
+        return await EvaluatePermissionAsync(cachedMatrix, permissionCode, nodeId, tenantId);
     }
+
+    public async Task<IReadOnlyList<string>> GetAllowedPermissionCodesAsync(
+        Guid userId,
+        Guid tenantId,
+        Guid? nodeId,
+        CancellationToken cancellationToken)
+    {
+        bool isInTenant = await _dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(user => user.Id == userId && user.TenantId == tenantId, cancellationToken);
+        if (!isInTenant)
+        {
+            return Array.Empty<string>();
+        }
+
+        UserPermissionMatrix cachedMatrix = await GetOrBuildUserPermissionMatrixAsync(userId, tenantId);
+
+        IReadOnlyList<Guid?> nodeScope = await GetNodeScopeAsync(nodeId, tenantId);
+        if (nodeScope.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        HashSet<Guid?> nodeScopeSet = new HashSet<Guid?>(nodeScope);
+        List<string> allowedCodes = new();
+
+        foreach ((string permissionCode, List<PermissionDecisionEntry> decisions) in cachedMatrix.Decisions)
+        {
+            List<PermissionDecisionEntry> relevantDecisions = decisions
+                .Where(entry => nodeScopeSet.Contains(entry.NodeId))
+                .ToList();
+
+            if (relevantDecisions.Count == 0)
+            {
+                continue;
+            }
+
+            if (relevantDecisions.Any(entry => entry.Decision == Decision.Deny))
+            {
+                continue;
+            }
+
+            if (relevantDecisions.Any(entry => entry.Decision == Decision.Allow))
+            {
+                allowedCodes.Add(permissionCode);
+            }
+        }
+
+        return allowedCodes
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(code => code, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    private async Task<UserPermissionMatrix> GetOrBuildUserPermissionMatrixAsync(Guid userId, Guid tenantId)
+    {
+        string cacheKey = AuthzCacheKeys.ForUserTenant(userId, tenantId);
+        UserPermissionMatrix? cachedMatrix = await _cacheService.GetAsync<UserPermissionMatrix>(cacheKey);
+
+        if (cachedMatrix is null)
+        {
+            cachedMatrix = await BuildUserPermissionMatrixAsync(userId, tenantId);
+            await _cacheService.SetAsync(cacheKey, cachedMatrix, CacheTtl);
+        }
+
+        return cachedMatrix;
+    }
+
+    private async Task<UserPermissionMatrix> BuildUserPermissionMatrixAsync(Guid userId, Guid tenantId)
+    {
+        List<int> roleIds = await _dbContext.Users
+            .Where(user => user.Id == userId)
+            .SelectMany(user => user.Roles
+                .Where(role => role.TenantId == tenantId)
+                .Select(role => role.Id))
+            .ToListAsync();
+
+        List<Guid> roleSubjectIds = roleIds
+            .Select(MapRoleIdToSubjectId)
+            .ToList();
+
+        List<Guid> groupIds = await _dbContext.UserGroups
+            .AsNoTracking()
+            .Where(userGroup => userGroup.UserId == userId)
+            .Select(userGroup => userGroup.GroupId)
+            .ToListAsync();
+
+        List<PermissionAssignment> assignments = await _dbContext.PermissionAssignments
+            .AsNoTracking()
+            .Where(assignment => assignment.TenantId == tenantId)
+            .Where(assignment =>
+                assignment.SubjectType == SubjectType.User && assignment.SubjectId == userId
+                || assignment.SubjectType == SubjectType.Role && roleSubjectIds.Contains(assignment.SubjectId)
+                || assignment.SubjectType == SubjectType.Group && groupIds.Contains(assignment.SubjectId))
+            .ToListAsync();
+
+        List<string> rolePermissionCodes = await _dbContext.Set<Permission>()
+            .AsNoTracking()
+            .Where(permission => permission.RoleId.HasValue && roleIds.Contains(permission.RoleId.Value))
+            .Select(permission => permission.Name)
+            .ToListAsync();
+
+        UserPermissionMatrix matrix = new UserPermissionMatrix();
+
+        foreach (PermissionAssignment assignment in assignments)
+        {
+            AddDecision(matrix, assignment.PermissionCode, assignment.NodeId, assignment.Decision);
+        }
+
+        foreach (string permissionCode in rolePermissionCodes)
+        {
+            AddDecision(matrix, permissionCode, null, Decision.Allow);
+        }
+
+        return matrix;
+    }
+
+    private async Task<bool> EvaluatePermissionAsync(
+        UserPermissionMatrix matrix,
+        string permissionCode,
+        Guid? nodeId,
+        Guid? tenantId)
+    {
+        string normalizedCode = NormalizePermissionCode(permissionCode);
+        if (!matrix.Decisions.TryGetValue(normalizedCode, out List<PermissionDecisionEntry>? decisions))
+        {
+            return false;
+        }
+
+        IReadOnlyList<Guid?> nodeScope = await GetNodeScopeAsync(nodeId, tenantId);
+        if (nodeScope.Count == 0)
+        {
+            return false;
+        }
+
+        HashSet<Guid?> nodeScopeSet = new HashSet<Guid?>(nodeScope);
+
+        List<PermissionDecisionEntry> relevantDecisions = decisions
+            .Where(entry => nodeScopeSet.Contains(entry.NodeId))
+            .ToList();
+
+        if (relevantDecisions.Any(entry => entry.Decision == Decision.Deny))
+        {
+            return false;
+        }
+
+        return relevantDecisions.Any(entry => entry.Decision == Decision.Allow);
+    }
+
+    private async Task<IReadOnlyList<Guid?>> GetNodeScopeAsync(Guid? nodeId, Guid? tenantId)
+    {
+        if (!tenantId.HasValue)
+        {
+            return Array.Empty<Guid?>();
+        }
+
+        if (!nodeId.HasValue)
+        {
+            // 中文註解：NodeId = null 代表租戶層級授權，不允許跨租戶共用。
+            return new List<Guid?> { null };
+        }
+
+        ResourceNodeParent? initialNode = await _dbContext.ResourceNodes
+            .AsNoTracking()
+            .Where(resourceNode => resourceNode.Id == nodeId.Value)
+            .Select(resourceNode => new ResourceNodeParent(resourceNode.Id, resourceNode.ParentId, resourceNode.TenantId))
+            .SingleOrDefaultAsync();
+
+        if (initialNode is null || initialNode.TenantId != tenantId.Value)
+        {
+            return Array.Empty<Guid?>();
+        }
+
+        Guid currentNodeId = nodeId.Value;
+        List<Guid?> lineage = new List<Guid?> { currentNodeId };
+        HashSet<Guid> visited = new HashSet<Guid> { currentNodeId };
+        Guid? currentId = currentNodeId;
+
+        while (currentId.HasValue)
+        {
+            ResourceNodeParent? node = await _dbContext.ResourceNodes
+                .AsNoTracking()
+                .Where(resourceNode => resourceNode.Id == currentId.Value)
+                .Select(resourceNode => new ResourceNodeParent(resourceNode.Id, resourceNode.ParentId, resourceNode.TenantId))
+                .SingleOrDefaultAsync();
+
+            if (node is null || node.TenantId != tenantId.Value)
+            {
+                return Array.Empty<Guid?>();
+            }
+
+            if (node.ParentId is null)
+            {
+                break;
+            }
+
+            if (!visited.Add(node.ParentId.Value))
+            {
+                return Array.Empty<Guid?>();
+            }
+
+            lineage.Add(node.ParentId);
+            currentId = node.ParentId;
+        }
+
+        lineage.Add(null);
+
+        return lineage;
+    }
+
+    private static void AddDecision(
+        UserPermissionMatrix matrix,
+        string permissionCode,
+        Guid? nodeId,
+        Decision decision)
+    {
+        string normalizedCode = NormalizePermissionCode(permissionCode);
+        if (!matrix.Decisions.TryGetValue(normalizedCode, out List<PermissionDecisionEntry>? entries))
+        {
+            entries = new List<PermissionDecisionEntry>();
+            matrix.Decisions[normalizedCode] = entries;
+        }
+
+        PermissionDecisionEntry? existing = entries.FirstOrDefault(entry => entry.NodeId == nodeId);
+        if (existing is not null)
+        {
+            if (existing.Decision == Decision.Deny)
+            {
+                return;
+            }
+
+            if (decision == Decision.Deny)
+            {
+                entries.Remove(existing);
+                entries.Add(new PermissionDecisionEntry(nodeId, decision));
+            }
+
+            return;
+        }
+
+        entries.Add(new PermissionDecisionEntry(nodeId, decision));
+    }
+
+    private static string NormalizePermissionCode(string permissionCode)
+    {
+        return PermissionCatalog.NormalizeCode(permissionCode);
+    }
+
+    private static Guid MapRoleIdToSubjectId(int roleId)
+    {
+        return new Guid(roleId, 0, 0, new byte[8]);
+    }
+
+    private sealed record PermissionDecisionEntry(Guid? NodeId, Decision Decision);
+
+    private sealed class UserPermissionMatrix
+    {
+        public Dictionary<string, List<PermissionDecisionEntry>> Decisions { get; init; } = new();
+    }
+
+    private sealed record ResourceNodeParent(Guid Id, Guid? ParentId, Guid TenantId);
 }

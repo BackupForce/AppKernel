@@ -4,10 +4,10 @@ namespace Infrastructure.Authorization;
 
 internal sealed class PermissionRequirement : IAuthorizationRequirement
 {
-    public PermissionRequirement(string permission)
+    public PermissionRequirement(string permissionCode)
     {
-        Permission = permission;
+        PermissionCode = permissionCode;
     }
 
-    public string Permission { get; }
+    public string PermissionCode { get; }
 }

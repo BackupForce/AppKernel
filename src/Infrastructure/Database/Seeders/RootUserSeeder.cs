@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Infrastructure;
+using Domain.Security;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +10,7 @@ using SharedKernel.Identity;
 namespace Infrastructure.Database.Seeders;
 public class RootUserSeeder : IDataSeeder
 {
+    private const string PlatformAdminRoleName = "PLATFORM_ADMIN";
     private readonly ApplicationDbContext _db;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IConfiguration _config;
@@ -33,6 +30,11 @@ public class RootUserSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        await SeedPlatformRootAsync();
+    }
+
+    private async Task SeedPlatformRootAsync()
+    {
         string email = _config["RootUser:Email"] ?? RootUser.DefaultEmail;
         string? password = _config["RootUser:Password"];
 
@@ -44,18 +46,126 @@ public class RootUserSeeder : IDataSeeder
 
         Email rootEmail = Email.Create(email).Value;
 
-        User? existing = await _db.Users.FirstOrDefaultAsync(u => u.Email == rootEmail);
+        User? existing = await _db.Users
+            .Include(user => user.Roles)
+            .FirstOrDefaultAsync(u => u.Email == rootEmail);
         if (existing != null)
         {
+            if (existing.Type != UserType.Platform || existing.TenantId.HasValue)
+            {
+                // 中文註解：確保既有 root 帳號修正為平台使用者，避免租戶污染。
+                existing.UpdateType(UserType.Platform, null);
+                await _db.SaveChangesAsync();
+            }
+
+            await EnsurePlatformAdminRoleBindingAsync(existing);
+
             _logger.LogInformation("✅ Root user already exists: {Email}", email);
             return;
         }
 
-        var user = User.Create(rootEmail, new Name("root"), _passwordHasher.Hash(password), false);
+        User user = User.Create(
+            rootEmail,
+            new Name("root"),
+            _passwordHasher.Hash(password),
+            false,
+            UserType.Platform,
+            null);
 
-        _db.Users.Add(user);
+        await _db.Users.AddAsync(user);
         await _db.SaveChangesAsync();
 
+        await EnsurePlatformAdminRoleBindingAsync(user);
+
         _logger.LogInformation("🚀 Root user created: {Email}", email);
+    }
+
+    private async Task EnsurePlatformAdminRoleBindingAsync(User user)
+    {
+        Role? role = await EnsurePlatformAdminRoleAsync();
+        if (role is null)
+        {
+            return;
+        }
+
+        if (user.HasRole(role.Id))
+        {
+            return;
+        }
+
+        user.AssignRole(role);
+        await _db.SaveChangesAsync();
+    }
+
+    private async Task<Role?> EnsurePlatformAdminRoleAsync()
+    {
+        string normalizedRoleName = PlatformAdminRoleName.Trim().ToUpperInvariant();
+
+        Role? role = await _db.Set<Role>()
+            .AsTracking()
+            .FirstOrDefaultAsync(r => r.TenantId == null
+                && r.Name != null
+                && r.Name == normalizedRoleName);
+
+        if (role is null)
+        {
+            role = Role.Create(PlatformAdminRoleName, null);
+            await _db.Set<Role>().AddAsync(role);
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("✅ 已建立平台角色: {RoleName}", PlatformAdminRoleName);
+        }
+        else
+        {
+            _logger.LogInformation("✅ 平台角色已存在: {RoleName}", role.Name);
+        }
+
+        await EnsureRolePermissionsAsync(role, PermissionScope.Platform);
+
+        return role;
+    }
+
+    private async Task EnsureRolePermissionsAsync(Role role, PermissionScope scope)
+    {
+        List<Permission> existingPermissions = await _db.Set<Permission>()
+            .Where(permission => permission.RoleId == role.Id)
+            .ToListAsync();
+
+        HashSet<string> existingCodes = new HashSet<string>(StringComparer.Ordinal);
+        foreach (Permission permission in existingPermissions)
+        {
+            if (string.IsNullOrWhiteSpace(permission.Name))
+            {
+                continue;
+            }
+
+            existingCodes.Add(PermissionCatalog.NormalizeCode(permission.Name));
+        }
+
+        List<string> expectedCodes = PermissionCatalog.AllPermissionCodes
+            .Where(code =>
+                PermissionCatalog.TryGetScope(code, out PermissionScope resolvedScope)
+                && resolvedScope == scope)
+            .Select(code => PermissionCatalog.NormalizeCode(code))
+            .ToList();
+
+        List<Permission> toAdd = new List<Permission>();
+        foreach (string code in expectedCodes)
+        {
+            if (existingCodes.Contains(code))
+            {
+                continue;
+            }
+
+            Permission permission = Permission.CreateForRole(code, code, role.Id);
+            toAdd.Add(permission);
+        }
+
+        if (toAdd.Count == 0)
+        {
+            return;
+        }
+
+        await _db.Set<Permission>().AddRangeAsync(toAdd);
+        await _db.SaveChangesAsync();
     }
 }

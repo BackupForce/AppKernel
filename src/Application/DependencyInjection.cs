@@ -1,4 +1,9 @@
-﻿using Application.Abstractions.Behaviors;
+using Application.Abstractions.Behaviors;
+using Application.Abstractions.Time;
+using Application.Gaming.Tickets.Redeem;
+using Application.Gaming.Tickets.Services;
+using Application.Gaming.Tickets.Submission;
+using Application.Time;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,9 +22,16 @@ public static class DependencyInjection
             config.AddOpenBehavior(typeof(ValidationPipelineBehavior<,>));
             config.AddOpenBehavior(typeof(TransactionalPipelineBehavior<,>));
             config.AddOpenBehavior(typeof(QueryCachingPipelineBehavior<,>));
+            config.AddOpenBehavior(typeof(UpdateLastUsedBehavior<,>));
         });
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
+        services.AddSingleton<Authorization.PermissionUiCatalogProvider>();
+        services.AddSingleton<Authorization.PermissionSelectionNormalizer>();
+        services.AddSingleton<IUtcRangeCalculator, UtcRangeCalculator>();
+        services.AddScoped<TicketIssuanceService>();
+        services.AddScoped<TicketRedeemableDrawService>();
+        services.AddScoped<ITicketBetSubmissionService, TicketBetSubmissionService>();
 
         return services;
     }
