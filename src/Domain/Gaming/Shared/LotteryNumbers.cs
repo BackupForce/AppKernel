@@ -20,7 +20,7 @@ public sealed class LotteryNumbers : IEquatable<LotteryNumbers>
     }
 
     /// <summary>
-    /// 已排序的投注號碼列表（升冪）。
+    /// 號碼列表。一般投注流程會升冪正規化，開獎流程可保留抽出或輸入順序。
     /// </summary>
     public IReadOnlyList<int> Numbers { get; }
 
@@ -33,6 +33,14 @@ public sealed class LotteryNumbers : IEquatable<LotteryNumbers>
     public static Result<LotteryNumbers> Create(IEnumerable<int> numbers)
     {
         return CreateInternal(numbers, sortNumbers: true);
+    }
+
+    /// <summary>
+    /// 建立號碼組合並保留傳入順序。
+    /// </summary>
+    public static Result<LotteryNumbers> CreatePreservingOrder(IEnumerable<int> numbers)
+    {
+        return CreateInternal(numbers, sortNumbers: false);
     }
 
     /// <summary>
@@ -80,6 +88,19 @@ public sealed class LotteryNumbers : IEquatable<LotteryNumbers>
     /// </summary>
     public static Result<LotteryNumbers> Parse(string? value)
     {
+        return ParseInternal(value, preserveOrder: false);
+    }
+
+    /// <summary>
+    /// 從持久化格式解析（逗號分隔）並保留原始順序。
+    /// </summary>
+    public static Result<LotteryNumbers> ParsePreservingOrder(string? value)
+    {
+        return ParseInternal(value, preserveOrder: true);
+    }
+
+    private static Result<LotteryNumbers> ParseInternal(string? value, bool preserveOrder)
+    {
         if (string.IsNullOrWhiteSpace(value))
         {
             return Result.Failure<LotteryNumbers>(GamingErrors.LotteryNumbersRequired);
@@ -98,7 +119,7 @@ public sealed class LotteryNumbers : IEquatable<LotteryNumbers>
             numbers.Add(number);
         }
 
-        return Create(numbers);
+        return preserveOrder ? CreatePreservingOrder(numbers) : Create(numbers);
     }
 
     /// <summary>

@@ -140,12 +140,12 @@ internal sealed class SetDrawWinningNumbersCommandHandler(
     {
         if (request.WinningNumbers is { Count: > 0 })
         {
-            return LotteryNumbers.Create(request.WinningNumbers);
+            return LotteryNumbers.CreatePreservingOrder(request.WinningNumbers);
         }
 
         if (!string.IsNullOrWhiteSpace(request.WinningNumbersRaw))
         {
-            return LotteryNumbers.Parse(request.WinningNumbersRaw);
+            return LotteryNumbers.ParsePreservingOrder(request.WinningNumbersRaw);
         }
 
         return Result.Failure<LotteryNumbers>(GamingErrors.LotteryNumbersRequired);
