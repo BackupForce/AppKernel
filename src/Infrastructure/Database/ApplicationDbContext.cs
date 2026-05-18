@@ -1,20 +1,4 @@
-﻿using System.Data;
-using Application.Abstractions.Data;
-using Domain.Admin.OperationLogs;
-using Domain.Auth;
-using Domain.Gaming.DrawGroups;
-using Domain.Gaming.DrawTemplates;
-using Domain.Gaming.Draws;
-using Domain.Gaming.Entitlements;
-using Domain.Gaming.PrizeAwards;
-using Domain.Gaming.Prizes;
-using Domain.Gaming.RedeemRecords;
-using Domain.Gaming.TicketClaimEvents;
-using Domain.Gaming.Tickets;
-using Domain.Gaming.TicketTemplates;
-using Domain.Members;
-using Domain.Security;
-using Domain.Tenants;
+﻿using Application.Abstractions.Data;
 using Domain.Users;
 using Infrastructure.Gaming;
 using Microsoft.EntityFrameworkCore;
@@ -80,9 +64,9 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         modelBuilder.HasDefaultSchema(Schemas.Default);
     }
 
-    public async Task<IDbTransaction> BeginTransactionAsync()
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        return (await Database.BeginTransactionAsync()).GetDbTransaction();
+        return await Database.BeginTransactionAsync(cancellationToken);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
