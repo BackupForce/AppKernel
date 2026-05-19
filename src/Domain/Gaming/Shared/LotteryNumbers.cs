@@ -20,7 +20,7 @@ public sealed class LotteryNumbers : IEquatable<LotteryNumbers>
     }
 
     /// <summary>
-    /// 已排序的投注號碼列表（升冪）。
+    /// 已驗證的號碼列表。
     /// </summary>
     public IReadOnlyList<int> Numbers { get; }
 
@@ -33,6 +33,14 @@ public sealed class LotteryNumbers : IEquatable<LotteryNumbers>
     public static Result<LotteryNumbers> Create(IEnumerable<int> numbers)
     {
         return CreateInternal(numbers, sortNumbers: true);
+    }
+
+    /// <summary>
+    /// 建立號碼組合並保留輸入順序。
+    /// </summary>
+    public static Result<LotteryNumbers> CreatePreservingOrder(IEnumerable<int> numbers)
+    {
+        return CreateInternal(numbers, sortNumbers: false);
     }
 
     /// <summary>
@@ -99,6 +107,32 @@ public sealed class LotteryNumbers : IEquatable<LotteryNumbers>
         }
 
         return Create(numbers);
+    }
+
+    /// <summary>
+    /// 從持久化格式解析（逗號分隔），並保留原始順序。
+    /// </summary>
+    public static Result<LotteryNumbers> ParsePreservingOrder(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return Result.Failure<LotteryNumbers>(GamingErrors.LotteryNumbersRequired);
+        }
+
+        string[] parts = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var numbers = new List<int>();
+        foreach (string part in parts)
+        {
+            if (!int.TryParse(part, out int number))
+            {
+                return Result.Failure<LotteryNumbers>(GamingErrors.LotteryNumbersFormatInvalid);
+            }
+
+            numbers.Add(number);
+        }
+
+        return CreatePreservingOrder(numbers);
     }
 
     /// <summary>

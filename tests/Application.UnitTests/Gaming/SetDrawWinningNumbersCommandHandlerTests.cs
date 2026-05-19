@@ -2,7 +2,6 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Gaming;
 using Application.Gaming.Draws.SetWinningNumbers;
-using Application.Gaming.Draws.Settle;
 using Domain.Admin.OperationLogs;
 using Domain.Gaming.Catalog;
 using Domain.Gaming.Draws;
@@ -11,7 +10,6 @@ using Domain.Gaming.Rules;
 using Domain.Gaming.Shared;
 using Domain.Gaming.Tickets;
 using FluentAssertions;
-using MediatR;
 using NSubstitute;
 using SharedKernel;
 
@@ -37,7 +35,6 @@ public sealed class SetDrawWinningNumbersCommandHandlerTests
         ITenantContext tenantContext = Substitute.For<ITenantContext>();
         IEntitlementChecker entitlementChecker = Substitute.For<IEntitlementChecker>();
         IUserContext userContext = Substitute.For<IUserContext>();
-        ISender sender = Substitute.For<ISender>();
 
         drawRepository.GetByIdAsync(tenantId, draw.Id, Arg.Any<CancellationToken>()).Returns(draw);
         entitlementChecker.EnsureGameEnabledAsync(tenantId, draw.GameCode, Arg.Any<CancellationToken>())
@@ -45,7 +42,6 @@ public sealed class SetDrawWinningNumbersCommandHandlerTests
         dateTimeProvider.UtcNow.Returns(now);
         tenantContext.TenantId.Returns(tenantId);
         userContext.UserId.Returns(userId);
-        sender.Send(Arg.Any<SettleDrawCommand>(), Arg.Any<CancellationToken>()).Returns(Result.Success());
 
         SetDrawWinningNumbersCommandHandler handler = new(
             drawRepository,
@@ -56,21 +52,19 @@ public sealed class SetDrawWinningNumbersCommandHandlerTests
             dateTimeProvider,
             tenantContext,
             entitlementChecker,
-            userContext,
-            sender);
+            userContext);
 
         SetDrawWinningNumbersCommand command = new(
             draw.Id,
             null,
-            new[] { 1, 2, 3, 4, 5 },
+            new[] { 5, 3, 1, 4, 2 },
             false,
             "manual input");
 
         Result result = await handler.Handle(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        draw.WinningNumbersRaw.Should().Be("1,2,3,4,5");
-        await sender.Received(1).Send(Arg.Any<SettleDrawCommand>(), Arg.Any<CancellationToken>());
+        draw.WinningNumbersRaw.Should().Be("5,3,1,4,2");
     }
 
     [Fact]
@@ -91,7 +85,6 @@ public sealed class SetDrawWinningNumbersCommandHandlerTests
         ITenantContext tenantContext = Substitute.For<ITenantContext>();
         IEntitlementChecker entitlementChecker = Substitute.For<IEntitlementChecker>();
         IUserContext userContext = Substitute.For<IUserContext>();
-        ISender sender = Substitute.For<ISender>();
 
         drawRepository.GetByIdAsync(tenantId, draw.Id, Arg.Any<CancellationToken>()).Returns(draw);
         entitlementChecker.EnsureGameEnabledAsync(tenantId, draw.GameCode, Arg.Any<CancellationToken>())
@@ -109,8 +102,7 @@ public sealed class SetDrawWinningNumbersCommandHandlerTests
             dateTimeProvider,
             tenantContext,
             entitlementChecker,
-            userContext,
-            sender);
+            userContext);
 
         SetDrawWinningNumbersCommand command = new(
             draw.Id,
@@ -149,7 +141,6 @@ public sealed class SetDrawWinningNumbersCommandHandlerTests
         ITenantContext tenantContext = Substitute.For<ITenantContext>();
         IEntitlementChecker entitlementChecker = Substitute.For<IEntitlementChecker>();
         IUserContext userContext = Substitute.For<IUserContext>();
-        ISender sender = Substitute.For<ISender>();
 
         drawRepository.GetByIdAsync(tenantId, draw.Id, Arg.Any<CancellationToken>()).Returns(draw);
         entitlementChecker.EnsureGameEnabledAsync(tenantId, draw.GameCode, Arg.Any<CancellationToken>())
@@ -161,7 +152,6 @@ public sealed class SetDrawWinningNumbersCommandHandlerTests
             .Returns(Array.Empty<TicketDraw>());
         ticketDrawRepository.GetByDrawIdAsync(tenantId, draw.Id, TicketDrawParticipationStatus.Settled, Arg.Any<CancellationToken>())
             .Returns(new[] { settled });
-        sender.Send(Arg.Any<SettleDrawCommand>(), Arg.Any<CancellationToken>()).Returns(Result.Success());
 
         SetDrawWinningNumbersCommandHandler handler = new(
             drawRepository,
@@ -172,8 +162,7 @@ public sealed class SetDrawWinningNumbersCommandHandlerTests
             dateTimeProvider,
             tenantContext,
             entitlementChecker,
-            userContext,
-            sender);
+            userContext);
 
         SetDrawWinningNumbersCommand command = new(
             draw.Id,

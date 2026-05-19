@@ -230,13 +230,13 @@ public sealed class GetScheduledOrSalesOpenDrawsTests : BaseIntegrationTest
         public DateTime UtcNow => utcNow;
     }
 
-    private sealed class TestTenantContext(Guid tenantId) : ITenantContext
+    private sealed class TestTenantContext(Guid _tenantId) : ITenantContext
     {
-        public Guid TenantId => tenantId;
+        public Guid TenantId => _tenantId;
 
-        public bool TryGetTenantId(out Guid resolvedTenantId)
+        public bool TryGetTenantId(out Guid tenantId)
         {
-            resolvedTenantId = tenantId;
+            tenantId = _tenantId;
             return true;
         }
     }
