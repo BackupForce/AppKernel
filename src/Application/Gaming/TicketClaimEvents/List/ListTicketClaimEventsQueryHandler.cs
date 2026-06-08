@@ -113,13 +113,39 @@ internal sealed class ListTicketClaimEventsQueryHandler(
 
         using IDbConnection connection = dbConnectionFactory.GetOpenConnection();
 
-        IEnumerable<TicketClaimEventSummaryDto> items = await connection.QueryAsync<TicketClaimEventSummaryDto>(
+        IEnumerable<dynamic> rows = await connection.QueryAsync(
             finalSql,
             parameters);
         int totalCount = await connection.ExecuteScalarAsync<int>(
             string.Format(CultureInfo.InvariantCulture, countSql, baseSql),
             parameters);
 
+        IEnumerable<TicketClaimEventSummaryDto> items = rows.Select(ToDto);
+
         return PagedResult<TicketClaimEventSummaryDto>.Create(items, totalCount, request.Page, request.PageSize);
+    }
+
+    private static TicketClaimEventSummaryDto ToDto(dynamic row)
+    {
+        return new TicketClaimEventSummaryDto(
+            row.Id,
+            row.Name,
+            row.Status,
+            row.StartsAtUtc,
+            row.EndsAtUtc,
+            row.TotalQuota,
+            row.TotalClaimed,
+            row.PerMemberQuota,
+            row.ScopeType,
+            row.ScopeId,
+            row.TicketTemplateId,
+            row.CreatedAtUtc,
+            row.UpdatedAtUtc,
+            ToGuidArray(row.AllowedTagIds));
+    }
+
+    private static Guid[] ToGuidArray(object? values)
+    {
+        return values is Array array ? array.Cast<Guid>().ToArray() : Array.Empty<Guid>();
     }
 }

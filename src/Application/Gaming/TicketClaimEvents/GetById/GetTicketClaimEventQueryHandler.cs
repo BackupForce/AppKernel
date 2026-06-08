@@ -44,14 +44,19 @@ internal sealed class GetTicketClaimEventQueryHandler(
                 e.scope_id AS ScopeId,
                 e.ticket_template_id AS TicketTemplateId,
                 e.created_at_utc AS CreatedAtUtc,
-                e.updated_at_utc AS UpdatedAtUtc
+                e.updated_at_utc AS UpdatedAtUtc,
+                COALESCE((
+                    SELECT array_agg(r.tag_id ORDER BY r.tag_id)
+                    FROM gaming.ticket_claim_event_tag_rules r
+                    WHERE r.event_id = e.id
+                ), ARRAY[]::uuid[]) AS AllowedTagIds
             FROM gaming.ticket_claim_events e
             WHERE e.tenant_id = @TenantId AND e.id = @EventId
             """;
 
         using System.Data.IDbConnection connection = dbConnectionFactory.GetOpenConnection();
 
-        TicketClaimEventDetailDto? detail = await connection.QueryFirstOrDefaultAsync<TicketClaimEventDetailDto>(
+        dynamic? detail = await connection.QueryFirstOrDefaultAsync(
             sql,
             new { request.TenantId, request.EventId });
 
@@ -60,6 +65,30 @@ internal sealed class GetTicketClaimEventQueryHandler(
             return Result.Failure<TicketClaimEventDetailDto>(GamingErrors.TicketClaimEventNotFound);
         }
 
-        return detail;
+        return ToDto(detail);
+    }
+
+    private static TicketClaimEventDetailDto ToDto(dynamic row)
+    {
+        return new TicketClaimEventDetailDto(
+            row.Id,
+            row.Name,
+            row.Status,
+            row.StartsAtUtc,
+            row.EndsAtUtc,
+            row.TotalQuota,
+            row.TotalClaimed,
+            row.PerMemberQuota,
+            row.ScopeType,
+            row.ScopeId,
+            row.TicketTemplateId,
+            row.CreatedAtUtc,
+            row.UpdatedAtUtc,
+            ToGuidArray(row.AllowedTagIds));
+    }
+
+    private static Guid[] ToGuidArray(object? values)
+    {
+        return values is Array array ? array.Cast<Guid>().ToArray() : Array.Empty<Guid>();
     }
 }
